@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Test</title>
+<style>
+body { background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:20px; font-family:Arial; }
+button { width:280px; padding:24px; font-size:20px; border-radius:12px; border:none; background:#6600cc; color:white; cursor:pointer; }
+#msg { color:#aaa; font-size:14px; text-align:center; padding:0 20px; }
+</style>
+</head>
+<body>
+<div id="msg">Tap the button. Make sure your phone is NOT on silent and volume is up.</div>
+<button ontouchstart="beep()" onmousedown="beep()">TAP FOR SOUND</button>
+<script>
+function beep(){
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    ac.resume().then(function(){
+      var o = ac.createOscillator();
+      var g = ac.createGain();
+      o.connect(g);
+      g.connect(ac.destination);
+      o.type = 'square';
+      o.frequency.value = 440;
+      g.gain.value = 0.5;
+      o.start();
+      o.stop(ac.currentTime + 0.5);
+      document.getElementById('msg').textContent = 'AC state: ' + ac.state + ' -- If you heard a beep, audio works!';
+    });
+  } catch(e) {
+    document.getElementById('msg').textContent = 'ERROR: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
