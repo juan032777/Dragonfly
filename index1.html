@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Dragonfly Audio Test</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#05020f; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; font-family:Arial,sans-serif; gap:16px; padding:24px; }
+h1 { color:#b06eff; font-size:22px; text-align:center; margin-bottom:8px; }
+p  { color:#9966cc; font-size:13px; text-align:center; margin-bottom:8px; }
+.btn {
+  width:100%; max-width:320px; padding:18px;
+  border-radius:12px; border:2px solid #6a20aa;
+  background:rgba(80,30,160,0.3); color:#e8d8ff;
+  font-size:16px; font-weight:bold; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active { background:rgba(130,50,220,0.6); }
+.btn.gold  { border-color:#ffd700; color:#ffd700; background:rgba(80,50,0,0.4); }
+.btn.red   { border-color:#ff4444; color:#ff4444; background:rgba(80,10,10,0.4); }
+.btn.green { border-color:#44ff88; color:#44ff88; background:rgba(10,60,30,0.4); }
+#status { color:#40c8ff; font-size:12px; text-align:center; min-height:20px; }
+</style>
+</head>
+<body>
+<h1>🪲 Dragonfly Audio Test</h1>
+<p>Tap any button to hear the sounds.<br>Audio unlocks on first tap.</p>
+<div id="status">Tap a button to start</div>
+
+<button class="btn" onclick="test('main')">▶ Main Theme (90s Chiptune)</button>
+<button class="btn gold" onclick="test('infinite')">⚡ Infinite Dragonfly Theme</button>
+<button class="btn red" onclick="test('stop')">⏹ Stop Music</button>
+
+<p style="margin-top:8px;color:#6644aa;">-- Sound Effects --</p>
+<button class="btn" onclick="sfx('moth')">🦋 Moth Collected</button>
+<button class="btn gold" onclick="sfx('goldmoth')">✦ Golden Moth</button>
+<button class="btn red" onclick="sfx('tree')">🌲 Hit Tree</button>
+<button class="btn red" onclick="sfx('building')">🏢 Hit Building</button>
+<button class="btn red" onclick="sfx('rock')">⛰ Hit Rock</button>
+<button class="btn red" onclick="sfx('lava')">🌋 Hit Lava</button>
+<button class="btn red" onclick="sfx('ice')">❄ Hit Ice</button>
+<button class="btn red" onclick="sfx('frog')">🐸 Frog Tongue</button>
+<button class="btn green" onclick="sfx('levelclear')">🎉 Level Clear</button>
+<button class="btn red" onclick="sfx('gameover')">💀 Game Over</button>
+<button class="btn gold" onclick="sfx('infinite')">⚡ Infinite Activate</button>
+
+<script>
+var AC = null;
+var sfxGain, musicGain, masterGain;
+var musicScheduled = [];
+var currentTrack = null;
+
+function unlock(){
+  if(!AC){
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = AC.createGain(); masterGain.gain.value=0.7; masterGain.connect(AC.destination);
+    sfxGain    = AC.createGain(); sfxGain.gain.value=1.0;    sfxGain.connect(masterGain);
+    musicGain  = AC.createGain(); musicGain.gain.value=0.45; musicGain.connect(masterGain);
+  }
+  if(AC.state==='suspended') AC.resume();
+}
+
+function osc(freq,type,startT,dur,volStart,volEnd,dest){
+  if(!AC||AC.state==='suspended') return;
+  var g=AC.createGain(); g.connect(dest||sfxGain);
+  g.gain.setValueAtTime(volStart,startT);
+  g.gain.linearRampToValueAtTime(volEnd,startT+dur);
+  var o=AC.createOscillator(); o.type=type||'square';
+  o.frequency.setValueAtTime(freq,startT);
+  o.connect(g); o.start(startT); o.stop(startT+dur+0.01);
+}
+
+function oscSlide(fA,fB,type,startT,dur,vol,dest){
+  if(!AC||AC.state==='suspended') return;
+  var g=AC.createGain(); g.connect(dest||sfxGain);
+  g.gain.setValueAtTime(vol,startT);
+  g.gain.linearRampToValueAtTime(0,startT+dur);
+  var o=AC.createOscillator(); o.type=type||'square';
+  o.frequency.setValueAtTime(fA,startT);
+  o.frequency.linearRampToValueAtTime(fB,startT+dur);
+  o.connect(g); o.start(startT); o.stop(startT+dur+0.01);
+}
+
+function noise(startT,dur,vol,dest){
+  if(!AC||AC.state==='suspended') return;
+  var len=AC.sampleRate*dur;
+  var buf=AC.createBuffer(1,len,AC.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<len;i++) d[i]=(Math.random()*2-1);
+  var src=AC.createBufferSource(); src.buffer=buf;
+  var g=AC.createGain(); g.connect(dest||sfxGain);
+  g.gain.setValueAtTime(vol,startT);
+  g.gain.linearRampToValueAtTime(0,startT+dur);
+  src.connect(g); src.start(startT); src.stop(startT+dur+0.01);
+}
+
+function stopMusic(){
+  for(var i=0;i<musicScheduled.length;i++){
+    clearTimeout(musicScheduled[i]);
+    clearInterval(musicScheduled[i]);
+  }
+  musicScheduled=[]; currentTrack=null;
+}
+
+var MAIN_MELODY=[
+  {freq:523,dur:0.5,wave:'square',vol:0.28},{freq:659,dur:0.5,wave:'square',vol:0.28},
+  {freq:784,dur:0.5,wave:'square',vol:0.28},{freq:1047,dur:0.5,wave:'square',vol:0.28},
+  {freq:988,dur:0.5,wave:'square',vol:0.28},{freq:880,dur:0.5,wave:'square',vol:0.28},
+  {freq:784,dur:0.5,wave:'square',vol:0.28},{freq:698,dur:0.5,wave:'square',vol:0.28},
+  {freq:659,dur:0.25,wave:'square',vol:0.30},{freq:698,dur:0.25,wave:'square',vol:0.30},
+  {freq:659,dur:0.25,wave:'square',vol:0.30},{freq:587,dur:0.25,wave:'square',vol:0.30},
+  {freq:523,dur:0.5,wave:'square',vol:0.30},{freq:440,dur:0.5,wave:'square',vol:0.28},
+  {freq:349,dur:0.25,wave:'square',vol:0.28},{freq:392,dur:0.25,wave:'square',vol:0.28},
+  {freq:440,dur:0.25,wave:'square',vol:0.28},{freq:523,dur:0.25,wave:'square',vol:0.28},
+  {freq:587,dur:0.5,wave:'square',vol:0.30},{freq:659,dur:0.5,wave:'square',vol:0.30},
+  {freq:784,dur:0.25,wave:'square',vol:0.28},{freq:880,dur:0.25,wave:'square',vol:0.28},
+  {freq:988,dur:0.25,wave:'square',vol:0.28},{freq:1047,dur:0.25,wave:'square',vol:0.28},
+  {freq:988,dur:0.25,wave:'square',vol:0.28},{freq:880,dur:0.25,wave:'square',vol:0.28},
+  {freq:784,dur:0.25,wave:'square',vol:0.28},{freq:698,dur:0.25,wave:'square',vol:0.28},
+  {freq:659,dur:0.5,wave:'square',vol:0.30},{freq:523,dur:0.5,wave:'square',vol:0.28},
+  {freq:440,dur:0.5,wave:'square',vol:0.28},{freq:349,dur:0.5,wave:'square',vol:0.28},
+  {freq:392,dur:0.25,wave:'square',vol:0.28},{freq:440,dur:0.25,wave:'square',vol:0.28},
+  {freq:523,dur:0.25,wave:'square',vol:0.28},{freq:587,dur:0.25,wave:'square',vol:0.28},
+  {freq:659,dur:0.5,wave:'square',vol:0.30},{freq:784,dur:0.5,wave:'square',vol:0.30},
+  {freq:1047,dur:0.5,wave:'square',vol:0.32},{freq:784,dur:0.25,wave:'square',vol:0.28},
+  {freq:659,dur:0.25,wave:'square',vol:0.28},{freq:523,dur:1.0,wave:'square',vol:0.32,chord:[262,392]},
+];
+var MAIN_BASS=[
+  {freq:131,dur:1,wave:'sawtooth',vol:0.18},{freq:131,dur:1,wave:'sawtooth',vol:0.18},
+  {freq:110,dur:1,wave:'sawtooth',vol:0.18},{freq:110,dur:1,wave:'sawtooth',vol:0.18},
+  {freq:131,dur:1,wave:'sawtooth',vol:0.18},{freq:131,dur:1,wave:'sawtooth',vol:0.18},
+  {freq:98, dur:1,wave:'sawtooth',vol:0.18},{freq:131,dur:1,wave:'sawtooth',vol:0.18},
+];
+var INF_MELODY=[
+  {freq:1047,dur:0.25,wave:'square',vol:0.32},{freq:1319,dur:0.25,wave:'square',vol:0.32},
+  {freq:1568,dur:0.25,wave:'square',vol:0.32},{freq:2093,dur:0.25,wave:'square',vol:0.32},
+  {freq:1568,dur:0.25,wave:'square',vol:0.30},{freq:1319,dur:0.25,wave:'square',vol:0.30},
+  {freq:1047,dur:0.5,wave:'square',vol:0.32},{freq:880,dur:0.25,wave:'square',vol:0.28},
+  {freq:988,dur:0.25,wave:'square',vol:0.28},{freq:1047,dur:0.25,wave:'square',vol:0.30},
+  {freq:1175,dur:0.25,wave:'square',vol:0.30},{freq:1319,dur:0.5,wave:'square',vol:0.32},
+  {freq:1568,dur:0.25,wave:'square',vol:0.32},{freq:1319,dur:0.25,wave:'square',vol:0.30},
+  {freq:1175,dur:0.25,wave:'square',vol:0.30},{freq:1047,dur:0.25,wave:'square',vol:0.30},
+  {freq:988,dur:0.25,wave:'square',vol:0.28},{freq:880,dur:0.25,wave:'square',vol:0.28},
+  {freq:784,dur:0.5,wave:'square',vol:0.30},{freq:880,dur:0.25,wave:'square',vol:0.28},
+  {freq:988,dur:0.25,wave:'square',vol:0.28},{freq:1047,dur:0.5,wave:'square',vol:0.32,chord:[523,784]},
+  {freq:1319,dur:0.25,wave:'square',vol:0.32},{freq:1568,dur:0.25,wave:'square',vol:0.32},
+  {freq:2093,dur:0.5,wave:'square',vol:0.35,chord:[1047,1568]},{freq:1568,dur:0.5,wave:'square',vol:0.32},
+  {freq:1319,dur:0.5,wave:'square',vol:0.30},{freq:1047,dur:1.0,wave:'square',vol:0.35,chord:[523,784]},
+];
+var INF_BASS=[
+  {freq:196,dur:0.5,wave:'sawtooth',vol:0.22},{freq:196,dur:0.5,wave:'sawtooth',vol:0.22},
+  {freq:220,dur:0.5,wave:'sawtooth',vol:0.22},{freq:220,dur:0.5,wave:'sawtooth',vol:0.22},
+  {freq:247,dur:0.5,wave:'sawtooth',vol:0.22},{freq:247,dur:0.5,wave:'sawtooth',vol:0.22},
+  {freq:196,dur:0.5,wave:'sawtooth',vol:0.22},{freq:196,dur:0.5,wave:'sawtooth',vol:0.22},
+];
+
+function scheduleSeq(seq,bpm,dest){
+  if(!AC) return;
+  var beat=60.0/bpm, t=AC.currentTime+0.1, cursor=0;
+  for(var i=0;i<seq.length;i++){
+    var note=seq[i], dur=note.dur*beat;
+    if(note.freq) osc(note.freq,note.wave||'square',t+cursor,dur*0.88,note.vol||0.3,0,dest);
+    if(note.chord) for(var ci=0;ci<note.chord.length;ci++)
+      osc(note.chord[ci],'sine',t+cursor,dur*0.82,(note.vol||0.3)*0.35,0,dest);
+    cursor+=dur;
+  }
+  return cursor;
+}
+
+function playMusicLoop(track){
+  if(!AC) return;
+  stopMusic();
+  currentTrack=track;
+  var bpm=track==='infinite'?180:140;
+  var melody=track==='infinite'?INF_MELODY:MAIN_MELODY;
+  var bass=track==='infinite'?INF_BASS:MAIN_BASS;
+
+  function loop(){
+    if(currentTrack!==track) return;
+    var dur1=scheduleSeq(melody,bpm,musicGain);
+    scheduleSeq(bass,bpm,musicGain);
+    var id=setTimeout(loop, dur1*1000 - 200);
+    musicScheduled.push(id);
+  }
+  loop();
+}
+
+function test(t){
+  unlock();
+  if(t==='stop'){ stopMusic(); status('Stopped'); return; }
+  status('Playing: '+(t==='main'?'Main Theme':'Infinite Theme'));
+  AC.resume().then(function(){ playMusicLoop(t); });
+}
+
+function sfx(type){
+  unlock();
+  AC.resume().then(function(){
+    var t=AC.currentTime;
+    if(type==='moth'){ osc(880,'sine',t,0.08,0.3,0); osc(1100,'sine',t+0.07,0.1,0.3,0); }
+    else if(type==='goldmoth'){ [523,659,784,1047].forEach(function(f,i){ osc(f,'sine',t+i*0.06,0.18,0.4,0); }); osc(1047,'sine',t+0.24,0.3,0.5,0); }
+    else if(type==='tree'){ noise(t,0.06,0.4); osc(80,'sawtooth',t,0.12,0.5,0); osc(160,'square',t+0.02,0.08,0.3,0); }
+    else if(type==='building'){ osc(55,'sawtooth',t,0.15,0.7,0); osc(110,'square',t,0.08,0.4,0); noise(t,0.04,0.25); osc(440,'sine',t+0.02,0.2,0.15,0); }
+    else if(type==='rock'){ noise(t,0.12,0.5); osc(45,'sawtooth',t,0.18,0.6,0); osc(65,'sine',t+0.04,0.1,0.3,0); }
+    else if(type==='lava'){ osc(40,'sawtooth',t,0.2,0.7,0); noise(t+0.05,0.15,0.4); osc(880,'sine',t,0.05,0.2,0); }
+    else if(type==='ice'){ osc(1200,'sine',t,0.04,0.4,0); osc(900,'sine',t+0.01,0.06,0.3,0); osc(600,'sine',t+0.02,0.08,0.2,0); noise(t,0.05,0.2); }
+    else if(type==='frog'){ oscSlide(200,60,'sine',t,0.1,0.45); osc(80,'sine',t+0.05,0.1,0.25,0); }
+    else if(type==='levelclear'){ [523,659,784,1047,784,1047,1319].forEach(function(f,i){ osc(f,'square',t+i*0.1,0.15,0.35,0); }); }
+    else if(type==='gameover'){ [440,330,220,165].forEach(function(f,i){ osc(f,'sawtooth',t+i*0.18,0.25,0.3,0); }); }
+    else if(type==='infinite'){ oscSlide(200,1200,'sawtooth',t,0.3,0.5); osc(880,'sine',t+0.15,0.2,0.4,0); osc(1100,'sine',t+0.22,0.2,0.4,0); osc(1320,'sine',t+0.29,0.3,0.5,0); }
+    status('Playing SFX: '+type);
+  });
+}
+
+function status(msg){
+  document.getElementById('status').textContent=msg;
+}
+</script>
+
+</body>
+</html>
