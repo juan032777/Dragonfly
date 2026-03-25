@@ -2251,7 +2251,7 @@ function doTap(){
   if(state!=='playing') return;
   if(TAP_COOLDOWN>0) return;
   if(Date.now()-gameStartTime < 300) return; // ignore taps within 300ms of game start
-  fly.vy = -4.8;
+  fly.vy = Math.max(-4.0, fly.vy - 1.6);
   TAP_COOLDOWN=6;
   try{ sfxTap(); }catch(e){}
 }
@@ -2351,8 +2351,8 @@ function update(){
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
   // Simple gravity -- dragonfly drops, tap makes it fly up
-  fly.vy += 0.14;   // gravity pull down
-  fly.vy *= 0.92;   // air drag
+  fly.vy += 0.20;   // gravity
+  fly.vy *= 0.90;   // drag
   fly.vy = Math.max(-5.5, Math.min(6.0, fly.vy));
   fly.y += fly.vy;
   fly.trail.push({x:fly.x-20, y:fly.y});
@@ -2399,8 +2399,6 @@ function draw(){
   drawInfiniteLayer();
   for(var i=0;i<moths.length;i++) drawMoth(moths[i]);
   drawWindItems();
-  updateSteam();
-  updateLightning();
   if(state!=='idle'){
     if(infiniteActive && isEliteSkin()){drawFly();drawEliteInfiniteOverlay();}
     else if(infiniteActive){drawInfiniteFly();}
@@ -2409,7 +2407,8 @@ function draw(){
   drawFrogs();
 }
 
-function loop(){requestAnimationFrame(loop);update();draw();}
+var lastFrameTime=0;
+function loop(ts){requestAnimationFrame(loop);if(ts-lastFrameTime<14)return;lastFrameTime=ts;update();draw();}
 
 
 // -- AUDIO ENGINE --------------------------------------------
