@@ -50,7 +50,7 @@ canvas { display:block; width:100%; height:100%; }
 #mothHudBar { height:100%; border-radius:2px; background:linear-gradient(90deg,#d070ff,#fff); transition:width 0.2s; }
 
 /* Controls */
-#controls { position:absolute; bottom:0; left:0; right:0; display:flex; height:140px; pointer-events:all; }
+#controls { position:absolute; bottom:0; left:0; right:0; display:flex; height:140px; pointer-events:none; }
 .btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:linear-gradient(180deg,rgba(10,4,25,0.88),rgba(22,8,45,0.94)); border-top:2px solid #6a20aa; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; transition:background 0.08s; }
 .btn:active, .btn.pressed { background:linear-gradient(180deg,rgba(50,15,90,0.96),rgba(70,20,120,0.99)); }
 .btn-left { border-right:1px solid #6a20aa; }
@@ -2250,17 +2250,23 @@ function doTap(){
   if(TAP_COOLDOWN>0) return;
   sfxTap();
   fly.vy = -4.8;
-  TAP_COOLDOWN=4; // small cooldown prevents double-fire
+  TAP_COOLDOWN=4;
 }
 
-var btnTap = document.getElementById('btnTap');
-if(btnTap){
-  btnTap.addEventListener('touchstart',function(e){e.preventDefault();doTap();},{passive:false});
-  btnTap.addEventListener('mousedown',doTap);
-}
-// Also tap anywhere on the canvas
-canvas.addEventListener('touchstart',function(e){e.preventDefault();doTap();},{passive:false});
-canvas.addEventListener('mousedown',doTap);
+// Tap the WHOLE screen to fly -- attach to wrapper so UI doesn't block it
+var _wrapper = document.getElementById('gameWrapper');
+_wrapper.addEventListener('touchstart',function(e){
+  // Only fire if not tapping a button/interactive element
+  var tag = e.target.tagName;
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL') return;
+  e.preventDefault();
+  doTap();
+},{passive:false});
+_wrapper.addEventListener('mousedown',function(e){
+  var tag = e.target.tagName;
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL') return;
+  doTap();
+});
 
 // -- GAME LOOP -----------------------------------------------
 function loseLife(){
