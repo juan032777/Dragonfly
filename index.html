@@ -2253,18 +2253,25 @@ function doTap(){
   TAP_COOLDOWN=4;
 }
 
-// Tap the WHOLE screen to fly -- attach to wrapper so UI doesn't block it
+// Tap anywhere on screen to fly -- only active during gameplay
 var _wrapper = document.getElementById('gameWrapper');
 _wrapper.addEventListener('touchstart',function(e){
-  // Only fire if not tapping a button/interactive element
+  if(state!=='playing') return; // don't intercept menu touches
   var tag = e.target.tagName;
-  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL') return;
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='A') return;
+  // Don't intercept touches on menu screens
+  var el = e.target;
+  while(el && el!==document.body){
+    if(el.classList && (el.classList.contains('menu-screen')||el.id==='overlayDead'||el.id==='levelOverlay'||el.id==='screenPassword')) return;
+    el=el.parentNode;
+  }
   e.preventDefault();
   doTap();
 },{passive:false});
 _wrapper.addEventListener('mousedown',function(e){
+  if(state!=='playing') return;
   var tag = e.target.tagName;
-  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL') return;
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='A') return;
   doTap();
 });
 
