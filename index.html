@@ -2248,30 +2248,23 @@ function checkCollision(){
 function doTap(){
   if(state!=='playing') return;
   if(TAP_COOLDOWN>0) return;
+  if(frameN<3) return; // ignore taps in first 3 frames (same touch as Play button)
   sfxTap();
   fly.vy = -4.8;
-  TAP_COOLDOWN=4;
+  TAP_COOLDOWN=6;
 }
 
-// Tap anywhere on screen to fly -- only active during gameplay
-var _wrapper = document.getElementById('gameWrapper');
-_wrapper.addEventListener('touchstart',function(e){
-  if(state!=='playing') return; // don't intercept menu touches
-  var tag = e.target.tagName;
-  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='A') return;
-  // Don't intercept touches on menu screens
-  var el = e.target;
-  while(el && el!==document.body){
-    if(el.classList && (el.classList.contains('menu-screen')||el.id==='overlayDead'||el.id==='levelOverlay'||el.id==='screenPassword')) return;
-    el=el.parentNode;
-  }
-  e.preventDefault();
-  doTap();
-},{passive:false});
-_wrapper.addEventListener('mousedown',function(e){
+// Simple approach: listen on document, only act when playing
+document.addEventListener('touchstart',function(e){
   if(state!=='playing') return;
-  var tag = e.target.tagName;
-  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='A') return;
+  var tag = e.target ? e.target.tagName : '';
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='SELECT') return;
+  doTap();
+},{passive:true});
+document.addEventListener('mousedown',function(e){
+  if(state!=='playing') return;
+  var tag = e.target ? e.target.tagName : '';
+  if(tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='SELECT') return;
   doTap();
 });
 
