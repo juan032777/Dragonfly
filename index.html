@@ -229,15 +229,9 @@ canvas { display:block; width:100%; height:100%; }
     <!-- Screen flash on activation -->
     <div id="screenFlash"></div>
     <div id="controls">
-      <div class="btn btn-left" id="btnUp">
-        <div class="btn-icon">⬆️</div>
-        <div class="btn-label">Soar</div>
-        <div class="tap-meter"><div class="tap-fill" id="upMeter" style="width:0%"></div></div>
-      </div>
-      <div class="btn" id="btnDown">
-        <div class="btn-icon">⬇️</div>
-        <div class="btn-label">Dive</div>
-        <div class="tap-meter"><div class="tap-fill" id="downMeter" style="width:0%"></div></div>
+      <div class="btn" id="btnTap" style="width:100%;border-left:none;flex-direction:column;gap:4px;">
+        <div class="btn-icon">🪲</div>
+        <div class="btn-label">TAP TO FLY</div>
       </div>
     </div>
   </div>
@@ -523,10 +517,7 @@ var ctx     = canvas.getContext('2d');
 var wrapper = document.getElementById('gameWrapper');
 var scoreEl = document.getElementById('score');
 var highScEl= document.getElementById('highScore');
-var btnUp   = document.getElementById('btnUp');
-var btnDown = document.getElementById('btnDown');
-var upMeter = document.getElementById('upMeter');
-var downMeter=document.getElementById('downMeter');
+var btnTapEl = document.getElementById('btnTap');
 var life1   = document.getElementById('life1');
 var life2   = document.getElementById('life2');
 var life3   = document.getElementById('life3');
@@ -561,8 +552,7 @@ var diffMult=0.8;
 
 // Dragonfly physics
 var fly = {x:0,y:0,vy:0,trail:[]};
-var upTaps=0,downTaps=0,upDecay=0,downDecay=0;
-var TAP_WIN=18, MAX_TAPS=6, BASE_IMP=-2.2, BONUS=-0.55;
+var TAP_COOLDOWN=0; // brief cooldown between taps to prevent spam
 
 // Obstacles
 var obstacles=[], obstTimer=0, obstInterval=160;
@@ -570,6 +560,9 @@ var movingObst=[], frogs=[], branches=[];
 
 // Moths
 var moths=[], mothTimer=0, mothInterval=480, mothsTotal=0;
+// Wind collectible -- attracts all moths when collected
+var windItems=[], windTimer=0, windInterval=1800, windActive=false, windActiveTimer=0;
+var WIND_DURATION=420; // 7 seconds of moth attraction
 
 // Infinite Dragonfly power
 var infiniteOwned=true; // demo: always owned
@@ -918,8 +911,7 @@ function getLevelObstInterval(level){
   return Math.max(80, 180 - level*2);
 }
 function getLevelDuration(level){
-  // Later levels are longer too
-  return Math.max(30, 45 + Math.floor(level/10)*5);
+  return 80 + (level-1)*3;
 }
 
 
@@ -984,12 +976,13 @@ function resetGame(){
   obstacles=[]; obstTimer=0;
   frogs=[]; branches=[]; movingObst=[];
   moths=[]; mothTimer=0; mothInterval=480;
+  windItems=[]; windTimer=0; windActive=false; windActiveTimer=0;
   infiniteActive=false; infiniteTimer=0; infiniteMothSpawned=false; infMoth=null;
   infMothSpawnTimer=0;
   debris=[]; steamParticles=[]; lightningBolts=[];
   lightningTimer=0; lightningBurstActive=false; lightningBurstFrames=0; lightningBurstCooldown=0;
   document.getElementById('infiniteHud').classList.remove('show');
-  upTaps=0; downTaps=0; upDecay=0; downDecay=0;
+  TAP_COOLDOWN=0;
   updateLivesUI(); updateLevelUI(); initBg();
   farOff=0; nearOff=0; ruinOff=0;
 }
@@ -1004,6 +997,7 @@ function startNextLevel(){
   }
   obstacles=[]; frogs=[]; branches=[]; movingObst=[];
   moths=[]; mothTimer=0; mothInterval=Math.max(300,480-(currentLevel-1)*8);
+  windItems=[]; windTimer=0; windActive=false; windActiveTimer=0;
   infiniteActive=false; infiniteTimer=0; infiniteMothSpawned=false; infMoth=null;
   infMothSpawnTimer=0;
   debris=[]; steamParticles=[]; lightningBolts=[];
@@ -1390,7 +1384,7 @@ function drawLandmark(rx,r,gameH,style,rC,rwC,icC){
 // -- DRAGONFLY DRAWING ---------------------------------------
 function drawFly(){
   var d=fly,t=frameN*0.10;
-  var buzzSpeed=3.5+upTaps*1.2+downTaps*1.2;
+  var buzzSpeed=4.0;
   var sk=getSkin(), fx=sk.fx||'';
 
   // Trail
@@ -1502,7 +1496,7 @@ function drawFly(){
 // Infinite golden form
 function drawInfiniteFly(){
   var d=fly,t=frameN*0.10;
-  var buzzSpeed=5+upTaps*1.5+downTaps*1.5;
+  var buzzSpeed=6.0;
   // Elite skin stacking
   if(isEliteSkin()){drawFly();drawEliteInfiniteOverlay();return;}
   // Gold trail
@@ -1554,26 +1548,46 @@ function drawEliteInfiniteOverlay(){
 function spawnObstacle(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   var gameH=H-140;
-  var side=Math.random()<0.5?'bottom':'top';
-  var x=W+30;
-  var h=gameH*(0.18+Math.random()*0.22);
-  var w=30+Math.random()*25;
-  var y=side==='bottom'?gameH-h:0;
-
-  // Biome-specific obstacle shapes
   var os=bm.obstStyle||'default';
-  var type='mountain';
-  if(os==='branch'||os==='root') type='tree';
-  if(Math.random()<0.15) type='gap';
+  var x=W+30;
 
-  // New biome special obstacles
-  if(os==='lake') type=Math.random()<0.4?'fish':'pole';
-  else if(os==='jungle') type=Math.random()<0.4?'monkey':'vine';
-  else if(os==='iceworld') type='iceslide';
-  else if(os==='restaurant') type=Math.random()<0.3?'umbrella':'tray';
+  // Every ~5th obstacle is a paired top+bottom squeeze -- must fly through gap
+  if(Math.random()<0.25 && currentLevel>=2){
+    // Paired squeeze: one from top, one from bottom, small gap in middle
+    var gapSize=gameH*(0.22-Math.min(0.08,currentLevel*0.002)); // gap shrinks with level
+    var gapY=gameH*(0.2+Math.random()*0.5); // random gap position
+    var topH=gapY;
+    var botH=gameH-gapY-gapSize;
+    var w=28+Math.random()*18;
+    var type=getObstType(os);
+    obstacles.push({x:x,y:0,w:w,h:topH,side:'top',type:type,phase:Math.random()*Math.PI*2,paired:true});
+    obstacles.push({x:x,y:gapY+gapSize,w:w,h:botH,side:'bottom',type:type,phase:Math.random()*Math.PI*2,paired:true});
+    return;
+  }
 
-  if(type==='gap') return; // skip, just an open space
+  // Single obstacle -- much taller than before to force movement
+  var side=Math.random()<0.5?'bottom':'top';
+  // Height: 30-65% of screen (was 18-40%) -- forces player to move
+  var minH=0.30, maxH=0.65;
+  // Higher levels push taller obstacles
+  minH=Math.min(0.50, 0.30+currentLevel*0.005);
+  maxH=Math.min(0.75, 0.65+currentLevel*0.003);
+  var h=gameH*(minH+Math.random()*(maxH-minH));
+  var w=28+Math.random()*22;
+  var y=side==='bottom'?gameH-h:0;
+  var type=getObstType(os);
+  if(type==='gap') return;
   obstacles.push({x:x,y:y,w:w,h:h,side:side,type:type,phase:Math.random()*Math.PI*2});
+}
+
+function getObstType(os){
+  if(os==='branch'||os==='root') return 'tree';
+  if(os==='lake') return Math.random()<0.4?'fish':'pole';
+  if(os==='jungle') return Math.random()<0.4?'monkey':'vine';
+  if(os==='iceworld') return 'iceslide';
+  if(os==='restaurant') return Math.random()<0.3?'umbrella':'tray';
+  if(Math.random()<0.08) return 'gap';
+  return 'mountain';
 }
 
 function spawnMovingObstacle(){
@@ -1912,7 +1926,16 @@ function updateMoths(){
   var ns=[];
   for(var i=0;i<moths.length;i++){
     var m=moths[i];
-    if(!m.collected) m.x-=as;
+    if(!m.collected){
+      // Wind attraction: moths fly toward dragonfly
+      if(windActive){
+        var dx=fly.x-m.x, dy=fly.y-m.y;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>5){m.x+=dx/dist*4; m.y+=dy/dist*3;}
+      } else {
+        m.x-=as;
+      }
+    }
     m.glowPh+=0.04; m.collectAnim+=m.collected?1:0;
     if(!m.collected && hx<m.x+12 && hx+hw>m.x-12 && hy<m.y+10 && hy+hh>m.y-10){
       m.collected=true; m.collectAnim=1;
@@ -1923,6 +1946,75 @@ function updateMoths(){
     if(m.x>-20&&m.collectAnim<8) ns.push(m);
   }
   moths=ns;
+
+  // Wind collectible timer
+  windTimer++;
+  if(windTimer>=windInterval){spawnWind();windTimer=0;windInterval=1400+Math.floor(Math.random()*800);}
+  if(windActive){
+    windActiveTimer--;
+    if(windActiveTimer<=0){windActive=false;showToast('Wind faded...');}
+  }
+  // Update wind items
+  var wns=[];
+  for(var i=0;i<windItems.length;i++){
+    var w=windItems[i];
+    w.x-=as; w.phase+=0.06;
+    // Check collection
+    if(!w.collected && Math.abs(fly.x-w.x)<22 && Math.abs(fly.y-w.y)<22){
+      w.collected=true;
+      windActive=true; windActiveTimer=WIND_DURATION;
+      O(880,'sine',AC?AC.currentTime:0,0.05,0.3);
+      O(1100,'sine',AC?AC.currentTime+0.06:0,0.05,0.3);
+      O(1320,'sine',AC?AC.currentTime+0.12:0,0.1,0.35);
+      showToast('\ud83c\udf2c\ufe0f Wind! Moths attracted for 7 seconds!');
+    }
+    if(w.x>-40&&!w.collected) wns.push(w);
+  }
+  windItems=wns;
+}
+
+function spawnWind(){
+  var gameH=H-140;
+  windItems.push({x:W+30,y:gameH*(0.15+Math.random()*0.7),phase:Math.random()*Math.PI*2,collected:false});
+}
+
+function drawWindItems(){
+  for(var i=0;i<windItems.length;i++){
+    var w=windItems[i];
+    var wy=w.y+Math.sin(w.phase)*6;
+    ctx.save();ctx.translate(w.x,wy);
+    // Swirling wind orb
+    var pulse=0.6+Math.sin(frameN*0.1+w.phase)*0.3;
+    var wg=ctx.createRadialGradient(0,0,4,0,0,22);
+    wg.addColorStop(0,'rgba(180,240,255,'+pulse+')');
+    wg.addColorStop(0.5,'rgba(100,200,255,0.4)');
+    wg.addColorStop(1,'rgba(60,160,255,0)');
+    ctx.fillStyle=wg;ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();
+    // Swirl lines
+    ctx.strokeStyle='rgba(200,240,255,0.8)';ctx.lineWidth=1.5;ctx.lineCap='round';
+    for(var s2=0;s2<3;s2++){
+      var sa=frameN*0.06+s2*(Math.PI*2/3);
+      ctx.beginPath();
+      ctx.arc(0,0,10,sa,sa+Math.PI*0.9);ctx.stroke();
+    }
+    // Icon
+    ctx.fillStyle='rgba(220,245,255,0.95)';ctx.font='bold 16px sans-serif';ctx.textAlign='center';
+    ctx.shadowColor='#80d0ff';ctx.shadowBlur=10;
+    ctx.fillText('\ud83c\udf2c\ufe0f',0,6);ctx.shadowBlur=0;
+    ctx.restore();
+  }
+  // Wind active indicator -- swirl around dragonfly
+  if(windActive){
+    var pct=windActiveTimer/WIND_DURATION;
+    ctx.save();ctx.globalAlpha=0.35*pct;
+    for(var s3=0;s3<4;s3++){
+      var wa=frameN*0.08+s3*(Math.PI/2);
+      var wx2=fly.x+Math.cos(wa)*28,wy2=fly.y+Math.sin(wa)*18;
+      ctx.strokeStyle='rgba(150,220,255,0.8)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(wx2,wy2,5,wa,wa+Math.PI);ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 function drawMoth(m){
@@ -2151,21 +2243,24 @@ function checkCollision(){
 }
 
 // -- PHYSICS / TAP CONTROLS ----------------------------------
-function doUp(){
+// Single tap anywhere = fly upward impulse
+// Dragonfly drops naturally due to gravity
+function doTap(){
   if(state!=='playing') return;
+  if(TAP_COOLDOWN>0) return;
   sfxTap();
-  upTaps=Math.min(MAX_TAPS,upTaps+1); upDecay=0;
-  fly.vy+=BASE_IMP+BONUS*upTaps;
-}
-function doDown(){
-  if(state!=='playing') return;
-  sfxTap();
-  downTaps=Math.min(MAX_TAPS,downTaps+1); downDecay=0;
-  fly.vy-=BASE_IMP+BONUS*downTaps;
+  fly.vy = -4.8;
+  TAP_COOLDOWN=4; // small cooldown prevents double-fire
 }
 
-btnUp.addEventListener('touchstart',function(e){e.preventDefault();doUp();},{passive:false});
-btnDown.addEventListener('touchstart',function(e){e.preventDefault();doDown();},{passive:false});
+var btnTap = document.getElementById('btnTap');
+if(btnTap){
+  btnTap.addEventListener('touchstart',function(e){e.preventDefault();doTap();},{passive:false});
+  btnTap.addEventListener('mousedown',doTap);
+}
+// Also tap anywhere on the canvas
+canvas.addEventListener('touchstart',function(e){e.preventDefault();doTap();},{passive:false});
+canvas.addEventListener('mousedown',doTap);
 
 // -- GAME LOOP -----------------------------------------------
 function loseLife(){
@@ -2212,17 +2307,16 @@ function triggerLevelClear(){
   state='levelclear';
   var sc=Math.floor(score/10);
   if(gameMode==='story' && currentLevel>=50){
-    // Story complete!
     lvTitle.textContent='STORY COMPLETE!';
-    lvSub.textContent='You finished all 50 levels! Score: '+sc;
+    lvSub.textContent='Score: '+sc;
     lvOverlay.classList.add('show');
-    setTimeout(function(){lvOverlay.classList.remove('show');die();},4000);
+    setTimeout(function(){lvOverlay.classList.remove('show');die();},3000);
     return;
   }
   lvTitle.textContent='LEVEL '+currentLevel+' CLEAR!';
-  lvSub.textContent=gameMode==='story'?'Get ready for Level '+(currentLevel+1):'Keep going!';
+  lvSub.textContent='';
   lvOverlay.classList.add('show');
-  setTimeout(function(){lvOverlay.classList.remove('show');startNextLevel();},2800);
+  setTimeout(function(){lvOverlay.classList.remove('show');startNextLevel();},1500);
 }
 
 function die(){
@@ -2247,13 +2341,13 @@ function die(){
 function update(){
   if(state!=='playing') return;
   frameN++;
-  upDecay++;downDecay++;
-  if(upDecay>TAP_WIN){upTaps=Math.max(0,upTaps-1);upDecay=0;}
-  if(downDecay>TAP_WIN){downTaps=Math.max(0,downTaps-1);downDecay=0;}
-  fly.vy+=0.10; fly.vy*=0.90;
-  fly.vy=Math.max(-5.5,Math.min(5.5,fly.vy));
-  fly.y+=fly.vy;
-  fly.trail.push({x:fly.x-20,y:fly.y});
+  if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
+  // Simple gravity -- dragonfly drops, tap makes it fly up
+  fly.vy += 0.14;   // gravity pull down
+  fly.vy *= 0.92;   // air drag
+  fly.vy = Math.max(-5.5, Math.min(6.0, fly.vy));
+  fly.y += fly.vy;
+  fly.trail.push({x:fly.x-20, y:fly.y});
   if(fly.trail.length>12) fly.trail.shift();
 
   obstTimer++;
@@ -2288,8 +2382,6 @@ function update(){
   if(colorP>=1&&!levelTransitioning){levelTransitioning=true;triggerLevelClear();return;}
   var hit=checkCollision();
   if(hit && !infiniteActive) loseLife();
-  upMeter.style.width=(upTaps/MAX_TAPS*100)+'%';
-  downMeter.style.width=(downTaps/MAX_TAPS*100)+'%';
 }
 
 function draw(){
@@ -2298,6 +2390,7 @@ function draw(){
   drawObstacles();
   drawInfiniteLayer();
   for(var i=0;i<moths.length;i++) drawMoth(moths[i]);
+  drawWindItems();
   updateSteam();
   updateLightning();
   if(state!=='idle'){
@@ -2671,6 +2764,7 @@ function checkPin(){
   if(pinEntry===ACCESS_CODE){
     var pw=document.getElementById('screenPassword');
     if(pw) pw.style.display='none';
+    showScreen('screenMain');
   } else {
     var err=document.getElementById('pinError');
     if(err){err.style.opacity='1';setTimeout(function(){err.style.opacity='0';},1200);}
@@ -2682,10 +2776,19 @@ buildPinUI();
 
 try{
   (function(){
+    // Force ALL menu screens hidden first
+    var allScreens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard'];
+    allScreens.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.classList.add('hidden');
+    });
+    // Force password screen visible
+    var pw=document.getElementById('screenPassword');
+    if(pw){pw.style.display='flex';pw.style.zIndex='999';}
+
     var b=document.getElementById('buyInfiniteBtn');
     if(b&&infiniteOwned){b.innerHTML='<span class="bp" style="color:#ffd700;">\u2713 OWNED</span>';b.classList.add('owned');}
     updateCurrencyUI();updateMothUI();
-    showScreen('screenMain');
     initBg(); loop();
   })();
 } catch(err){
@@ -2693,8 +2796,10 @@ try{
 }
 
 if('serviceWorker' in navigator){
-  var swBlob=new Blob(["var CACHE='df-v2';self.addEventListener('install',function(e){e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll([]);}));});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}));});"],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
+  // Unregister old service workers to clear stale cache
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(reg){reg.unregister();});
+  });
 }
 
 
