@@ -2245,16 +2245,18 @@ function checkCollision(){
 // -- PHYSICS / TAP CONTROLS ----------------------------------
 // Single tap anywhere = fly upward impulse
 // Dragonfly drops naturally due to gravity
+var gameStartTime = 0;
+
 function doTap(){
   if(state!=='playing') return;
   if(TAP_COOLDOWN>0) return;
-  if(frameN<3) return; // ignore taps in first 3 frames (same touch as Play button)
-  sfxTap();
+  if(Date.now()-gameStartTime < 300) return; // ignore taps within 300ms of game start
   fly.vy = -4.8;
   TAP_COOLDOWN=6;
+  try{ sfxTap(); }catch(e){}
 }
 
-// Simple approach: listen on document, only act when playing
+// Listen on document for taps during gameplay
 document.addEventListener('touchstart',function(e){
   if(state!=='playing') return;
   var tag = e.target ? e.target.tagName : '';
@@ -2653,6 +2655,7 @@ function startGame(){
   initAudio();sfxMenuSelect();
   if(wingTrailRuns>0) wingTrailRuns--;
   showScreen(null);resetGame();state='playing';
+  gameStartTime=Date.now();
   if(AC) AC.resume().then(function(){playMusic('main');});
 }
 function restartGame(){
@@ -2660,6 +2663,7 @@ function restartGame(){
   document.getElementById('overlayDead').classList.add('hidden');
   if(wingTrailRuns>0) wingTrailRuns--;
   resetGame();state='playing';
+  gameStartTime=Date.now();
   if(AC) AC.resume().then(function(){playMusic('main');});
 }
 
