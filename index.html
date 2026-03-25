@@ -2251,7 +2251,7 @@ function doTap(){
   if(state!=='playing') return;
   if(TAP_COOLDOWN>0) return;
   if(Date.now()-gameStartTime < 300) return; // ignore taps within 300ms of game start
-  fly.vy = Math.max(-4.0, fly.vy - 1.6);
+  fly.vy = Math.max(-5.5, fly.vy - 2.4);
   TAP_COOLDOWN=6;
   try{ sfxTap(); }catch(e){}
 }
@@ -2351,7 +2351,7 @@ function update(){
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
   // Simple gravity -- dragonfly drops, tap makes it fly up
-  fly.vy += 0.20;   // gravity
+  fly.vy += 0.18;   // gravity
   fly.vy *= 0.90;   // drag
   fly.vy = Math.max(-5.5, Math.min(6.0, fly.vy));
   fly.y += fly.vy;
