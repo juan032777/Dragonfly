@@ -193,6 +193,36 @@ canvas { display:block; width:100%; height:100%; }
 .ov-score-val { font-size:30px; font-weight:700; color:#e8d8ff; text-shadow:0 0 15px #b06eff60; }
 .ov-btn { background:linear-gradient(135deg,#2a0060,#5a10a0,#2a0060); border:2px solid #b06eff; color:#e8d8ff; font-family:'Cinzel',serif; font-size:15px; font-weight:700; letter-spacing:4px; padding:13px 38px; cursor:pointer; text-transform:uppercase; box-shadow:0 0 20px #b06eff40; -webkit-tap-highlight-color:transparent; }
 .ov-btn:active { transform:scale(0.97); }
+/* World Map */
+.world-card { width:100%; border-radius:12px; overflow:hidden; margin-bottom:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform 0.1s; border:2px solid transparent; }
+.world-card:active { transform:scale(0.97); }
+.world-card.locked { opacity:0.55; }
+.world-header { display:flex; align-items:center; gap:12px; padding:14px 16px; }
+.world-icon { font-size:36px; filter:drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
+.world-info { flex:1; }
+.world-name { font-family:'Cinzel',serif; font-size:15px; font-weight:700; letter-spacing:2px; }
+.world-sub { font-family:'Crimson Text',serif; font-style:italic; font-size:11px; margin-top:2px; opacity:0.8; }
+.world-req { font-size:9px; letter-spacing:1px; margin-top:3px; opacity:0.7; }
+.world-progress { font-size:11px; font-weight:700; opacity:0.9; }
+.world-levels { display:flex; gap:6px; padding:0 16px 14px; flex-wrap:wrap; }
+.lvl-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; font-family:'Cinzel',serif; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform 0.1s; border:2px solid rgba(255,255,255,0.2); }
+.lvl-dot:active { transform:scale(0.9); }
+.lvl-dot.done { border-color:rgba(255,255,255,0.6); }
+.lvl-dot.current { border-color:white; box-shadow:0 0 10px rgba(255,255,255,0.5); animation:lvlPulse 1.5s ease-in-out infinite; }
+.lvl-dot.locked-lvl { opacity:0.35; cursor:default; }
+@keyframes lvlPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
+/* Level detail overlay */
+#screenLevelDetail { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(2,0,12,0.96); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:32px; z-index:50; }
+#screenLevelDetail.hidden { display:none; }
+.ld-icon { font-size:64px; filter:drop-shadow(0 0 20px rgba(255,255,255,0.5)); }
+.ld-title { font-size:22px; font-weight:700; color:#e8d8ff; letter-spacing:3px; text-align:center; }
+.ld-sub { font-family:'Crimson Text',serif; font-style:italic; font-size:13px; color:#9966cc; text-align:center; }
+.ld-req { font-size:11px; color:#ffaa44; letter-spacing:1px; text-align:center; }
+.ld-play { background:linear-gradient(135deg,#3a00a0,#7020d0,#3a00a0); border:2px solid #b06eff; color:#f0e8ff; font-family:'Cinzel',serif; font-size:14px; font-weight:700; letter-spacing:3px; padding:14px 40px; cursor:pointer; -webkit-tap-highlight-color:transparent; border-radius:4px; width:100%; }
+.ld-play:active { transform:scale(0.97); }
+.ld-play.locked-play { background:rgba(80,30,160,0.2); border-color:#3a1060; color:#6a40aa; pointer-events:none; }
+
 </style>
 
 </head>
@@ -254,8 +284,8 @@ canvas { display:block; width:100%; height:100%; }
       <div class="ov-score-label">YOUR SCORE</div>
       <div class="ov-score-val" id="finalScore">0</div>
     </div>
-    <button class="ov-btn" id="btnFlyAgain">FLY AGAIN</button>
-    <button class="mbtn mbtn-ghost" id="btnBackMenu" style="width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
+    <button class="ov-btn" id="btnFlyAgain" style="font-size:13px;">FLY AGAIN</button>
+    <button class="mbtn mbtn-ghost" id="btnBackMenu" style="display:none;" style="width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
   </div>
 
   <!-- -- PASSWORD GATE -- -->
@@ -308,7 +338,7 @@ canvas { display:block; width:100%; height:100%; }
       <span class="best-val" id="menuBest">0</span>
     </div>
     <div class="menu-nav">
-      <button class="mbtn mbtn-primary" id="btnPlayStory">&#9654; &nbsp;STORY MODE</button>
+      <button class="mbtn mbtn-primary" id="btnWorldMap">&#127757; &nbsp;WORLD MAP</button>
         <button class="mbtn mbtn-primary" id="btnPlayInfinite" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">&#9654; &nbsp;INFINITE MODE</button>
       <button class="mbtn mbtn-secondary" id="btnShop" style="display:flex;align-items:center;justify-content:center;gap:10px;">&#127811; &nbsp;SHOP</button>
       <button class="mbtn mbtn-secondary" id="btnLeaderboard">&#127942; &nbsp;LEADERBOARD</button>
@@ -500,6 +530,34 @@ canvas { display:block; width:100%; height:100%; }
       <div style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:11px;text-align:center;margin-bottom:12px;">Infinite Mode -- Top 10 Scores</div>
       <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
+  </div>
+
+```
+<!-- World Map Screen -->
+```
+
+  <div class="menu-screen hidden" id="screenWorldMap">
+    <div class="topband"></div>
+    <div class="sub-header">
+      <div class="back-btn" id="worldMapBack">&#8592;</div>
+      <div class="sub-title">WORLDS</div>
+    </div>
+    <div id="worldMapBody" style="width:100%;padding:0 16px 20px;overflow-y:auto;"></div>
+  </div>
+
+  <!-- Level Detail Screen -->
+
+  <div id="screenLevelDetail" class="hidden">
+    <div class="ld-icon" id="ldIcon">🌿</div>
+    <div class="ld-title" id="ldTitle">LEVEL NAME</div>
+    <div class="ld-sub" id="ldSub">Biome description</div>
+    <div class="ld-req" id="ldReq"></div>
+    <div style="width:100%;background:rgba(80,30,160,0.18);border:1px solid #3a1060;border-radius:8px;padding:12px;text-align:center;">
+      <div style="color:#b06eff;font-size:10px;letter-spacing:2px;">YOUR BEST</div>
+      <div id="ldBest" style="color:#e8d8ff;font-size:22px;font-weight:700;font-family:Cinzel,serif;">--</div>
+    </div>
+    <button class="ld-play" id="ldPlayBtn">&#9654; PLAY</button>
+    <button class="mbtn mbtn-ghost" id="ldBackBtn" style="width:100%;padding:10px;">&#8592; BACK</button>
   </div>
 
   <div id="toast"></div>
@@ -880,6 +938,63 @@ var BIOMES=[
   treeCol:['#301860','#402080','#201040'],
   hasMoving:true,hasFrogs:false,hasForest:false,
   bgStyle:'restaurant',obstStyle:'restaurant',groundStyle:'tiles',fogCol:'180,100,60'},
+
+ // 21 - Moon
+ {name:'The Moon',
+  skyTop:'#000005',skyMid:'#000008',skyBot:'#000010',
+  moonCol:'#e8e8e8',moonShadow:'#000005',hasSun:false,
+  starCol:'255,255,255',auroraCol:'200,200,255',cloudCol:'80,80,100',
+  mtnFar:'#1a1a1a',mtnNear0:'#2a2a2a',mtnNear1:'#181818',
+  iceCap:'220,220,220',groundTop:'#c0c0b8',groundBot:'#808078',
+  glowR:200,glowG:200,glowB:220,ruinCol:'#303030',ruinWin:'200,200,255',
+  treeCol:['#202020','#303030','#181818'],
+  hasMoving:true,hasFrogs:false,hasForest:false,
+  bgStyle:'moon',obstStyle:'crater',groundStyle:'moondust',fogCol:'180,180,200'},
+ // 22 - Deep Space
+ {name:'Deep Space',
+  skyTop:'#000000',skyMid:'#000005',skyBot:'#000010',
+  moonCol:'#ffffff',moonShadow:'#000000',hasSun:false,
+  starCol:'255,255,255',auroraCol:'100,100,255',cloudCol:'30,30,80',
+  mtnFar:'#050510',mtnNear0:'#080820',mtnNear1:'#050510',
+  iceCap:'200,200,255',groundTop:'#030315',groundBot:'#020208',
+  glowR:100,glowG:100,glowB:255,ruinCol:'#0a0a2a',ruinWin:'150,150,255',
+  treeCol:['#050510','#080820','#030310'],
+  hasMoving:true,hasFrogs:false,hasForest:false,
+  bgStyle:'space',obstStyle:'asteroid',groundStyle:'void',fogCol:'60,60,180'},
+ // 23 - Mars
+ {name:'Mars',
+  skyTop:'#200800',skyMid:'#4a1500',skyBot:'#8a3010',
+  moonCol:'#ffaa66',moonShadow:'#200800',hasSun:true,sunCol:'#ffcc88',sunGlowCol:'255,180,80',
+  starCol:'255,180,120',auroraCol:'200,80,20',cloudCol:'180,80,40',
+  mtnFar:'#5a2010',mtnNear0:'#8a3818',mtnNear1:'#6a2810',
+  iceCap:'255,180,120',groundTop:'#c06030',groundBot:'#8a3818',
+  glowR:220,glowG:80,glowB:20,ruinCol:'#6a2810',ruinWin:'255,150,60',
+  treeCol:['#4a1800','#602008','#380e00'],
+  hasMoving:true,hasFrogs:false,hasForest:false,
+  bgStyle:'mars',obstStyle:'marsrock',groundStyle:'redrock',fogCol:'200,80,30'},
+ // 24 - Venus
+ {name:'Venus',
+  skyTop:'#201000',skyMid:'#504000',skyBot:'#806010',
+  moonCol:'#ffee80',moonShadow:'#201000',hasSun:true,sunCol:'#ffff80',sunGlowCol:'255,255,100',
+  starCol:'255,240,100',auroraCol:'255,200,40',cloudCol:'200,180,60',
+  mtnFar:'#504010',mtnNear0:'#706020',mtnNear1:'#504010',
+  iceCap:'255,240,120',groundTop:'#a08030',groundBot:'#706020',
+  glowR:255,glowG:200,glowB:40,ruinCol:'#806030',ruinWin:'255,230,80',
+  treeCol:['#503010','#604020','#402008'],
+  hasMoving:true,hasFrogs:false,hasForest:false,
+  bgStyle:'venus',obstStyle:'venuslava',groundStyle:'venusrock',fogCol:'220,180,40'},
+ // 25 - Saturn (rainbow)
+ {name:'Saturn',
+  skyTop:'#000010',skyMid:'#080028',skyBot:'#100840',
+  moonCol:'#ffffff',moonShadow:'#000010',hasSun:false,
+  starCol:'255,255,255',auroraCol:'180,100,255',cloudCol:'140,80,200',
+  mtnFar:'#180838',mtnNear0:'#281058',mtnNear1:'#180838',
+  iceCap:'255,200,255',groundTop:'#281058',groundBot:'#180838',
+  glowR:200,glowG:100,glowB:255,ruinCol:'#301068',ruinWin:'220,150,255',
+  treeCol:['#180838','#281058','#100828'],
+  hasMoving:true,hasFrogs:false,hasForest:false,
+  bgStyle:'saturn',obstStyle:'ring',groundStyle:'ringtile',fogCol:'160,80,255'},
+
  // 20 Wrap back
  {name:'Ruined Kingdom II',
   skyTop:'#04001a',skyMid:'#0d0530',skyBot:'#200848',
@@ -896,11 +1011,16 @@ var BIOMES=[
 // Story mode: 50 levels mapped to biomes with difficulty scaling
 // Levels 1-5: biome 1, 6-10: biome 2, etc., cycling with harder params
 function getBiome(level){
-  var idx=(level-1)%BIOMES.length;
-  return BIOMES[idx];
+  // World map levels set currentLevel = biomeIdx+1 directly
+  var idx=(level-1);
+  if(idx<0) idx=0;
+  if(idx>=BIOMES.length) idx=idx%BIOMES.length;
+  return BIOMES[idx]||BIOMES[0];
 }
 function getNextBiome(level){
-  return BIOMES[level%BIOMES.length];
+  var idx=level;
+  if(idx>=BIOMES.length) idx=idx%BIOMES.length;
+  return BIOMES[idx]||BIOMES[0];
 }
 
 // Difficulty scales per story level
@@ -1054,7 +1174,7 @@ function showMothPop(x,y,val,golden){
 
 // -- SCREEN NAV ----------------------------------------------
 function showScreen(id){
-  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard'];
+  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap'];
   for(var i=0;i<screens.length;i++){
     var el=document.getElementById(screens[i]);
     if(el) el.classList.toggle('hidden',screens[i]!==id);
@@ -1332,6 +1452,15 @@ function drawAtmosphere(style,icC,gameH){
     ctx.save();ctx.globalAlpha=0.06;
     for(var li=0;li<5;li++){var lx=(li*W/4+frameN*0.1)%W;var lg=ctx.createLinearGradient(lx,0,lx+20,gameH);lg.addColorStop(0,'rgba(255,255,100,0.6)');lg.addColorStop(1,'rgba(255,255,100,0)');ctx.fillStyle=lg;ctx.fillRect(lx,0,15,gameH);}
     ctx.restore();
+  } else if(style==='saturn'){
+    // Rainbow rings sweeping across sky
+    for(var ri=0;ri<5;ri++){
+      var rh=(frameN*0.3+ri*72)%360;
+      ctx.save();ctx.globalAlpha=0.12+Math.sin(frameN*0.02+ri)*0.05;
+      ctx.strokeStyle='hsl('+rh+',100%,70%)';ctx.lineWidth=8+ri*4;
+      ctx.beginPath();ctx.ellipse(W/2,gameH*0.6,W*0.9+ri*20,W*0.15+ri*8,-0.1,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
   } else if(style==='restaurant'){
     // Fairy lights effect
     ctx.save();ctx.globalAlpha=0.7;
@@ -1673,6 +1802,24 @@ function drawObstacles(){
         var bw=w*0.7,bx2=x+(w-bw)/2;
         if(side==='bottom'){ctx.fillRect(bx2,y,bw,h);ctx.fillStyle=c1;ctx.fillRect(bx2-3,y,bw+6,h*0.08);}
         else{ctx.fillRect(bx2,0,bw,h);ctx.fillStyle=c1;ctx.fillRect(bx2-3,h-h*0.08,bw+6,h*0.08);}
+  } else if(style==='asteroid'||style==='crater'||style==='marsrock'||style==='venuslava'||style==='ring'){
+    // Space obstacles -- floating rocks / asteroids / rings
+    var bw=w*0.7,bx3=x+(w-bw)/2;
+    if(style==='ring'){
+      // Rainbow ring obstacle
+      var rh2=(frameN*0.5+x*0.1)%360;
+      ctx.strokeStyle='hsl('+rh2+',100%,70%)';ctx.lineWidth=6;
+      ctx.beginPath();ctx.ellipse(bx3+bw/2,side==='bottom'?y+h*0.5:h*0.5,bw*0.5,h*0.35,0,0,Math.PI*2);ctx.stroke();
+    } else {
+      // Rocky asteroid / lava rock
+      var rcol=style==='marsrock'?'#8a3010':style==='venuslava'?'#806020':style==='crater'?'#505050':'#404040';
+      ctx.fillStyle=rcol;
+      if(side==='bottom'){ctx.beginPath();ctx.arc(bx3+bw/2,y+h*0.5,bw*0.5,0,Math.PI*2);ctx.fill();}
+      else{ctx.beginPath();ctx.arc(bx3+bw/2,h*0.5,bw*0.5,0,Math.PI*2);ctx.fill();}
+      // Crater marks
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.beginPath();ctx.arc(bx3+bw*0.3,side==='bottom'?y+h*0.4:h*0.4,bw*0.12,0,Math.PI*2);ctx.fill();
+    }
       } else {
         // Mountain shape
         if(side==='bottom'){ctx.beginPath();ctx.moveTo(x,gameH);ctx.lineTo(x+w*0.4,y+h*0.3);ctx.lineTo(x+w*0.5,y);ctx.lineTo(x+w*0.6,y+h*0.25);ctx.lineTo(x+w,gameH);ctx.closePath();ctx.fill();}
@@ -2311,6 +2458,12 @@ function checkCollisionType(){
 }
 
 function triggerLevelClear(){
+  // Save level progress if coming from world map
+  if(currentWorldLevel){
+    var lid=currentWorldLevel.level.id;
+    var sc=Math.floor(score/10);
+    if(levelProgress[lid]===undefined||sc>levelProgress[lid]) levelProgress[lid]=sc;
+  }
   sfxLevelClear();
   state='levelclear';
   var sc=Math.floor(score/10);
@@ -2670,8 +2823,11 @@ function restartGame(){
 var _btnPlay = document.getElementById('btnPlay') || document.getElementById('btnPlayStory');
 if(_btnPlay) _btnPlay.addEventListener('touchstart',function(e){e.preventDefault();gameMode='story';startGame();},{passive:false});
 
-var btnPlayStory=document.getElementById('btnPlayStory');
-if(btnPlayStory) btnPlayStory.addEventListener('click',function(){gameMode='story';startGame();});
+var btnWorldMap=document.getElementById('btnWorldMap');
+if(btnWorldMap) btnWorldMap.addEventListener('click',function(){sfxMenuTap();buildWorldMap();showScreen('screenWorldMap');});
+// Keep old story button wired for Story screen back button
+var btnPlayStory2x=document.getElementById('btnPlayStory2');
+if(btnPlayStory2x) btnPlayStory2x.addEventListener('click',function(){gameMode='story';startGame();});
 var btnPlayInfinite=document.getElementById('btnPlayInfinite');
 if(btnPlayInfinite) btnPlayInfinite.addEventListener('click',function(){gameMode='infinite';levelDuration=999999;startGame();});
 
@@ -2708,6 +2864,8 @@ if(bpi){
 }
 var storyBack=document.getElementById('storyBack');
 if(storyBack) storyBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
+var worldMapBack=document.getElementById('worldMapBack');
+if(worldMapBack) worldMapBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
 var btnLeaderboard=document.getElementById('btnLeaderboard');
 if(btnLeaderboard) btnLeaderboard.addEventListener('click',function(){sfxMenuTap();updateLeaderboard();showScreen('screenLeaderboard');});
 var lbBack=document.getElementById('lbBack');
@@ -2733,6 +2891,266 @@ var bps=document.getElementById('btnPlayStory');
 if(bps) bps.addEventListener('click',function(){updateStoryScore();gameMode='story';startGame();});
 var bpi=document.getElementById('btnPlayInfinite');
 if(bpi) bpi.addEventListener('click',function(){gameMode='infinite';levelDuration=999999;startGame();});
+
+// ============================================================
+// WORLD MAP SYSTEM
+// ============================================================
+
+var WORLDS = [
+  {
+    id: 'earth',
+    name: 'EARTH REALM',
+    element: 'Air & Nature',
+    icon: '\ud83c\udf3f',
+    color: '#1a5c1a',
+    border: '#44cc44',
+    glow: '68,204,68',
+    skinReq: null, // no requirement
+    skinReqName: null,
+    unlocked: true,
+    levels: [
+      { id:'e1', name:'Ancient Forest',  icon:'\ud83c\udf32', biomeIdx:3,  desc:'Gnarled roots and moonlit trees',   duration:80  },
+      { id:'e2', name:'Jungle Canopy',   icon:'\ud83e\udd8a', biomeIdx:16, desc:'Monkeys and vines in the treetops', duration:83  },
+      { id:'e3', name:'Frog Swamp',      icon:'\ud83d\udc38', biomeIdx:7,  desc:'Leaping frogs in murky waters',     duration:86  },
+      { id:'e4', name:'Tropical Beach',  icon:'\ud83c\udfd6', biomeIdx:14, desc:'Waves and palm trees in the sun',   duration:89  },
+      { id:'e5', name:'Mountain Lake',   icon:'\ud83d\udca7', biomeIdx:15, desc:'Jumping fish and fishing poles',    duration:92  }
+    ]
+  },
+  {
+    id: 'fire',
+    name: 'FIRE REALM',
+    element: 'Fire & Lava',
+    icon: '\ud83d\udd25',
+    color: '#5c1a00',
+    border: '#ff6600',
+    glow: '255,102,0',
+    skinReq: ['ember','volcanic','crimson'],
+    skinReqName: 'Ember, Volcanic, or Crimson skin',
+    unlocked: false,
+    levels: [
+      { id:'f1', name:'Volcanic Hellscape', icon:'\ud83c\udf0b', biomeIdx:1,  desc:'Lava flows and molten boulders',     duration:80 },
+      { id:'f2', name:'Desert Sands',       icon:'\ud83c\udfdc', biomeIdx:12, desc:'Scorching dunes under a blazing sun', duration:83 },
+      { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:11, desc:'Crumbling buildings engulfed in fire', duration:86 },
+      { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:13, desc:'Deep underground rivers of magma',    duration:89 },
+      { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:1,  desc:'The eye of an eternal firestorm',     duration:92 }
+    ]
+  },
+  {
+    id: 'water',
+    name: 'WATER REALM',
+    element: 'Water & Ice',
+    icon: '\ud83d\udc99',
+    color: '#001a4a',
+    border: '#0088ff',
+    glow: '0,136,255',
+    skinReq: ['ocean','sapphire','cobalt'],
+    skinReqName: 'Ocean Deep, Sapphire, or Cobalt skin',
+    unlocked: false,
+    levels: [
+      { id:'w1', name:'Crystal Void',    icon:'\ud83d\udc8e', biomeIdx:4,  desc:'Floating crystals in deep space',   duration:80 },
+      { id:'w2', name:'Ice Cavern',      icon:'\ud83e\udde0', biomeIdx:13, desc:'Ancient ice deep underground',      duration:83 },
+      { id:'w3', name:'Mountain Lake',   icon:'\ud83d\udca7', biomeIdx:15, desc:'Leaping fish in crystal waters',    duration:86 },
+      { id:'w4', name:'Storm Front',     icon:'\u26c8\ufe0f', biomeIdx:8,  desc:'Thunder and lightning rage above',  duration:89 },
+      { id:'w5', name:'Celestial Ruins', icon:'\ud83c\udf0c', biomeIdx:9,  desc:'Ancient temple beneath the stars',  duration:92 }
+    ]
+  },
+  {
+    id: 'ice',
+    name: 'ICE REALM',
+    element: 'Ice & Wind',
+    icon: '\u2744\ufe0f',
+    color: '#001828',
+    border: '#80d8ff',
+    glow: '128,216,255',
+    skinReq: ['arctic'],
+    skinReqName: 'Arctic skin required',
+    unlocked: false,
+    levels: [
+      { id:'i1', name:'Frozen Tundra',  icon:'\ud83e\udd86', biomeIdx:2,  desc:'Endless frozen plains',              duration:80 },
+      { id:'i2', name:'Arctic Tundra',  icon:'\ud83d\udc27', biomeIdx:17, desc:'Penguins and ice slides',            duration:83 },
+      { id:'i3', name:'Ice Cavern',     icon:'\ud83e\udde0', biomeIdx:13, desc:'Glittering stalactites of ice',      duration:86 },
+      { id:'i4', name:'Crystal Void',   icon:'\ud83d\udc8e', biomeIdx:4,  desc:'Crystalline darkness and silence',  duration:89 },
+      { id:'i5', name:'The Blizzard',   icon:'\ud83c\udf28', biomeIdx:2,  desc:'A storm with no end in sight',      duration:92 }
+    ]
+  },
+  {
+    id: 'galaxy',
+    name: 'GALAXY REALM',
+    element: 'Legendary',
+    icon: '\ud83c\udf0c',
+    color: '#080018',
+    border: '#ffd700',
+    glow: '255,215,0',
+    skinReq: ['legendary','galaxy'],
+    skinReqName: 'Legendary or Galaxy skin required',
+    unlocked: false,
+    levels: [
+      { id:'g1', name:'The Moon',  icon:'\ud83c\udf14', biomeIdx:19, desc:'Craters and silence above the Earth',     duration:80 },
+      { id:'g2', name:'Deep Space',icon:'\u2b50',       biomeIdx:20,  desc:'Infinite darkness and starlight',         duration:86 },
+      { id:'g3', name:'Mars',      icon:'\ud83d\udd34', biomeIdx:21,  desc:'Red deserts and ancient dust storms',     duration:92 },
+      { id:'g4', name:'Venus',     icon:'\u2600\ufe0f', biomeIdx:22, desc:'Toxic clouds and volcanic lightning',     duration:98 },
+      { id:'g5', name:'Saturn',    icon:'\ud83d\udcab', biomeIdx:23,  desc:'Rainbow rings in the cosmic void',       duration:104 }
+    ]
+  }
+];
+
+// Track completed levels: { 'e1': bestScore, 'f2': bestScore, ... }
+var levelProgress = {};
+// Track which world's skin req the player has met
+function worldUnlocked(world){
+  if(world.id==='earth') return true;
+  // Galaxy requires legendary or galaxy skin owned
+  if(world.id==='galaxy') return ownedSkins.indexOf('legendary')>=0||ownedSkins.indexOf('galaxy')>=0;
+  // Other worlds: unlock if required skin owned
+  if(!world.skinReq) return true;
+  for(var i=0;i<world.skinReq.length;i++) if(ownedSkins.indexOf(world.skinReq[i])>=0) return true;
+  return false;
+}
+function levelUnlocked(worldId, levelIdx){
+  if(!worldUnlocked(getWorldById(worldId))) return false;
+  if(levelIdx===0) return true;
+  // Previous level must be completed
+  var world=getWorldById(worldId);
+  var prevId=world.levels[levelIdx-1].id;
+  return levelProgress[prevId]!==undefined;
+}
+function getWorldById(id){ for(var i=0;i<WORLDS.length;i++) if(WORLDS[i].id===id) return WORLDS[i]; return WORLDS[0]; }
+
+// Current level being played from world map
+var currentWorldLevel = null; // {worldId, levelIdx, level}
+
+function buildWorldMap(){
+  var body=document.getElementById('worldMapBody');
+  if(!body) return;
+  body.innerHTML='';
+  for(var wi=0;wi<WORLDS.length;wi++){
+    (function(world,wi2){
+      var unlocked=worldUnlocked(world);
+      var card=document.createElement('div');
+      card.className='world-card'+(unlocked?'':' locked');
+      card.style.background='linear-gradient(135deg,'+world.color+',rgba(0,0,0,0.8))';
+      card.style.border='2px solid '+(unlocked?world.border:'#2a1060');
+      card.style.boxShadow=unlocked?'0 0 16px rgba('+world.glow+',0.3)':'none';
+
+      // Count completed levels
+      var done=0;
+      for(var li=0;li<world.levels.length;li++) if(levelProgress[world.levels[li].id]!==undefined) done++;
+
+      var reqTxt='';
+      if(!unlocked && world.skinReqName) reqTxt='<div class="world-req" style="color:#ffaa44;">\ud83d\udd12 Requires: '+world.skinReqName+'</div>';
+      else if(world.skinReqName) reqTxt='<div class="world-req" style="color:rgba(255,255,255,0.6);">\u2713 '+world.skinReqName+'</div>';
+
+      card.innerHTML='<div class="world-header">'
+        +'<div class="world-icon">'+(unlocked?world.icon:'\ud83d\udd12')+'</div>'
+        +'<div class="world-info">'
+        +'<div class="world-name" style="color:'+world.border+';">'+world.name+'</div>'
+        +'<div class="world-sub" style="color:rgba(255,255,255,0.7);">'+world.element+'</div>'
+        +reqTxt
+        +'</div>'
+        +'<div class="world-progress" style="color:'+world.border+';">'+done+'/'+world.levels.length+'</div>'
+        +'</div>'
+        +'<div class="world-levels" id="wlevels_'+world.id+'"></div>';
+
+      body.appendChild(card);
+
+      // Build level dots
+      var dotsEl=document.getElementById('wlevels_'+world.id);
+      if(!dotsEl) return;
+      for(var li=0;li<world.levels.length;li++){
+        (function(level,li2){
+          var isUnlocked=levelUnlocked(world.id,li2);
+          var isDone=levelProgress[level.id]!==undefined;
+          var isCurrent=isUnlocked&&!isDone;
+          var dot=document.createElement('div');
+          dot.className='lvl-dot'+(isDone?' done':isCurrent?' current':' locked-lvl');
+          dot.style.background=isDone?world.border:isCurrent?'rgba('+world.glow+',0.3)':'rgba(0,0,0,0.3)';
+          dot.style.color=isDone?'#000':'rgba(255,255,255,0.9)';
+          dot.textContent=li2+1;
+          dot.title=level.name;
+          if(isUnlocked){
+            dot.addEventListener('click',function(){
+              sfxMenuTap();
+              showLevelDetail(world,level,li2);
+            });
+          }
+          dotsEl.appendChild(dot);
+        })(world.levels[li],li);
+      }
+    })(WORLDS[wi],wi);
+  }
+}
+
+var _ldWorld=null, _ldLevel=null;
+function showLevelDetail(world,level,li){
+  _ldWorld=world; _ldLevel=level;
+  var unlocked=worldUnlocked(world);
+  var isLvlUnlocked=levelUnlocked(world.id,li);
+  document.getElementById('ldIcon').textContent=level.icon;
+  document.getElementById('ldTitle').textContent=level.name;
+  document.getElementById('ldSub').textContent=level.desc;
+  var req=document.getElementById('ldReq');
+  if(world.skinReqName) req.textContent=(unlocked?'\u2713 Skin OK':'\ud83d\udd12 '+world.skinReqName);
+  else req.textContent='';
+  var best=levelProgress[level.id];
+  document.getElementById('ldBest').textContent=best!==undefined?best:'--';
+  var btn=document.getElementById('ldPlayBtn');
+  if(isLvlUnlocked){btn.className='ld-play';btn.textContent='\u25b6 PLAY';}
+  else{btn.className='ld-play locked-play';btn.textContent='\ud83d\udd12 LOCKED';}
+  document.getElementById('screenLevelDetail').classList.remove('hidden');
+}
+
+document.getElementById('ldPlayBtn').addEventListener('click',function(){
+  if(!_ldLevel||!_ldWorld) return;
+  if(!worldUnlocked(_ldWorld)){showToast('Equip the required skin first!');return;}
+  sfxMenuSelect();
+  document.getElementById('screenLevelDetail').classList.add('hidden');
+  // Set up game for this specific level
+  gameMode='story';
+  currentWorldLevel={worldId:_ldWorld.id,levelIdx:WORLDS.indexOf(_ldWorld),level:_ldLevel};
+  var _targetBiome=_ldLevel.biomeIdx;
+  showScreen(null);
+  resetGame();
+  currentLevel=_targetBiome+1; // biomeIdx+1 so getBiome(level) returns idx correctly
+  levelDuration=_ldLevel.duration;
+  speed=getLevelSpeed(1);
+  obstInterval=getLevelObstInterval(1);
+  state='playing';
+  gameStartTime=Date.now();
+  if(AC) AC.resume().then(function(){playMusic('main');});
+});
+
+document.getElementById('ldBackBtn').addEventListener('click',function(){
+  sfxMenuBack();
+  document.getElementById('screenLevelDetail').classList.add('hidden');
+});
+
+// Override die() to save level progress when coming from world map
+var _origDie=null;
+function dieWithProgress(){
+  var sc=Math.floor(score/10);
+  if(currentWorldLevel){
+    var lid=currentWorldLevel.level.id;
+    // Save best score for completed levels (only if survived the level)
+    if(state==='levelclear'||colorP>=0.99){
+      if(levelProgress[lid]===undefined||sc>levelProgress[lid]) levelProgress[lid]=sc;
+    }
+  }
+  sfxGameOver(); stopMusic();
+  state='dead';
+  if(sc>highScoreStory) highScoreStory=sc;
+  if(gameMode==='infinite'){
+    if(sc>highScoreInfinite) highScoreInfinite=sc;
+    var name=window._playerName||'Player';
+    leaderboard.push({name:name,score:sc,level:currentLevel});
+    leaderboard.sort(function(a,b){return b.score-a.score;});
+    leaderboard=leaderboard.slice(0,10);
+    updateLeaderboard();
+  }
+  if(highScEl) highScEl.textContent='BEST: '+Math.max(highScoreStory,highScoreInfinite);
+  var finEl=document.getElementById('finalScore');if(finEl) finEl.textContent=sc;
+  document.getElementById('overlayDead').classList.remove('hidden');
+}
+
 
 // -- PASSWORD GATE -------------------------------------------
 var ACCESS_CODE='1234';
