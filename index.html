@@ -50,7 +50,7 @@ canvas { display:block; width:100%; height:100%; }
 #mothHudBar { height:100%; border-radius:2px; background:linear-gradient(90deg,#d070ff,#fff); transition:width 0.2s; }
 
 /* Controls */
-#controls { position:absolute; bottom:0; left:0; right:0; display:flex; height:140px; pointer-events:none; }
+#controls { position:absolute; bottom:0; left:0; right:0; display:none; height:0; pointer-events:none; }
 .btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:linear-gradient(180deg,rgba(10,4,25,0.88),rgba(22,8,45,0.94)); border-top:2px solid #6a20aa; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; transition:background 0.08s; }
 .btn:active, .btn.pressed { background:linear-gradient(180deg,rgba(50,15,90,0.96),rgba(70,20,120,0.99)); }
 .btn-left { border-right:1px solid #6a20aa; }
@@ -250,20 +250,15 @@ canvas { display:block; width:100%; height:100%; }
       <span id="mothHudCount">0</span>
       <div id="mothHudBarWrap"><div id="mothHudBar" style="width:0%"></div></div>
     </div>
-    <!-- Infinite Dragonfly active HUD -->
-    <div id="infiniteHud">
-      <span style="font-size:15px">⚡</span>
-      <span id="infLabel">INFINITE</span>
-      <div id="infTimerBar"><div id="infTimerFill" style="width:100%"></div></div>
-    </div>
+<!-- infiniteHud removed -->
     <!-- Screen flash on activation -->
     <div id="screenFlash"></div>
     <div id="controls">
-      <div class="btn" id="btnTap" style="width:100%;border-left:none;flex-direction:column;gap:4px;">
-        <div class="btn-icon">🪲</div>
-        <div class="btn-label">TAP TO FLY</div>
-      </div>
-    </div>
+
+```
+</div>
+```
+
   </div>
 
   <!-- Level Clear -->
@@ -1061,8 +1056,8 @@ function blendRGB(a,b,t){
   return Math.round(+ap[0]+(+bp[0]-+ap[0])*t)+','+Math.round(+ap[1]+(+bp[1]-+ap[1])*t)+','+Math.round(+ap[2]+(+bp[2]-+ap[2])*t);
 }
 function transBlend(){
-  if(colorP<0.65) return 0;
-  return Math.min(1,(colorP-0.65)/0.35);
+  if(colorP<0.85) return 0;
+  return Math.min(1,(colorP-0.85)/0.15);
 }
 
 // -- BACKGROUND INIT -----------------------------------------
@@ -1071,10 +1066,8 @@ function initBg(){
   for(var i=0;i<60;i++) bgStars.push({x:Math.random()*W,y:Math.random()*H*0.6,r:Math.random()*1.5+0.3,tw:Math.random()*Math.PI*2});
   bgClouds=[];
   for(var i=0;i<6;i++) bgClouds.push({x:Math.random()*W*1.5,y:Math.random()*H*0.35+10,w:Math.random()*120+60,h:Math.random()*30+15,spd:0.25+Math.random()*0.2});
-  bgMtnFar=[]; var mx=0;
-  while(mx<W*2){var pw=60+Math.random()*90,ph=H*0.18+Math.random()*H*0.15;bgMtnFar.push({x:mx,w:pw,h:ph});mx+=pw*0.7;}
-  bgMtnNear=[]; mx=0;
-  while(mx<W*2){var pw=80+Math.random()*120,ph=H*0.25+Math.random()*H*0.2;bgMtnNear.push({x:mx,w:pw,h:ph});mx+=pw*0.65;}
+  bgMtnFar=[]; for(var mf=0;mf<8;mf++){bgMtnFar.push({x:mf*(W/4),w:60+Math.random()*80,h:H*0.18+Math.random()*H*0.12});}
+  bgMtnNear=[]; for(var mn=0;mn<6;mn++){bgMtnNear.push({x:mn*(W/3),w:80+Math.random()*100,h:H*0.22+Math.random()*H*0.15});}
   bgRuins=[];
   for(var i=0;i<18;i++) bgRuins.push({x:i*(W/6)+Math.random()*60,w:18+Math.random()*22,h:30+Math.random()*55,broken:Math.random()>0.4});
 }
@@ -1092,7 +1085,7 @@ function resetGame(){
     levelDuration=30; speed=2.2; obstInterval=160;
   }
   maxSpeed=5.5;
-  fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
+  fly.x=W*0.22; fly.y=(H-20)*0.42; fly.vy=0; fly.trail=[];
   obstacles=[]; obstTimer=0;
   frogs=[]; branches=[]; movingObst=[];
   moths=[]; mothTimer=0; mothInterval=480;
@@ -1190,7 +1183,7 @@ function drawSky(){
   var sTop=blendHex(bm.skyTop,nbm.skyTop,tb);
   var sMid=blendHex(bm.skyMid,nbm.skyMid,tb);
   var sBot=blendHex(bm.skyBot,nbm.skyBot,tb);
-  var gameH=H-140;
+  var gameH=H-20;
   var grad=ctx.createLinearGradient(0,0,0,gameH);
   grad.addColorStop(0,'rgb('+sTop+')');
   grad.addColorStop(0.45,'rgb('+sMid+')');
@@ -1264,7 +1257,7 @@ function drawBg(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   var nbm=getNextBiome(currentLevel)||BIOMES[0];
   var tb=transBlend();
-  var gameH=H-140;
+  var gameH=H-20;
   if(state==='playing'){farOff+=speed*0.18;nearOff+=speed*0.38;ruinOff+=speed*0.85;}
 
   var mfC=blendHexFull(bm.mtnFar,nbm.mtnFar,tb);
@@ -1293,7 +1286,7 @@ function drawBg(){
   for(var i=0;i<bgRuins.length;i++){
     var r=bgRuins[i],rx=(r.x-ruinOff%(W*3))%(W*3);
     if(rx<-60||rx>W+60) continue;
-    drawLandmark(rx,r,gameH,style,rC,rwC,icC);
+    // drawLandmark disabled for performance
   }
 
   // Atmosphere
@@ -1308,91 +1301,24 @@ function drawBg(){
 
 function drawFarLayer(style,mfC,mn0,mn1,icC,gameH){
   ctx.fillStyle=mfC;
-  for(var i=0;i<bgMtnFar.length;i++){
-    var m=bgMtnFar[i],rx=(m.x-farOff*0.5%(W*2))%(W*2);
-    if(style==='volcano'||style==='burningcity'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w/2,gameH-m.h*1.4);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='ice'||style==='icecave'||style==='iceworld'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w*0.3,gameH-m.h*0.7);ctx.lineTo(rx+m.w*0.5,gameH-m.h);ctx.lineTo(rx+m.w*0.7,gameH-m.h*0.6);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='forest'||style==='enchanted'||style==='swamp'||style==='jungle'){
-      var cx=rx+m.w/2,trH=m.h*0.45;
-      ctx.fillRect(cx-m.w*0.05,gameH-trH,m.w*0.1,trH);
-      ctx.beginPath();ctx.arc(cx,gameH-trH,m.w*0.42,Math.PI,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(cx-m.w*0.18,gameH-trH-m.h*0.18,m.w*0.28,Math.PI,Math.PI*2);ctx.fill();
-    } else if(style==='crystal'){
-      for(var ci=0;ci<3;ci++){var cx2=rx+m.w*(0.15+ci*0.32),cw=m.w*0.1,ch=m.h*(0.5+ci*0.22);ctx.beginPath();ctx.moveTo(cx2,gameH);ctx.lineTo(cx2-cw,gameH-ch*0.6);ctx.lineTo(cx2,gameH-ch);ctx.lineTo(cx2+cw,gameH-ch*0.55);ctx.closePath();ctx.fill();}
-    } else if(style==='kingdom'||style==='lake'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.1,gameH-m.h*0.1,rx+m.w*0.3,gameH-m.h,rx+m.w*0.5,gameH-m.h);ctx.bezierCurveTo(rx+m.w*0.7,gameH-m.h,rx+m.w*0.9,gameH-m.h*0.1,rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='city'||style==='restaurant'){
-      var bh=m.h*(0.5+((i*7)%5)*0.12),bw=m.w*0.55;
-      ctx.fillRect(rx,gameH-bh,bw,bh);
-      ctx.fillRect(rx+bw*0.45,gameH-bh-m.h*0.18,m.w*0.05,m.h*0.18);
-    } else if(style==='desert'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.2,gameH-m.h*0.2,rx+m.w*0.4,gameH-m.h,rx+m.w*0.55,gameH-m.h);ctx.bezierCurveTo(rx+m.w*0.7,gameH-m.h,rx+m.w*0.85,gameH-m.h*0.18,rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='beach'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.1,gameH-m.h*0.3,rx+m.w*0.35,gameH-m.h*0.55,rx+m.w*0.5,gameH-m.h*0.5);ctx.bezierCurveTo(rx+m.w*0.65,gameH-m.h*0.55,rx+m.w*0.9,gameH-m.h*0.25,rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='storm'){
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.05,gameH-m.h*0.3,rx+m.w*0.1,gameH-m.h*0.7,rx+m.w*0.25,gameH-m.h*0.8);ctx.bezierCurveTo(rx+m.w*0.35,gameH-m.h*0.95,rx+m.w*0.5,gameH-m.h,rx+m.w*0.55,gameH-m.h*0.9);ctx.bezierCurveTo(rx+m.w*0.65,gameH-m.h*1.05,rx+m.w*0.78,gameH-m.h*0.8,rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else {
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w*0.2,gameH-m.h*0.55);ctx.lineTo(rx+m.w*0.5,gameH-m.h);ctx.lineTo(rx+m.w*0.8,gameH-m.h*0.5);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
-    }
+  var count=bgMtnFar.length;
+  for(var i=0;i<count;i++){
+    var m=bgMtnFar[i];
+    var rx=((m.x-farOff*0.3)%W+W*2)%W;
+    if(rx>W+m.w||rx<-m.w) continue;
+    ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w*0.5,gameH-m.h);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
   }
 }
-
 function drawNearLayer(style,mfC,mn0,mn1,icC,gameH){
-  for(var i=0;i<bgMtnNear.length;i++){
-    var m=bgMtnNear[i],rx=(m.x-nearOff%(W*2))%(W*2);
-    if(style==='volcano'){
-      var mg=ctx.createLinearGradient(rx,gameH-m.h,rx,gameH);mg.addColorStop(0,'#5a1200');mg.addColorStop(1,'#2a0600');ctx.fillStyle=mg;
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w/2,gameH-m.h);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
-    } else if(style==='lake'){
-      // Lake surface -- draw water reflection
-      ctx.fillStyle='rgba(0,120,200,0.35)';
-      ctx.fillRect(0,gameH-m.h*0.4,W,m.h*0.4);
-      // Waves
-      ctx.strokeStyle='rgba(180,230,255,0.3)'; ctx.lineWidth=1.5;
-      for(var wi=0;wi<5;wi++){
-        var wy=gameH-m.h*0.35+wi*8;
-        ctx.beginPath();ctx.moveTo(0,wy);
-        for(var wx=0;wx<W+20;wx+=20) ctx.lineTo(wx,wy+Math.sin((wx+frameN*1.5+wi*30)*0.1)*3);
-        ctx.stroke();
-      }
-      // Distant mountains reflected
-      ctx.save(); ctx.globalAlpha=0.2; ctx.fillStyle=mn0;
-      for(var j=0;j<bgMtnFar.length;j++){var mf=bgMtnFar[j],rfx=(mf.x-farOff*0.5%(W*2))%(W*2);ctx.beginPath();ctx.moveTo(rfx,gameH-m.h*0.4);ctx.lineTo(rfx+mf.w*0.5,gameH-m.h*0.4-mf.h*0.3);ctx.lineTo(rfx+mf.w,gameH-m.h*0.4);ctx.closePath();ctx.fill();}
-      ctx.restore();
-    } else if(style==='iceworld'){
-      // Flat icy ground with snow mounds
-      var mg2=ctx.createLinearGradient(rx,gameH-m.h,rx,gameH);mg2.addColorStop(0,'#c0d8f0');mg2.addColorStop(1,'#90b8d8');ctx.fillStyle=mg2;
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.2,gameH-m.h*0.3,rx+m.w*0.8,gameH-m.h*0.28,rx+m.w,gameH);ctx.closePath();ctx.fill();
-      // Snow sparkle
-      ctx.fillStyle='rgba(220,240,255,0.5)';ctx.beginPath();ctx.arc(rx+m.w*0.4,gameH-m.h*0.2,m.w*0.15,Math.PI,Math.PI*2);ctx.fill();
-    } else if(style==='jungle'){
-      // Lush jungle hills with dense canopy
-      var mg3=ctx.createLinearGradient(rx,gameH-m.h,rx,gameH);mg3.addColorStop(0,'#0a4000');mg3.addColorStop(1,'#062800');ctx.fillStyle=mg3;
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.bezierCurveTo(rx+m.w*0.15,gameH-m.h*0.85,rx+m.w*0.35,gameH-m.h,rx+m.w*0.5,gameH-m.h);ctx.bezierCurveTo(rx+m.w*0.65,gameH-m.h,rx+m.w*0.85,gameH-m.h*0.8,rx+m.w,gameH);ctx.closePath();ctx.fill();
-      // Dense tree canopy on top
-      ctx.fillStyle='#0a5010';ctx.beginPath();ctx.arc(rx+m.w/2,gameH-m.h,m.w*0.55,Math.PI,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#0c6012';ctx.beginPath();ctx.arc(rx+m.w*0.28,gameH-m.h+m.h*0.04,m.w*0.32,Math.PI,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(rx+m.w*0.72,gameH-m.h+m.h*0.05,m.w*0.3,Math.PI,Math.PI*2);ctx.fill();
-    } else if(style==='restaurant'){
-      // City rooftop buildings -- warm lit windows
-      var bh=m.h*(0.6+((i*9)%6)*0.07),bw=m.w*(0.48+((i*5)%4)*0.07);
-      var bg2=ctx.createLinearGradient(rx,gameH-bh,rx+bw,gameH);bg2.addColorStop(0,mn1);bg2.addColorStop(1,mn0);ctx.fillStyle=bg2;
-      ctx.fillRect(rx,gameH-bh,bw,bh);
-      // Warm lit windows
-      for(var wy=0;wy<3;wy++) for(var wx=0;wx<2;wx++){
-        var lit=Math.sin(i*3.7+wx*1.3+wy*0.9)>0;
-        ctx.fillStyle=lit?'rgba(255,200,80,0.6)':'rgba(100,60,20,0.2)';
-        ctx.fillRect(rx+bw*0.12+wx*bw*0.42,gameH-bh*0.8+wy*bh*0.22,bw*0.28,bh*0.14);
-      }
-    } else {
-      var mg4=ctx.createLinearGradient(rx,gameH-m.h,rx+m.w,gameH);mg4.addColorStop(0,mn1);mg4.addColorStop(0.4,mn0);mg4.addColorStop(1,mn1);ctx.fillStyle=mg4;
-      ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w*0.25,gameH-m.h*0.62);ctx.lineTo(rx+m.w*0.5,gameH-m.h);ctx.lineTo(rx+m.w*0.75,gameH-m.h*0.58);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
-    }
+  ctx.fillStyle=mn0;
+  var count=bgMtnNear.length;
+  for(var i=0;i<count;i++){
+    var m=bgMtnNear[i];
+    var rx=((m.x-nearOff*0.6)%W+W*2)%W;
+    if(rx>W+m.w||rx<-m.w) continue;
+    ctx.beginPath();ctx.moveTo(rx,gameH);ctx.lineTo(rx+m.w*0.5,gameH-m.h);ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
   }
 }
-
 function drawGround(bm,nbm,tb,mn1,icC,gameH){
   var gs=tb>0.5?(nbm.groundStyle||'default'):(bm.groundStyle||'default');
   ctx.fillStyle=mn1; ctx.fillRect(0,gameH-32,W,16);
@@ -1435,6 +1361,7 @@ function drawGround(bm,nbm,tb,mn1,icC,gameH){
 }
 
 function drawAtmosphere(style,icC,gameH){
+  if(frameN%3!==0) return;
   if(style==='volcano'||style==='burningcity'){
     ctx.save();ctx.globalAlpha=0.35;
     for(var ai=0;ai<5;ai++){var ax=(ai*W/4+frameN*0.4)%W,ay=H*0.12+Math.sin(frameN*0.018+ai)*H*0.06;var ag=ctx.createRadialGradient(ax,ay,5,ax,ay,40+ai*8);ag.addColorStop(0,'rgba(60,30,10,0.5)');ag.addColorStop(1,'rgba(40,20,5,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.ellipse(ax,ay,50+ai*10,14+ai*4,Math.sin(ai*0.8)*0.2,0,Math.PI*2);ctx.fill();}
@@ -1469,7 +1396,7 @@ function drawAtmosphere(style,icC,gameH){
   }
 }
 
-function drawLandmark(rx,r,gameH,style,rC,rwC,icC){
+function drawLandmark_disabled(rx,r,gameH,style,rC,rwC,icC){
   ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(rx+3,gameH-r.h-18+3,r.w,r.h);
   if(style==='volcano'||style==='burningcity'){
     ctx.fillStyle=style==='burningcity'?rC:'rgb(38,8,4)';ctx.fillRect(rx,gameH-r.h-18,r.w,r.h);
@@ -1676,7 +1603,7 @@ function drawEliteInfiniteOverlay(){
 // -- OBSTACLE SPAWNING AND DRAWING ---------------------------
 function spawnObstacle(){
   var bm=getBiome(currentLevel)||BIOMES[0];
-  var gameH=H-140;
+  var gameH=H-20;
   var os=bm.obstStyle||'default';
   var x=W+30;
 
@@ -1694,13 +1621,11 @@ function spawnObstacle(){
     return;
   }
 
-  // Single obstacle -- much taller than before to force movement
+  // Single obstacle -- scaled to world difficulty not biomeIdx
   var side=Math.random()<0.5?'bottom':'top';
-  // Height: 30-65% of screen (was 18-40%) -- forces player to move
-  var minH=0.30, maxH=0.65;
-  // Higher levels push taller obstacles
-  minH=Math.min(0.50, 0.30+currentLevel*0.005);
-  maxH=Math.min(0.75, 0.65+currentLevel*0.003);
+  var worldDiff=currentWorldLevel?currentWorldLevel.levelIdx:0; // 0-4
+  var minH=0.28+worldDiff*0.04; // 0.28 to 0.44
+  var maxH=0.55+worldDiff*0.04; // 0.55 to 0.71
   var h=gameH*(minH+Math.random()*(maxH-minH));
   var w=28+Math.random()*22;
   var y=side==='bottom'?gameH-h:0;
@@ -1722,7 +1647,7 @@ function getObstType(os){
 function spawnMovingObstacle(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   if(!bm.hasMoving) return;
-  var gameH=H-140;
+  var gameH=H-20;
   var kind;
   var os=bm.obstStyle||'default';
   if(os==='lava') kind='boulder';
@@ -1742,7 +1667,7 @@ function updateMovingObstacles(){
   moveObstTimer++;
   if(moveObstTimer>=moveObstInterval){spawnMovingObstacle();moveObstTimer=0;moveObstInterval=Math.max(120,moveObstInterval-1);}
   var bm=getBiome(currentLevel)||BIOMES[0];
-  var gameH=H-140;
+  var gameH=H-20;
   var as=speed*diffMult*(infiniteActive?1.35:1.0);
   var ns=[];
   for(var i=0;i<movingObst.length;i++){
@@ -1757,81 +1682,105 @@ function updateMovingObstacles(){
   movingObst=ns;
 }
 
+
+function drawSolidObstacle(o,gameH,c0,c1,c2){
+  var x=o.x,w=o.w,h=o.h,side=o.side;
+  ctx.save();
+  // Gradient from bright tip to dark base
+  var grad;
+  if(side==='bottom'){
+    grad=ctx.createLinearGradient(0,o.y,0,o.y+h);
+    grad.addColorStop(0,c2); grad.addColorStop(0.3,c0); grad.addColorStop(1,c1);
+  } else {
+    grad=ctx.createLinearGradient(0,h,0,0);
+    grad.addColorStop(0,c2); grad.addColorStop(0.3,c0); grad.addColorStop(1,c1);
+  }
+  ctx.fillStyle=grad;
+  ctx.strokeStyle=c2;
+  ctx.lineWidth=2;
+  if(side==='bottom'){
+    // Rises from bottom of screen up to o.y
+    ctx.beginPath();
+    ctx.moveTo(x, gameH);
+    ctx.lineTo(x + w*0.35, o.y + h*0.25);
+    ctx.lineTo(x + w*0.5,  o.y);
+    ctx.lineTo(x + w*0.65, o.y + h*0.25);
+    ctx.lineTo(x + w,      gameH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    // Hangs from top of screen down to h
+    ctx.beginPath();
+    ctx.moveTo(x,     0);
+    ctx.lineTo(x + w, 0);
+    ctx.lineTo(x + w*0.65, h - h*0.25);
+    ctx.lineTo(x + w*0.5,  h);
+    ctx.lineTo(x + w*0.35, h - h*0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function getObstacleColors(os){
+  var map={
+    'default':   {main:'#7730cc',dark:'#4a1080',accent:'#e0a0ff'},
+    'root':      {main:'#8B4513',dark:'#4a200a',accent:'#ffaa44'},
+    'branch':    {main:'#228B22',dark:'#0a3a0a',accent:'#88ff44'},
+    'lava':      {main:'#cc2200',dark:'#660800',accent:'#ff8844'},
+    'ice':       {main:'#4488cc',dark:'#1a3a6a',accent:'#aaddff'},
+    'icicle':    {main:'#4488cc',dark:'#1a3a6a',accent:'#aaddff'},
+    'icecave':   {main:'#2266aa',dark:'#0a2244',accent:'#88ccff'},
+    'iceworld':  {main:'#2288bb',dark:'#0a3355',accent:'#99ddff'},
+    'crystal':   {main:'#4444cc',dark:'#1a1a88',accent:'#aaaaff'},
+    'rock':      {main:'#886644',dark:'#442200',accent:'#ddbb88'},
+    'sandstone': {main:'#cc8822',dark:'#664400',accent:'#ffcc66'},
+    'hedge':     {main:'#228833',dark:'#0a4410',accent:'#66ff44'},
+    'swamp':     {main:'#446622',dark:'#1a3308',accent:'#99cc44'},
+    'storm':     {main:'#4455aa',dark:'#1a2266',accent:'#88aaff'},
+    'building':  {main:'#334466',dark:'#111a33',accent:'#88aacc'},
+    'rubble':    {main:'#885544',dark:'#442218',accent:'#ddaa88'},
+    'pillar':    {main:'#664488',dark:'#2a1a44',accent:'#cc88ff'},
+    'lake':      {main:'#1166aa',dark:'#063355',accent:'#44aaff'},
+    'jungle':    {main:'#226611',dark:'#0a3308',accent:'#66dd22'},
+    'restaurant':{main:'#994422',dark:'#4a1a08',accent:'#ffaa66'},
+    'crater':    {main:'#666666',dark:'#333333',accent:'#cccccc'},
+    'asteroid':  {main:'#555566',dark:'#222233',accent:'#9999bb'},
+    'marsrock':  {main:'#aa3311',dark:'#551508',accent:'#ff6633'},
+    'venuslava': {main:'#aa7711',dark:'#553308',accent:'#ffcc33'},
+    'ring':      {main:'#6622cc',dark:'#2a0a66',accent:'#cc66ff'}
+  };
+  return map[os]||map['default'];
+}
+
 function drawObstacles(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   var nbm=getNextBiome(currentLevel)||BIOMES[0];
   var tb=transBlend();
   var os=tb>0.5?nbm.obstStyle:bm.obstStyle;
-  var gameH=H-140;
-  var c0=blendHexFull(bm.mtnNear0,nbm.mtnNear0,tb);
-  var c1=blendHexFull(bm.mtnFar,nbm.mtnFar,tb);
+  var gameH=H-20;
   var capC=blendRGB(bm.iceCap,nbm.iceCap,tb);
   var as=speed*diffMult*(infiniteActive?1.35:1.0);
 
+  // Pick obstacle colors that are always clearly visible
+  var obstColors=getObstacleColors(os);
+  var c0=obstColors.main;
+  var c1=obstColors.dark;
+  var c2=obstColors.accent;
+
   for(var i=0;i<obstacles.length;i++){
     var o=obstacles[i];
-    o.x-=as;
     if(o.x+o.w<-20) {obstacles.splice(i,1);i--;continue;}
-    var x=o.x,y=o.y,w=o.w,h=o.h,side=o.side;
 
-    if(o.type==='fish'){drawFishObstacle(o,gameH,c0,c1);}
-    else if(o.type==='pole'){drawFishingPole(o,gameH,c0);}
-    else if(o.type==='monkey'){drawMonkeyObstacle(o,gameH,c0,c1);}
-    else if(o.type==='vine'){drawVineObstacle(o,gameH,c0);}
-    else if(o.type==='iceslide'){drawIceSlide(o,gameH,capC);}
-    else if(o.type==='umbrella'){drawUmbrellaObstacle(o,gameH,c0,c1);}
-    else if(o.type==='tray'){drawTrayObstacle(o,gameH,c0,c1);}
-    else if(o.type==='tree'){
-      // Rounded tree obstacle
-      var bx=o.x+o.w/2,trW=o.w*0.18,trH=o.h*0.48,flipped=side==='top';
-      ctx.save();ctx.translate(bx,o.y);if(flipped)ctx.scale(1,-1);
-      ctx.fillStyle=c0;ctx.fillRect(-trW/2,o.h-trH,trW,trH);
-      var cg=ctx.createRadialGradient(0,o.h-trH,o.w*0.05,0,o.h-trH,o.w*0.52);cg.addColorStop(0,c0);cg.addColorStop(1,c1);ctx.fillStyle=cg;
-      ctx.beginPath();ctx.arc(0,o.h-trH,o.w*0.5,Math.PI,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(-o.w*0.28,o.h-trH+o.h*0.05,o.w*0.3,Math.PI,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(o.w*0.26,o.h-trH+o.h*0.07,o.w*0.28,Math.PI,Math.PI*2);ctx.fill();
-      ctx.restore();
-    } else {
-      // Mountain / default -- biome styled
-      var grad=ctx.createLinearGradient(x,y,x+w,y+h);
-      if(side==='bottom'){grad.addColorStop(0,c0);grad.addColorStop(1,c1);}
-      else{grad.addColorStop(0,c1);grad.addColorStop(1,c0);}
-      ctx.fillStyle=grad;
-      if(os==='building'||os==='rubble'||os==='pillar'){
-        // Flat-top skyscraper style
-        var bw=w*0.7,bx2=x+(w-bw)/2;
-        if(side==='bottom'){ctx.fillRect(bx2,y,bw,h);ctx.fillStyle=c1;ctx.fillRect(bx2-3,y,bw+6,h*0.08);}
-        else{ctx.fillRect(bx2,0,bw,h);ctx.fillStyle=c1;ctx.fillRect(bx2-3,h-h*0.08,bw+6,h*0.08);}
-  } else if(style==='asteroid'||style==='crater'||style==='marsrock'||style==='venuslava'||style==='ring'){
-    // Space obstacles -- floating rocks / asteroids / rings
-    var bw=w*0.7,bx3=x+(w-bw)/2;
-    if(style==='ring'){
-      // Rainbow ring obstacle
-      var rh2=(frameN*0.5+x*0.1)%360;
-      ctx.strokeStyle='hsl('+rh2+',100%,70%)';ctx.lineWidth=6;
-      ctx.beginPath();ctx.ellipse(bx3+bw/2,side==='bottom'?y+h*0.5:h*0.5,bw*0.5,h*0.35,0,0,Math.PI*2);ctx.stroke();
-    } else {
-      // Rocky asteroid / lava rock
-      var rcol=style==='marsrock'?'#8a3010':style==='venuslava'?'#806020':style==='crater'?'#505050':'#404040';
-      ctx.fillStyle=rcol;
-      if(side==='bottom'){ctx.beginPath();ctx.arc(bx3+bw/2,y+h*0.5,bw*0.5,0,Math.PI*2);ctx.fill();}
-      else{ctx.beginPath();ctx.arc(bx3+bw/2,h*0.5,bw*0.5,0,Math.PI*2);ctx.fill();}
-      // Crater marks
-      ctx.fillStyle='rgba(0,0,0,0.3)';
-      ctx.beginPath();ctx.arc(bx3+bw*0.3,side==='bottom'?y+h*0.4:h*0.4,bw*0.12,0,Math.PI*2);ctx.fill();
-    }
-      } else {
-        // Mountain shape
-        if(side==='bottom'){ctx.beginPath();ctx.moveTo(x,gameH);ctx.lineTo(x+w*0.4,y+h*0.3);ctx.lineTo(x+w*0.5,y);ctx.lineTo(x+w*0.6,y+h*0.25);ctx.lineTo(x+w,gameH);ctx.closePath();ctx.fill();}
-        else{ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+w*0.4,h*0.7);ctx.lineTo(x+w*0.5,h);ctx.lineTo(x+w*0.6,h*0.75);ctx.lineTo(x+w,0);ctx.closePath();ctx.fill();}
-      }
-    }
+    drawSolidObstacle(o,gameH,c0,c1,c2);
   }
 
   // Moving obstacles
   for(var i=0;i<movingObst.length;i++){
     var m=movingObst[i];
-    drawMovingObstacle(m,gameH,c0,c1,capC,os);
+    drawMovingObstacle(m,gameH,c0,c1,capC,os,c2);
   }
 }
 
@@ -1982,7 +1931,8 @@ function drawTrayObstacle(o,gameH,c0,c1){
   ctx.restore();
 }
 
-function drawMovingObstacle(m,gameH,c0,c1,capC,os){
+function drawMovingObstacle(m,gameH,c0,c1,capC,os,c2){
+  c2=c2||'#ffffff';
   if(m.kind==='fish'){
     // Draw a simpler moving fish
     ctx.save();ctx.translate(m.x,m.y);
@@ -2010,27 +1960,37 @@ function drawMovingObstacle(m,gameH,c0,c1,capC,os){
 function updateFrogs(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   if(!bm.hasFrogs) return;
-  var gameH=H-140;
+  var gameH=H-20;
   var as=speed*diffMult*(infiniteActive?1.35:1.0);
-  if(Math.random()<0.004) spawnFrog();
+  // Frogs only spawn after 30 seconds and walk in from right
+  if(frogs.length<1 && levelTimer>1800 && Math.random()<0.0005) spawnFrog();
   var ns=[];
   for(var i=0;i<frogs.length;i++){
     var f=frogs[i];
     f.x-=as*0.5; f.phase+=0.04;
-    var dy=fly.y-f.y;
-    if(Math.abs(fly.x-f.x)<150 && f.state==='idle') f.state='alert';
-    if(f.state==='alert' && Math.abs(fly.x-f.x)<80) f.state='leap';
-    if(f.state==='leap'){f.vx+=(fly.x-f.x)*0.003;f.vy+=(fly.y-f.y)*0.003;f.vy-=0.12;}
+    // Only alert/leap if dragonfly is close AND flying low (within jump reach)
+    var dx=fly.x-f.x, dy=fly.y-f.y;
+    var inRange=Math.abs(dx)<100 && dy>-H*0.25 && f.x<W-50; // only jump if fly is low AND frog is on screen
+    if(inRange && f.state==='idle') f.state='alert';
+    // Only leap if very close and truly on screen
+    if(f.state==='alert' && Math.abs(dx)<60 && inRange) f.state='leap';
+    // If fly moves away reset to idle
+    if((f.state==='alert'||f.state==='leap') && Math.abs(dx)>180) f.state='idle';
+    if(f.state==='leap'){
+      f.vx+=(fly.x-f.x)*0.002;
+      f.vy+=(fly.y-f.y)*0.002;
+      f.vy-=0.10;
+    }
     f.x+=f.vx; f.y+=f.vy; f.vy+=0.04;
-    if(f.y>gameH-10) {f.y=gameH-10;f.vy*=-0.5;f.vx*=0.8;if(Math.abs(f.vy)<0.5)f.vy=0;}
+    if(f.y>gameH-10){f.y=gameH-10;f.vy*=-0.5;f.vx*=0.8;if(Math.abs(f.vy)<0.5){f.vy=0;f.state='idle';}}
     if(f.x>-60) ns.push(f);
   }
   frogs=ns;
 }
 
 function spawnFrog(){
-  var gameH=H-140;
-  frogs.push({x:W+40,y:gameH-10,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+  var gameH=H-20;
+  frogs.push({x:W+80,y:gameH-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
 }
 
 function drawFrogs(){
@@ -2059,7 +2019,7 @@ function drawFrogs(){
 
 // -- MOTH SYSTEM ---------------------------------------------
 function spawnMoth(){
-  var gameH=H-140;
+  var gameH=H-20;
   var y=gameH*0.12+Math.random()*gameH*0.76;
   var golden=Math.random()<0.05;
   moths.push({x:W+20,y:y,floatPh:Math.random()*Math.PI*2,phase:Math.random()*Math.PI*2,golden:golden,value:golden?3:1,collected:false,collectAnim:0,scale:golden?1.35:1.0,glowPh:Math.random()*Math.PI*2});
@@ -2121,7 +2081,7 @@ function updateMoths(){
 }
 
 function spawnWind(){
-  var gameH=H-140;
+  var gameH=H-20;
   windItems.push({x:W+30,y:gameH*(0.15+Math.random()*0.7),phase:Math.random()*Math.PI*2,collected:false});
 }
 
@@ -2196,17 +2156,14 @@ function drawMoth(m){
 
 // -- INFINITE DRAGONFLY MOTH SPAWNING ------------------------
 function updateInfinite(){
-  var bm=getBiome(currentLevel)||BIOMES[0];
-  if(!infiniteOwned||infiniteActive) {
-    // Spawn special moth collectible
-    if(infiniteOwned && !infiniteMothSpawned && !infMoth){
-      infMothSpawnTimer++;
-      var spawnDelay=currentLevel===1?300:2400;
-      if(infMothSpawnTimer>=spawnDelay){infMoth=spawnInfMoth();infiniteMothSpawned=true;}
-    }
-    return;
+  // Spawn the collectible moth jar when not active
+  if(infiniteOwned && !infiniteActive && !infiniteMothSpawned && !infMoth){
+    infMothSpawnTimer++;
+    var spawnDelay=600; // 10 seconds before jar appears
+    if(infMothSpawnTimer>=spawnDelay){infMoth=spawnInfMoth();infiniteMothSpawned=true;}
   }
-  // Active: countdown
+  // Countdown only while active
+  if(!infiniteActive) return;
   infiniteTimer--;
   var pct=infiniteTimer/INFINITE_DURATION;
   var fill=document.getElementById('infTimerFill');
@@ -2215,7 +2172,7 @@ function updateInfinite(){
 }
 
 function spawnInfMoth(){
-  var gameH=H-140;
+  var gameH=H-20;
   return {x:W+40,y:H*0.4+Math.random()*H*0.2,phase:0,collected:false,collectAnim:0};
 }
 
@@ -2279,7 +2236,7 @@ function deactivateInfinite(){
   lightningBurstActive=false; lightningBurstFrames=0; lightningBurstCooldown=0;
   document.getElementById('infiniteHud').classList.remove('show');
   playMusic('main');
-  showToast('Infinite power faded...');
+  showToast('\u26a1 Infinite power faded');
 }
 
 function updateSteam(){
@@ -2348,12 +2305,12 @@ function drawInfiniteLayer(){
 
 // -- COLLISION DETECTION -------------------------------------
 function checkCollision(){
-  var gameH=H-140;
+  var gameH=H-20;
   var hx=fly.x-14,hy=fly.y-8,hw=28,hh=16;
   var showHit=document.getElementById('optHitbox')&&document.getElementById('optHitbox').checked;
   if(showHit){ctx.strokeStyle='rgba(255,0,0,0.6)';ctx.lineWidth=1;ctx.strokeRect(hx,hy,hw,hh);}
   // Boundary
-  if(hy<0||hy+hh>gameH) return 'boundary';
+  if(hy<0||hy+hh>gameH-4) return 'boundary';
   // Obstacles
   for(var i=0;i<obstacles.length;i++){
     var o=obstacles[i];
@@ -2435,7 +2392,7 @@ function loseLife(){
 }
 
 function checkCollisionType(){
-  var gameH=H-140;
+  var gameH=H-20;
   var hx=fly.x-14,hy=fly.y-8,hw=28,hh=16;
   if(hy<0||hy+hh>gameH) return 'boundary';
   for(var i=0;i<obstacles.length;i++){
@@ -2515,7 +2472,10 @@ function update(){
   if(obstTimer>=obstInterval){spawnObstacle();obstTimer=0;obstInterval=Math.max(80,obstInterval-1.5);}
   var activeSpeed=speed*diffMult*(infiniteActive?1.35:1.0);
   var newObs=[];
-  for(var i=0;i<obstacles.length;i++){if(obstacles[i].x+obstacles[i].w>-20) newObs.push(obstacles[i]);}
+  for(var i=0;i<obstacles.length;i++){
+    obstacles[i].x-=activeSpeed;
+    if(obstacles[i].x+obstacles[i].w>-20) newObs.push(obstacles[i]);
+  }
   obstacles=newObs;
 
   updateMoths();
@@ -2529,7 +2489,7 @@ function update(){
   if(gameMode==='infinite'){
     speed=Math.min(maxSpeed,2.2+(score/2000)*(maxSpeed-2.2));
     obstInterval=Math.max(80,160-Math.floor(score/300));
-  } else {
+  } else if(!currentWorldLevel){
     speed=getLevelSpeed(currentLevel);
   }
 
@@ -3110,10 +3070,11 @@ document.getElementById('ldPlayBtn').addEventListener('click',function(){
   var _targetBiome=_ldLevel.biomeIdx;
   showScreen(null);
   resetGame();
-  currentLevel=_targetBiome+1; // biomeIdx+1 so getBiome(level) returns idx correctly
+  currentLevel=_targetBiome+1; // biomeIdx+1 so getBiome() returns right biome
   levelDuration=_ldLevel.duration;
-  speed=getLevelSpeed(1);
-  obstInterval=getLevelObstInterval(1);
+  speed=2.5; // start at reasonable speed for world map levels
+  obstInterval=160; // clear obstacles every 160 frames -- always visible
+  obstTimer=80; // start halfway so first obstacle appears quickly
   state='playing';
   gameStartTime=Date.now();
   if(AC) AC.resume().then(function(){playMusic('main');});
