@@ -3180,19 +3180,17 @@ try{
     initBg(); loop();
   })();
 } catch(err){
-  document.body.innerHTML='<div style="color:#ff6666;font-family:monospace;padding:30px;background:#050010;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;"><div>\u26a0 Error: '+err.message+'<br><br><small style="color:#9966cc">Please reload</small></div></div>';
+  document.body.innerHTML='<div style="color:#ff6666;font-family:monospace;padding:20px;background:#050010;height:100vh;overflow:auto;font-size:13px;"><h2 style="color:#ff4444">Script Error</h2><p>'+err.message+'</p><pre style="color:#ffaa44;font-size:11px;margin-top:10px;">'+((err.stack||'').replace(/</g,'&lt;').substring(0,500))+'</pre><p style="color:#9966cc;margin-top:10px;">Please reload the page.</p></div>';
+
 }
 
-if('serviceWorker' in navigator){
-  // Unregister old service workers to clear stale cache
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(reg){reg.unregister();});
-  });
+if(‘serviceWorker’ in navigator){
+// Unregister old service workers to clear stale cache
+navigator.serviceWorker.getRegistrations().then(function(regs){
+regs.forEach(function(reg){reg.unregister();});
+});
 }
-
-
 
 </script>
-
 </body>
 </html>
