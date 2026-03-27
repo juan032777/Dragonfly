@@ -1860,9 +1860,13 @@ updateCurrencyUI();
 [‘screenMain’,‘screenOptions’,‘screenShop’,‘screenLeaderboard’,‘screenWorldMap’].forEach(function(id){
 var el=document.getElementById(id);if(el)el.classList.add(‘hidden’);
 });
+// Wait for layout before starting
+requestAnimationFrame(function(){
+resize();
 initBg();
 loop();
 showScreen(‘screenMain’);
+});
 }catch(err){
 try{
 var be=document.createElement(‘div’);
