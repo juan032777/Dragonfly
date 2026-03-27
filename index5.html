@@ -1835,7 +1835,8 @@ btn.style.color=’#e8d8ff’;
 btn.style.background=‘rgba(80,30,160,0.22)’;
 btn.style.width=‘100%’;
 btn.style.touchAction=‘manipulation’;
-btn.addEventListener(‘click’,function(){handleKey(k);});
+btn.addEventListener(‘touchstart’,function(e){e.preventDefault();handleKey(k);},{passive:false});
+btn.addEventListener(‘mousedown’,function(){handleKey(k);});
 pad.appendChild(btn);
 });
 }catch(e){}
