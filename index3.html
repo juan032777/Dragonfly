@@ -172,11 +172,11 @@ canvas{display:block;width:100%;height:100%;pointer-events:none;touch-action:non
     <div class="divider"></div>
     <div class="best-badge"><span class="best-label">BEST</span><span class="best-val" id="menuBest">0</span></div>
     <div class="menu-nav">
-      <button class="mbtn mbtn-primary" id="btnWorldMap">&#127757; &nbsp;WORLD MAP</button>
-      <button class="mbtn mbtn-primary" id="btnPlayInfinite" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">&#9654; &nbsp;INFINITE MODE</button>
-      <button class="mbtn mbtn-secondary" id="btnShop">&#129419; &nbsp;SHOP</button>
-      <button class="mbtn mbtn-secondary" id="btnLeaderboard">&#127942; &nbsp;LEADERBOARD</button>
-      <button class="mbtn mbtn-ghost" id="btnOptions">&#9881;&#65039; &nbsp;OPTIONS</button>
+      <button class="mbtn mbtn-primary" id="btnWorldMap" onclick="buildWorldMap();showScreen('screenWorldMap');">&#127757; &nbsp;WORLD MAP</button>
+      <button class="mbtn mbtn-primary" id="btnPlayInfinite" onclick="gameMode='infinite';levelDuration=999999;currentLevel=1;startGame();" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">&#9654; &nbsp;INFINITE MODE</button>
+      <button class="mbtn mbtn-secondary" id="btnShop" onclick="buildSkins();showScreen('screenShop');">&#129419; &nbsp;SHOP</button>
+      <button class="mbtn mbtn-secondary" id="btnLeaderboard" onclick="showScreen('screenLeaderboard');">&#127942; &nbsp;LEADERBOARD</button>
+      <button class="mbtn mbtn-ghost" id="btnOptions" onclick="buildWorldLevelPicker();showScreen('screenOptions');">&#9881;&#65039; &nbsp;OPTIONS</button>
     </div>
     <div class="currency-row"><div class="gem-badge"><span class="gem-icon">&#129419;</span><span class="gem-count" id="menuMoths">0</span></div></div>
     <div class="menu-footer">tap to fly &bull; tap rapidly to climb faster</div>
