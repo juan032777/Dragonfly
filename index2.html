@@ -396,7 +396,7 @@ var BIOMES = [
 {name:‘Saturn’,          sky:[’#000000’,’#000000’,’#000000’], glow:[200,180,100], mtn:[’#0a0800’,’#080600’,’#0c0a00’], ground:[’#0a0800’,’#060400’], obstStyle:‘ring’,    hasForest:false, hasFrogs:false, hasMoving:true},
 {name:‘Ruined Kingdom II’,sky:[’#020008’,’#0d0525’,’#2a0a50’],glow:[176,110,255], mtn:[’#1a0840’,’#0d0428’,’#180850’], ground:[’#1a0840’,’#0d0428’], obstStyle:‘hedge’,  hasForest:false, hasFrogs:false, hasMoving:true},
 {name:‘Celestial Peak’,  sky:[’#040008’,’#0c0020’,’#180040’], glow:[180,80,220],  mtn:[’#120030’,’#0c0020’,’#180040’], ground:[’#100030’,’#080018’], obstStyle:‘pillar’,  hasForest:false, hasFrogs:false, hasMoving:true},
-{name:‘Jungle Day’,       sky:[’#1a6a00’,’#2a8a10’,’#3aaa20’], glow:[60,200,40],   mtn:[’#0a3a00’,’#1a5a10’,’#2a7a20’], ground:[’#1a5a00’,’#0a3a00’], obstStyle:‘jungle’,  hasForest:false, hasFrogs:false, hasMoving:true, hasMonkeys:true, hasSun:true}
+{name:‘Jungle Day’,       sky:[’#1a7acc’,’#2a9ae0’,’#4ab8f0’], glow:[60,200,40],   mtn:[’#0a3a00’,’#1a5a10’,’#2a7a20’], ground:[’#1a5a00’,’#0a3a00’], obstStyle:‘jungle’,  hasForest:false, hasFrogs:false, hasMoving:true, hasMonkeys:true, hasSun:true}
 ];
 
 function getBiome(lvl){ return BIOMES[(lvl-1) % BIOMES.length]; }
@@ -441,6 +441,24 @@ g.addColorStop(0,blendHex(bm.sky[0],nbm.sky[0],tb));
 g.addColorStop(0.3,blendHex(bm.sky[1],nbm.sky[1],tb));
 g.addColorStop(1,blendHex(bm.sky[2],nbm.sky[2],tb));
 ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+// Bright sun for daytime biomes
+if(bm.hasSun){
+ctx.save();
+var sunX=W*0.78,sunY=H*0.1;
+for(var ri=0;ri<12;ri++){
+var ra=ri*(Math.PI/6)+frameN*0.008;
+ctx.beginPath();ctx.moveTo(sunX+Math.cos(ra)*34,sunY+Math.sin(ra)*34);
+ctx.lineTo(sunX+Math.cos(ra)*(58+Math.sin(frameN*0.05+ri)*5),sunY+Math.sin(ra)*(58+Math.sin(frameN*0.05+ri)*5));
+ctx.strokeStyle=‘rgba(255,240,80,0.7)’;ctx.lineWidth=4;ctx.lineCap=‘round’;ctx.stroke();
+}
+var shg=ctx.createRadialGradient(sunX,sunY,20,sunX,sunY,90);
+shg.addColorStop(0,‘rgba(255,255,150,0.7)’);shg.addColorStop(1,‘rgba(255,220,50,0)’);
+ctx.fillStyle=shg;ctx.beginPath();ctx.arc(sunX,sunY,90,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=’#fff700’;ctx.shadowColor=’#ffe040’;ctx.shadowBlur=35;
+ctx.beginPath();ctx.arc(sunX,sunY,28,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ctx.restore();
+}
 
 // Moon
 var mx2=W*0.82,my=H*0.1;
@@ -604,24 +622,31 @@ ctx.beginPath();ctx.moveTo(vx,canopyY+30);
 ctx.bezierCurveTo(vx+sw*15,canopyY+60,vx-sw*10,canopyY+90,vx+5,canopyY+120);ctx.stroke();
 }
 if(m.type===‘monkey’){
-// Draw monkey hanging in tree
-var mx=m.x+sw*25, my=m.y+10;
-// Tail
-ctx.strokeStyle=’#8B4513’;ctx.lineWidth=3;ctx.lineCap=‘round’;
-ctx.beginPath();ctx.moveTo(mx,my+20);ctx.quadraticCurveTo(mx+20,my+10,mx+15,my-5);ctx.stroke();
-// Body
-ctx.fillStyle=’#8B4513’;ctx.beginPath();ctx.ellipse(mx,my+10,10,13,0,0,Math.PI*2);ctx.fill();
-// Head
-ctx.fillStyle=’#a0522d’;ctx.beginPath();ctx.arc(mx,my-4,10,0,Math.PI*2);ctx.fill();
-// Face
-ctx.fillStyle=’#ffcc99’;ctx.beginPath();ctx.ellipse(mx,my-2,6,5,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle=’#000’;
-ctx.beginPath();ctx.arc(mx-3,my-5,1.5,0,Math.PI*2);ctx.fill();
-ctx.beginPath();ctx.arc(mx+3,my-5,1.5,0,Math.PI*2);ctx.fill();
-// Arms holding vine
+// Monkey hangs from vine INSIDE canopy
+var vineAnchorX=m.x+sw*20;  // vine anchor swings in canopy
+var vineAnchorY=m.y+15;     // anchor point at top of canopy
+var vineLen=35;
+var mx=vineAnchorX+sw*10;   // monkey hangs below anchor
+var my=vineAnchorY+vineLen;
+// Draw vine from canopy to monkey hands
+ctx.strokeStyle=’#2a6000’;ctx.lineWidth=2;ctx.lineCap=‘round’;
+ctx.beginPath();ctx.moveTo(vineAnchorX,vineAnchorY);ctx.quadraticCurveTo(vineAnchorX+sw*8,my-10,mx,my-18);ctx.stroke();
+// Arms reaching up to vine
 ctx.strokeStyle=’#8B4513’;ctx.lineWidth=3;
-ctx.beginPath();ctx.moveTo(mx,my+2);ctx.lineTo(mx-15,my-10);ctx.stroke();
-ctx.beginPath();ctx.moveTo(mx,my+2);ctx.lineTo(mx+15,my-10);ctx.stroke();
+ctx.beginPath();ctx.moveTo(mx-5,my-5);ctx.lineTo(vineAnchorX-5,vineAnchorY+8);ctx.stroke();
+ctx.beginPath();ctx.moveTo(mx+5,my-5);ctx.lineTo(vineAnchorX+5,vineAnchorY+8);ctx.stroke();
+// Tail curling
+ctx.strokeStyle=’#8B4513’;ctx.lineWidth=3;ctx.lineCap=‘round’;
+ctx.beginPath();ctx.moveTo(mx-8,my+15);ctx.quadraticCurveTo(mx-22,my+8,mx-18,my-5);ctx.stroke();
+// Body
+ctx.fillStyle=’#8B4513’;ctx.beginPath();ctx.ellipse(mx,my+5,10,13,0,0,Math.PI*2);ctx.fill();
+// Head
+ctx.fillStyle=’#a0522d’;ctx.beginPath();ctx.arc(mx,my-9,10,0,Math.PI*2);ctx.fill();
+// Face
+ctx.fillStyle=’#ffcc99’;ctx.beginPath();ctx.ellipse(mx,my-7,6,5,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=’#000’;
+ctx.beginPath();ctx.arc(mx-3,my-10,1.5,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.arc(mx+3,my-10,1.5,0,Math.PI*2);ctx.fill();
 // Draw projectiles (coconuts)
 for(var j=0;j<m.projectiles.length;j++){
 var p=m.projectiles[j];
