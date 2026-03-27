@@ -161,13 +161,6 @@ canvas{display:block;width:100%;height:100%;}
     <button class="ov-btn" id="btnFlyAgain">FLY AGAIN</button>
     <button class="mbtn mbtn-ghost" id="btnBackMenu" style="width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
   </div>
-  <div id="screenPassword" style="display:none;">
-    <div style="font-size:60px">&#129410;</div>
-    <div style="font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:#e8d8ff;letter-spacing:4px;text-align:center;">DRAGONFLY'S<br>FLIGHT</div>
-    <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:13px;color:#7755aa;letter-spacing:1px;">enter access code</div>
-    <div id="pinDots" style="display:flex;gap:12px;margin:4px 0;"></div>
-    <div id="pinError" style="font-family:'Cinzel',serif;font-size:11px;color:#ff4466;letter-spacing:2px;min-height:16px;opacity:0;">INCORRECT CODE</div>
-    <div id="numPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:220px;"></div>
   </div>
   <div class="menu-screen hidden" id="screenMain">
     <div class="topband"></div>
@@ -1783,76 +1776,6 @@ setTimeout(function(){musicLoop(seq,120,track);},100);
 // ============================================================
 // PIN GATE
 // ============================================================
-var ACCESS_CODE=‘1234’,pinEntry=’’;
-
-function buildPinUI(){
-try{
-var dots=document.getElementById(‘pinDots’);
-if(!dots) return;
-dots.innerHTML=’’;
-for(var i=0;i<ACCESS_CODE.length;i++){
-var d=document.createElement(‘div’);
-d.style.width=‘16px’;d.style.height=‘16px’;d.style.borderRadius=‘50%’;
-d.style.border=‘2px solid #6a20aa’;
-d.style.background=pinEntry.length>i?’#b06eff’:‘transparent’;
-d.style.display=‘inline-block’;d.style.margin=‘0 4px’;
-dots.appendChild(d);
-}
-var pad=document.getElementById(‘numPad’);
-if(!pad||pad.children.length) return;
-[‘1’,‘2’,‘3’,‘4’,‘5’,‘6’,‘7’,‘8’,‘9’,’\u232b’,‘0’,’\u21b5’].forEach(function(k){
-var btn=document.createElement(‘button’);
-btn.textContent=k;
-btn.style.padding=‘16px 0’;btn.style.borderRadius=‘8px’;btn.style.fontSize=‘18px’;
-btn.style.fontWeight=‘700’;btn.style.cursor=‘pointer’;btn.style.border=‘1px solid #3a1060’;
-btn.style.color=’#e8d8ff’;btn.style.background=‘rgba(80,30,160,0.22)’;btn.style.width=‘100%’;
-btn.addEventListener(‘touchstart’,function(e){e.preventDefault();handleKey(k);},{passive:false});
-btn.addEventListener(‘mousedown’,function(){handleKey(k);});
-pad.appendChild(btn);
-});
-}catch(e){}
-}
-
-function handleKey(k){
-if(k===’\u232b’){pinEntry=pinEntry.slice(0,-1);buildPinUI();}
-else if(k===’\u21b5’){checkPin();}
-else if(pinEntry.length<ACCESS_CODE.length){pinEntry+=k;buildPinUI();if(pinEntry.length===ACCESS_CODE.length)setTimeout(checkPin,120);}
-}
-
-function checkPin(){
-if(pinEntry===ACCESS_CODE){
-var gate=document.getElementById(‘screenPassword’);
-gate.style.opacity=‘0’;
-setTimeout(function(){gate.style.display=‘none’;},500);
-try{sessionStorage.setItem(‘df_auth’,‘1’);}catch(e){}
-showScreen(‘screenMain’);
-} else {
-pinEntry=’’;buildPinUI();
-var err=document.getElementById(‘pinError’);
-if(err){err.style.opacity=‘1’;setTimeout(function(){err.style.opacity=‘0’;},1800);}
-}
-}
-
-var shakeStyle=document.createElement(‘style’);
-shakeStyle.textContent=’@keyframes pinShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(6px)}}’;
-try{if(document.head)document.head.appendChild(shakeStyle);}catch(e){}
-
-document.addEventListener(‘keydown’,function(e){
-var gate=document.getElementById(‘screenPassword’);
-if(!gate||gate.style.display===‘none’) return;
-if(e.key>=‘0’&&e.key<=‘9’) handleKey(e.key);
-else if(e.key===‘Backspace’) handleKey(’\u232b’);
-else if(e.key===‘Enter’) handleKey(’\u21b5’);
-});
-
-var alreadyAuthed=false;
-try{alreadyAuthed=sessionStorage.getItem(‘df_auth’)===‘1’;}catch(e){}
-if(alreadyAuthed){
-var gp=document.getElementById(‘screenPassword’);if(gp)gp.style.display=‘none’;
-} else {
-buildPinUI();
-}
-
 // ============================================================
 // BOOT
 // ============================================================
