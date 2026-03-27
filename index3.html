@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dragonfly's Flight</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,7 +50,7 @@ canvas{display:block;width:100%;height:100%;pointer-events:none;touch-action:non
 .best-label{font-size:10px;color:#6a20aa;letter-spacing:2px;}
 .best-val{font-size:18px;font-weight:700;color:#e8d8ff;}
 .menu-nav{display:flex;flex-direction:column;gap:12px;width:100%;padding:0 32px;margin-top:10px;}
-.mbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:15px 0;border-radius:6px;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;width:100%;}
+.mbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:15px 0;border-radius:6px;touch-action:manipulation;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;width:100%;}
 .mbtn-primary{background:linear-gradient(135deg,#3a00a0,#7020d0,#3a00a0);border:2px solid #b06eff;color:#f0e8ff;}
 .mbtn-secondary{background:rgba(80,30,160,0.25);border:1px solid #6a20aa;color:#c0a0e8;}
 .mbtn-ghost{background:transparent;border:1px solid #3a1060;color:#7755aa;}
@@ -1790,6 +1790,7 @@ try{
 var bib=document.getElementById(‘buyInfiniteBtn’);
 if(bib){bib.textContent=’\u2713 OWNED’;bib.classList.add(‘owned’);}
 updateCurrencyUI();
+document.title=‘Loaded OK’;
 [‘screenOptions’,‘screenShop’,‘screenLeaderboard’,‘screenWorldMap’].forEach(function(id){
 var el=document.getElementById(id);if(el)el.classList.add(‘hidden’);
 });
@@ -1813,7 +1814,7 @@ try{
 var be=document.createElement(‘div’);
 be.style.position=‘fixed’;be.style.top=‘0’;be.style.left=‘0’;be.style.right=‘0’;be.style.bottom=‘0’;
 be.style.background=’#050010’;be.style.color=’#ff6666’;be.style.zIndex=‘99999’;be.style.padding=‘20px’;be.style.textAlign=‘center’;be.style.fontSize=‘13px’;
-be.textContent=’\u26A0 Boot Error: ’+(err&&err.message?err.message:String(err));
+be.textContent=’BOOT ERROR: ’+(err&&err.message?err.message:String(err));
 document.body.appendChild(be);
 }catch(e2){}
 }
