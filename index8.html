@@ -2347,14 +2347,18 @@ function handlePinKey(k){
 }
 
 function checkPin(){
-  if(pinEntry===ACCESS_CODE){
-    var pw=document.getElementById('screenPassword');
-    if(pw) pw.style.display='none';
+  if(String(pinEntry) === String(ACCESS_CODE)){
+    var pw = document.getElementById('screenPassword');
+    if(pw) pw.style.display = 'none';
     showScreen('screenMain');
   } else {
-    var err=document.getElementById('pinError');
-    if(err){err.style.opacity='1';setTimeout(function(){err.style.opacity='0';},1200);}
-    pinEntry=''; buildPinUI();
+    var err = document.getElementById('pinError');
+    if(err){
+      err.style.opacity = '1';
+      setTimeout(function(){ err.style.opacity = '0'; }, 1200);
+    }
+    pinEntry = '';
+    buildPinUI();
   }
 }
 
