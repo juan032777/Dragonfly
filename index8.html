@@ -949,6 +949,51 @@ function drawBg(){
 }
 
 function drawFarLayer(mfC,gameH){
+  var bm=getBiome(currentLevel)||BIOMES[0];
+  var tb=transBlend();
+  var style=tb>0.5?(getNextBiome(currentLevel).bgStyle||'default'):(bm.bgStyle||'default');
+  if(style==='forest'||style==='enchanted'){
+    // Distant mountain silhouette
+    ctx.save();
+    var mgr=ctx.createLinearGradient(0,gameH-gameH*0.55,0,gameH);
+    mgr.addColorStop(0,'#0a2a06');
+    mgr.addColorStop(1,'#061a04');
+    ctx.fillStyle=mgr;
+    ctx.beginPath();
+    ctx.moveTo(0,gameH);
+    ctx.lineTo(0,gameH-gameH*0.28);
+    ctx.bezierCurveTo(W*0.15,gameH-gameH*0.5,W*0.28,gameH-gameH*0.55,W*0.38,gameH-gameH*0.42);
+    ctx.bezierCurveTo(W*0.48,gameH-gameH*0.32,W*0.55,gameH-gameH*0.48,W*0.65,gameH-gameH*0.38);
+    ctx.bezierCurveTo(W*0.75,gameH-gameH*0.28,W*0.85,gameH-gameH*0.44,W,gameH-gameH*0.3);
+    ctx.lineTo(W,gameH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // Far background tree silhouettes
+    ctx.save();
+    ctx.globalAlpha=0.55;
+    for(var i=0;i<bgMtnFar.length;i++){
+      var m=bgMtnFar[i];
+      var rx=((m.x-farOff*0.3)%W+W*2)%W;
+      var th=m.h*0.9;
+      var tw=m.w*0.5;
+      // Trunk
+      ctx.fillStyle='#0a2006';
+      ctx.fillRect(rx+tw*0.44,gameH-th*0.55,tw*0.12,th*0.55);
+      // Canopy puffs
+      var cg=ctx.createRadialGradient(rx+tw*0.5,gameH-th*0.72,4,rx+tw*0.5,gameH-th*0.72,tw*0.7);
+      cg.addColorStop(0,'#1a5a0c');
+      cg.addColorStop(0.6,'#0e3a08');
+      cg.addColorStop(1,'#081e04');
+      ctx.fillStyle=cg;
+      ctx.beginPath();ctx.ellipse(rx+tw*0.5,gameH-th*0.72,tw*0.7,tw*0.55,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(rx+tw*0.25,gameH-th*0.62,tw*0.45,tw*0.38,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(rx+tw*0.75,gameH-th*0.62,tw*0.45,tw*0.38,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    ctx.restore();
+    return;
+  }
   ctx.fillStyle=mfC;
   for(var i=0;i<bgMtnFar.length;i++){
     var m=bgMtnFar[i];
@@ -958,6 +1003,47 @@ function drawFarLayer(mfC,gameH){
   }
 }
 function drawNearLayer(mn0,gameH){
+  var bm=getBiome(currentLevel)||BIOMES[0];
+  var tb=transBlend();
+  var style=tb>0.5?(getNextBiome(currentLevel).bgStyle||'default'):(bm.bgStyle||'default');
+  if(style==='forest'||style==='enchanted'){
+    // Near tree line silhouettes — larger, darker
+    ctx.save();
+    for(var i=0;i<bgMtnNear.length;i++){
+      var m=bgMtnNear[i];
+      var rx=((m.x-nearOff*0.6)%W+W*2)%W;
+      var th=m.h;
+      var tw=m.w*0.5;
+      // Trunk
+      ctx.fillStyle='#071504';
+      ctx.beginPath();
+      ctx.moveTo(rx+tw*0.5-tw*0.1,gameH);
+      ctx.bezierCurveTo(rx+tw*0.5-tw*0.13,gameH-th*0.4,rx+tw*0.5-tw*0.08,gameH-th*0.6,rx+tw*0.5-tw*0.07,gameH-th*0.65);
+      ctx.lineTo(rx+tw*0.5+tw*0.07,gameH-th*0.65);
+      ctx.bezierCurveTo(rx+tw*0.5+tw*0.08,gameH-th*0.6,rx+tw*0.5+tw*0.13,gameH-th*0.4,rx+tw*0.5+tw*0.1,gameH);
+      ctx.closePath();
+      ctx.fill();
+      // Canopy
+      var ncg=ctx.createRadialGradient(rx+tw*0.5,gameH-th*0.78,6,rx+tw*0.5,gameH-th*0.78,tw*0.9);
+      ncg.addColorStop(0,'#1a5a0a');
+      ncg.addColorStop(0.5,'#0e3806');
+      ncg.addColorStop(1,'#061c02');
+      ctx.fillStyle=ncg;
+      ctx.beginPath();ctx.ellipse(rx+tw*0.5,gameH-th*0.78,tw*0.9,tw*0.72,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(rx+tw*0.28,gameH-th*0.65,tw*0.6,tw*0.5,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(rx+tw*0.72,gameH-th*0.65,tw*0.6,tw*0.5,0,0,Math.PI*2);ctx.fill();
+      // Subtle glow
+      ctx.globalAlpha=0.12+Math.sin(frameN*0.018+i)*0.06;
+      var ng=ctx.createRadialGradient(rx+tw*0.5,gameH-th*0.78,4,rx+tw*0.5,gameH-th*0.78,tw);
+      ng.addColorStop(0,'rgba(60,220,20,0.4)');
+      ng.addColorStop(1,'rgba(20,100,0,0)');
+      ctx.fillStyle=ng;
+      ctx.beginPath();ctx.ellipse(rx+tw*0.5,gameH-th*0.78,tw,tw*0.8,0,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+    return;
+  }
   ctx.fillStyle=mn0;
   for(var i=0;i<bgMtnNear.length;i++){
     var m=bgMtnNear[i];
@@ -1005,7 +1091,180 @@ function drawGround(bm,nbm,tb,mn1,icC,gameH){
   }
 }
 
+function drawAncientForest(gameH){
+  // Deep mystical background trees
+  ctx.save();
+  var treePositions=[0.08,0.18,0.32,0.48,0.62,0.75,0.88,0.97];
+  for(var ti=0;ti<treePositions.length;ti++){
+    var tx=((treePositions[ti]*W - ruinOff*0.4)%W+W*2)%W;
+    var th=gameH*(0.45+Math.sin(ti*1.3)*0.12);
+    var tw=18+ti%3*8;
+    // Trunk
+    var trunkGrad=ctx.createLinearGradient(tx,gameH-th,tx,gameH);
+    trunkGrad.addColorStop(0,'#1a4010');
+    trunkGrad.addColorStop(1,'#0a2008');
+    ctx.fillStyle=trunkGrad;
+    ctx.beginPath();
+    ctx.moveTo(tx-tw*0.18,gameH);
+    ctx.bezierCurveTo(tx-tw*0.22,gameH-th*0.4,tx-tw*0.1,gameH-th*0.7,tx,gameH-th);
+    ctx.bezierCurveTo(tx+tw*0.1,gameH-th*0.7,tx+tw*0.22,gameH-th*0.4,tx+tw*0.18,gameH);
+    ctx.closePath();
+    ctx.fill();
+    // Gnarled branches
+    ctx.strokeStyle='#1a4010';
+    ctx.lineWidth=3+ti%2*2;
+    ctx.lineCap='round';
+    for(var bi=0;bi<3;bi++){
+      var bangle=-0.6+bi*0.6+Math.sin(ti*0.7+bi)*0.3;
+      var blen=tw*2.5+bi*8;
+      var by=gameH-th*(0.5+bi*0.15);
+      ctx.beginPath();
+      ctx.moveTo(tx,by);
+      ctx.quadraticCurveTo(tx+Math.cos(bangle)*blen*0.5,by-20,tx+Math.cos(bangle)*blen,by+Math.sin(bangle)*blen*0.4);
+      ctx.stroke();
+    }
+    // Glowing canopy
+    var canopyR=tw*2.8+Math.sin(frameN*0.02+ti)*4;
+    var cg=ctx.createRadialGradient(tx,gameH-th,4,tx,gameH-th*0.85,canopyR);
+    cg.addColorStop(0,'rgba(40,180,20,0.55)');
+    cg.addColorStop(0.4,'rgba(20,120,10,0.35)');
+    cg.addColorStop(0.7,'rgba(10,80,5,0.18)');
+    cg.addColorStop(1,'rgba(0,40,0,0)');
+    ctx.fillStyle=cg;
+    ctx.beginPath();
+    ctx.ellipse(tx,gameH-th*0.85,canopyR,canopyR*0.7,0,0,Math.PI*2);
+    ctx.fill();
+    // Bioluminescent leaf glow
+    ctx.globalAlpha=0.25+Math.sin(frameN*0.025+ti)*0.12;
+    var lg=ctx.createRadialGradient(tx,gameH-th,2,tx,gameH-th,canopyR*0.5);
+    lg.addColorStop(0,'rgba(100,255,80,0.6)');
+    lg.addColorStop(1,'rgba(40,200,20,0)');
+    ctx.fillStyle=lg;
+    ctx.beginPath();
+    ctx.ellipse(tx,gameH-th,canopyR*0.5,canopyR*0.4,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+
+  // Ground mushrooms
+  ctx.save();
+  for(var mi=0;mi<8;mi++){
+    var mx=((mi*W/7+W*0.05 - ruinOff*0.85)%W+W*2)%W;
+    var mh=12+mi%3*8;
+    var mw=8+mi%3*5;
+    // Stem
+    ctx.fillStyle='#c8a878';
+    ctx.beginPath();
+    ctx.rect(mx-mw*0.2,gameH-18-mh,mw*0.4,mh);
+    ctx.fill();
+    // Cap
+    var mcg=ctx.createRadialGradient(mx,gameH-18-mh,1,mx,gameH-18-mh,mw);
+    var capColors=[['rgba(220,40,40,0.9)','rgba(180,20,20,0.6)'],['rgba(255,140,0,0.9)','rgba(200,80,0,0.6)'],['rgba(180,40,220,0.9)','rgba(120,20,160,0.6)']];
+    var cc2=capColors[mi%3];
+    mcg.addColorStop(0,cc2[0]);
+    mcg.addColorStop(1,cc2[1]);
+    ctx.fillStyle=mcg;
+    ctx.beginPath();
+    ctx.ellipse(mx,gameH-18-mh,mw,mh*0.55,0,0,Math.PI);
+    ctx.fill();
+    // Mushroom glow
+    ctx.globalAlpha=0.2+Math.sin(frameN*0.03+mi)*0.1;
+    var mg2=ctx.createRadialGradient(mx,gameH-18-mh,2,mx,gameH-18-mh,mw*1.8);
+    mg2.addColorStop(0,cc2[0]);
+    mg2.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=mg2;
+    ctx.beginPath();
+    ctx.arc(mx,gameH-18-mh,mw*1.8,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+
+  // Fireflies
+  ctx.save();
+  for(var fi=0;fi<18;fi++){
+    var ft=frameN*0.012+fi*0.7;
+    var fx2=((fi*W/17+Math.sin(ft*0.8)*30 - ruinOff*0.2)%W+W*2)%W;
+    var fy2=gameH*(0.15+Math.sin(ft*1.1+fi)*0.55);
+    var fa=0.4+Math.sin(frameN*0.08+fi*2.1)*0.4;
+    if(fa<0.05) continue;
+    ctx.globalAlpha=fa;
+    var fg=ctx.createRadialGradient(fx2,fy2,0,fx2,fy2,6);
+    fg.addColorStop(0,'rgba(180,255,80,1)');
+    fg.addColorStop(0.4,'rgba(100,220,40,0.6)');
+    fg.addColorStop(1,'rgba(40,180,0,0)');
+    ctx.fillStyle=fg;
+    ctx.beginPath();
+    ctx.arc(fx2,fy2,6,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+
+  // Deer silhouette in background
+  ctx.save();
+  var deerX=((W*0.7 - ruinOff*0.3)%W+W*2)%W;
+  var deerY=gameH-22;
+  ctx.globalAlpha=0.35;
+  ctx.fillStyle='#0a2008';
+  // Body
+  ctx.beginPath();ctx.ellipse(deerX,deerY-18,18,10,0.2,0,Math.PI*2);ctx.fill();
+  // Head
+  ctx.beginPath();ctx.ellipse(deerX+20,deerY-26,8,6,-0.3,0,Math.PI*2);ctx.fill();
+  // Legs
+  ctx.strokeStyle='#0a2008';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(deerX-8,deerY-10);ctx.lineTo(deerX-10,deerY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(deerX,deerY-10);ctx.lineTo(deerX-2,deerY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(deerX+8,deerY-10);ctx.lineTo(deerX+10,deerY);ctx.stroke();
+  // Antlers
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(deerX+20,deerY-32);ctx.lineTo(deerX+16,deerY-44);ctx.lineTo(deerX+12,deerY-40);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(deerX+20,deerY-32);ctx.lineTo(deerX+26,deerY-44);ctx.lineTo(deerX+30,deerY-40);ctx.stroke();
+  ctx.globalAlpha=1;
+  ctx.restore();
+
+  // Owl silhouette on a branch
+  ctx.save();
+  var owlX=((W*0.35 - ruinOff*0.5)%W+W*2)%W;
+  var owlY=gameH*0.38;
+  ctx.globalAlpha=0.5;
+  ctx.fillStyle='#0d2a08';
+  // Body
+  ctx.beginPath();ctx.ellipse(owlX,owlY,7,10,0,0,Math.PI*2);ctx.fill();
+  // Head
+  ctx.beginPath();ctx.arc(owlX,owlY-12,7,0,Math.PI*2);ctx.fill();
+  // Ear tufts
+  ctx.beginPath();ctx.moveTo(owlX-4,owlY-18);ctx.lineTo(owlX-7,owlY-24);ctx.lineTo(owlX-1,owlY-20);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(owlX+4,owlY-18);ctx.lineTo(owlX+7,owlY-24);ctx.lineTo(owlX+1,owlY-20);ctx.closePath();ctx.fill();
+  // Eyes glow
+  ctx.globalAlpha=0.7+Math.sin(frameN*0.05)*0.2;
+  ctx.fillStyle='rgba(180,255,80,0.9)';
+  ctx.beginPath();ctx.arc(owlX-3,owlY-12,2.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(owlX+3,owlY-12,2.5,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.restore();
+
+  // Mist along ground
+  ctx.save();
+  for(var msi=0;msi<5;msi++){
+    var msx=((msi*W/4 + frameN*0.3)%W+W*2)%W;
+    ctx.globalAlpha=0.08+Math.sin(frameN*0.01+msi)*0.04;
+    var msg=ctx.createRadialGradient(msx,gameH-10,5,msx,gameH-10,80);
+    msg.addColorStop(0,'rgba(100,255,80,0.4)');
+    msg.addColorStop(1,'rgba(40,180,20,0)');
+    ctx.fillStyle=msg;
+    ctx.beginPath();ctx.ellipse(msx,gameH-10,80,22,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
 function drawAtmosphere(style,icC,gameH){
+  if(style==='forest'||style==='enchanted'){
+    drawAncientForest(gameH);
+    return;
+  }
   if(frameN%3!==0) return;
   if(style==='volcano'||style==='burningcity'){
     ctx.save();ctx.globalAlpha=0.35;
@@ -1025,6 +1284,59 @@ function drawFly(){
   var d=fly,t=frameN*0.10;
   var buzzSpeed=4.0;
   var sk=getSkin(), fx=sk.fx||'';
+
+  // Mystical end-of-level transformation
+  if(colorP>0.75 && state==='playing'){
+    var transP=Math.min(1,(colorP-0.75)/0.25); // 0 to 1 over last 25% of level
+    // Spawn transformation particles
+    if(frameN%2===0){
+      for(var tp=0;tp<3;tp++){
+        var angle=Math.random()*Math.PI*2;
+        var dist=20+Math.random()*30;
+        steamParticles.push({
+          x:d.x+Math.cos(angle)*dist,
+          y:d.y+Math.sin(angle)*dist,
+          vx:Math.cos(angle)*(0.3+Math.random()*0.6),
+          vy:Math.sin(angle)*(0.3+Math.random()*0.6)-0.8,
+          r:2+Math.random()*4,
+          life:1.0,
+          decay:0.012+Math.random()*0.01,
+          hue:Math.random()<0.5?(45+Math.random()*20):(270+Math.random()*40)
+        });
+      }
+    }
+    // Outer aura pulse
+    ctx.save();
+    var auraSize=50+Math.sin(frameN*0.12)*15+transP*40;
+    ctx.globalAlpha=(0.15+transP*0.35)*0.8;
+    var auraGrad=ctx.createRadialGradient(d.x,d.y,5,d.x,d.y,auraSize);
+    var hue1=transP>0.5?55:270+transP*170; // purple -> gold
+    auraGrad.addColorStop(0,'hsla('+hue1+',100%,85%,0.8)');
+    auraGrad.addColorStop(0.5,'hsla('+hue1+',100%,65%,0.4)');
+    auraGrad.addColorStop(1,'hsla('+hue1+',100%,50%,0)');
+    ctx.fillStyle=auraGrad;
+    ctx.beginPath();ctx.arc(d.x,d.y,auraSize,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // Orbiting sparkles
+    ctx.save();
+    for(var si2=0;si2<6;si2++){
+      var sangle=frameN*0.06+si2*(Math.PI/3);
+      var srad=28+transP*20+Math.sin(frameN*0.1+si2)*8;
+      var sx2=d.x+Math.cos(sangle)*srad;
+      var sy2=d.y+Math.sin(sangle)*srad*0.6;
+      ctx.globalAlpha=(0.5+Math.sin(frameN*0.1+si2)*0.3)*transP;
+      var sparkHue=si2%2===0?55:280;
+      ctx.fillStyle='hsl('+sparkHue+',100%,80%)';
+      var sparkR=2+transP*3+Math.sin(frameN*0.15+si2)*1.5;
+      ctx.beginPath();ctx.arc(sx2,sy2,sparkR,0,Math.PI*2);ctx.fill();
+      // sparkle cross
+      ctx.strokeStyle='hsl('+sparkHue+',100%,90%)';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(sx2-sparkR*2,sy2);ctx.lineTo(sx2+sparkR*2,sy2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(sx2,sy2-sparkR*2);ctx.lineTo(sx2,sy2+sparkR*2);ctx.stroke();
+    }
+    ctx.restore();
+  }
   for(var i=0;i<d.trail.length;i++){
     var pt=d.trail[i];
     var a=(i/d.trail.length)*0.38,r=(i/d.trail.length)*5+1;
@@ -1111,6 +1423,21 @@ function drawFly(){
   ctx.beginPath();ctx.moveTo(4,3);ctx.lineTo(9,7);ctx.stroke();
   ctx.globalAlpha=1;
   ctx.restore();
+  // Mystical white transformation fade over the body
+  if(colorP>0.75 && state==='playing'){
+    var transP2=Math.min(1,(colorP-0.75)/0.25);
+    ctx.save();
+    ctx.translate(d.x,d.y);
+    ctx.rotate(Math.max(-0.32,Math.min(0.32,d.vy*0.04)));
+    ctx.globalAlpha=transP2*0.65+Math.sin(frameN*0.15)*0.1*transP2;
+    var wfg=ctx.createRadialGradient(0,0,2,0,0,30);
+    wfg.addColorStop(0,'rgba(255,255,255,1)');
+    wfg.addColorStop(0.4,'rgba(220,200,255,0.7)');
+    wfg.addColorStop(1,'rgba(180,140,255,0)');
+    ctx.fillStyle=wfg;
+    ctx.beginPath();ctx.ellipse(0,0,60,28,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -1143,27 +1470,243 @@ function spawnObstacle(){
   var x=W+30;
   if(currentWorldLevel && currentWorldLevel.worldId==='earth' && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
     var progress=levelTimer/((levelDuration||80)*60);
-    var w=24+Math.random()*16;
-    if(progress<0.3){
-      var h2=gameH*(0.25+Math.random()*0.2);
-      obstacles.push({x:x,y:gameH-h2,w:w,h:h2,side:'bottom',type:'tree',phase:Math.random()*Math.PI*2});
-    } else if(progress<0.6){
-      var side=frameN%2===0?'bottom':'top';
-      var h2=gameH*(0.28+Math.random()*0.22);
-      var y=side==='bottom'?gameH-h2:0;
-      obstacles.push({x:x,y:y,w:w,h:h2,side:side,type:'tree',phase:Math.random()*Math.PI*2});
-    } else {
-      var gapSize=gameH*0.32;
-      var gapY=gameH*(0.25+Math.random()*0.42);
-      var topH=gapY;
-      var botH=gameH-gapY-gapSize;
-      if(botH>20&&topH>20){
+    var w=38+Math.random()*16;
+    var gameH2=gameH;
+    var side=obstTimer%2===0?'bottom':'top';
+    if(progress>0.70 && Math.random()<0.4){
+      var gapSize=gameH2*0.26;
+      var gapY=gameH2*(0.30+Math.random()*0.25);
+      var topH=gapY; var botH=gameH2-gapY-gapSize;
+      if(botH>80&&topH>80){
         obstacles.push({x:x,y:0,w:w,h:topH,side:'top',type:'tree',phase:Math.random()*Math.PI*2,paired:true});
         obstacles.push({x:x,y:gapY+gapSize,w:w,h:botH,side:'bottom',type:'tree',phase:Math.random()*Math.PI*2,paired:true});
-      } else {
-        var h2=gameH*(0.3+Math.random()*0.2);
-        obstacles.push({x:x,y:gameH-h2,w:w,h:h2,side:'bottom',type:'tree',phase:Math.random()*Math.PI*2});
+        return;
       }
+    }
+    var minH=0.62+progress*0.14; var maxH=0.82+progress*0.08;
+    var h2=gameH2*(minH+Math.random()*(maxH-minH));
+    var y2=side==='bottom'?gameH2-h2:0;
+    obstacles.push({x:x,y:y2,w:w,h:h2,side:side,type:'tree',phase:Math.random()*Math.PI*2});
+    if(progress>0.50&&Math.random()<0.15&&frogs.length<2){
+      frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+    }
+    return;
+  }
+
+  // ---- GENERIC WORLD LEVEL SPAWNER ----
+  if(currentWorldLevel){
+    var lid=currentWorldLevel.level.id;
+    var progress=levelTimer/((levelDuration||80)*60);
+    var gameH2=gameH;
+    var side=obstTimer%2===0?'bottom':'top';
+
+    // Helper: spawn single tall obstacle
+    function spawnSingle(minH,maxH,ww,type){
+      var h2=gameH2*(minH+Math.random()*(maxH-minH));
+      var y2=side==='bottom'?gameH2-h2:0;
+      obstacles.push({x:x,y:y2,w:ww,h:h2,side:side,type:type||'mountain',phase:Math.random()*Math.PI*2});
+    }
+    // Helper: spawn paired obstacles
+    function spawnPair(minGap,maxGap,ww,type){
+      var gapSize=gameH2*(minGap+Math.random()*(maxGap-minGap));
+      var gapY=gameH2*(0.20+Math.random()*0.40);
+      var topH=gapY; var botH=gameH2-gapY-gapSize;
+      if(botH>70&&topH>70){
+        obstacles.push({x:x,y:0,w:ww,h:topH,side:'top',type:type||'mountain',phase:Math.random()*Math.PI*2,paired:true});
+        obstacles.push({x:x,y:gapY+gapSize,w:ww,h:botH,side:'bottom',type:type||'mountain',phase:Math.random()*Math.PI*2,paired:true});
+        return true;
+      }
+      return false;
+    }
+
+    // e2 - Jungle Canopy: tall jungle vines/trees, monkeys ambush, gets dense
+    if(lid==='e2'){
+      var w=36+Math.random()*18;
+      if(progress>0.65&&Math.random()<0.45){ if(spawnPair(0.24,0.30,w,'tree')) return; }
+      spawnSingle(0.58+progress*0.16, 0.78+progress*0.10, w, 'tree');
+      if(progress>0.40&&Math.random()<0.18&&frogs.length<2)
+        frogs.push({x:W+120,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+      return;
+    }
+    // e3 - Frog Swamp: shorter murky obstacles, constant frog ambushes, gets chaotic
+    if(lid==='e3'){
+      var w=34+Math.random()*20;
+      if(progress>0.50&&Math.random()<0.50){ if(spawnPair(0.26,0.34,w,'mountain')) return; }
+      spawnSingle(0.52+progress*0.18, 0.72+progress*0.10, w, 'mountain');
+      if(Math.random()<0.25&&frogs.length<3)
+        frogs.push({x:W+80+Math.random()*60,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+      return;
+    }
+    // e4 - Tropical Beach: wave-like paired obstacles from bottom, breezy feel
+    if(lid==='e4'){
+      var w=40+Math.random()*20;
+      if(progress>0.40&&Math.random()<0.55){ if(spawnPair(0.28,0.36,w,'mountain')) return; }
+      // Beach mostly bottom obstacles (waves/palm trees)
+      side='bottom';
+      if(Math.random()<0.3) side='top';
+      spawnSingle(0.55+progress*0.16, 0.75+progress*0.10, w, 'mountain');
+      if(progress>0.60&&Math.random()<0.12&&frogs.length<2)
+        frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+      return;
+    }
+    // e5 - Mountain Lake: fishing poles and rocks, tight paired gaps mid-level
+    if(lid==='e5'){
+      var w=32+Math.random()*16;
+      if(progress>0.30&&Math.random()<0.60){ if(spawnPair(0.24,0.30,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.18, 0.80+progress*0.08, w, 'mountain');
+      return;
+    }
+
+    // f1 - Volcanic Hellscape: lava boulders, narrow gaps, always intense
+    if(lid==='f1'){
+      var w=38+Math.random()*18;
+      if(Math.random()<0.55){ if(spawnPair(0.22+progress*0.04, 0.28, w, 'mountain')) return; }
+      spawnSingle(0.60+progress*0.16, 0.82+progress*0.08, w, 'mountain');
+      return;
+    }
+    // f2 - Desert Sands: sandstone pillars mostly from bottom, occasional top
+    if(lid==='f2'){
+      var w=36+Math.random()*20;
+      side=Math.random()<0.65?'bottom':'top';
+      if(progress>0.55&&Math.random()<0.45){ if(spawnPair(0.26,0.32,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.18, 0.80+progress*0.10, w, 'mountain');
+      return;
+    }
+    // f3 - Burning City: building rubble, jagged pairs, very punishing late
+    if(lid==='f3'){
+      var w=42+Math.random()*22;
+      if(progress>0.35&&Math.random()<0.60){ if(spawnPair(0.20+progress*0.04, 0.26, w, 'mountain')) return; }
+      spawnSingle(0.62+progress*0.16, 0.84+progress*0.08, w, 'mountain');
+      return;
+    }
+    // f4 - Lava Cavern: stalactites from top AND stalagmites from bottom, paired always
+    if(lid==='f4'){
+      var w=36+Math.random()*16;
+      if(progress>0.20&&Math.random()<0.70){ if(spawnPair(0.20+progress*0.06, 0.26, w, 'mountain')) return; }
+      spawnSingle(0.64+progress*0.16, 0.84+progress*0.08, w, 'mountain');
+      return;
+    }
+    // f5 - Firestorm: maximum difficulty, tight pairs from start, fastest speed
+    if(lid==='f5'){
+      var w=38+Math.random()*14;
+      if(Math.random()<0.75){ if(spawnPair(0.18+progress*0.04, 0.24, w, 'mountain')) return; }
+      spawnSingle(0.66+progress*0.14, 0.86+progress*0.08, w, 'mountain');
+      return;
+    }
+
+    // w1 - Crystal Void: floating crystal shards from all sides, eerie spacing
+    if(lid==='w1'){
+      var w=32+Math.random()*18;
+      if(progress>0.40&&Math.random()<0.50){ if(spawnPair(0.26,0.34,w,'mountain')) return; }
+      spawnSingle(0.56+progress*0.18, 0.78+progress*0.10, w, 'mountain');
+      return;
+    }
+    // w2 - Ice Cavern: icicles from top heavy, paired mid-level
+    if(lid==='w2'){
+      var w=34+Math.random()*16;
+      side=Math.random()<0.60?'top':'bottom'; // icicles hang from ceiling
+      if(progress>0.45&&Math.random()<0.55){ if(spawnPair(0.24,0.30,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.18, 0.80+progress*0.10, w, 'mountain');
+      return;
+    }
+    // w3 - Mountain Lake: poles and rocks, fish jump from bottom
+    if(lid==='w3'){
+      var w=30+Math.random()*16;
+      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.26,0.32,w,'mountain')) return; }
+      side=Math.random()<0.55?'bottom':'top';
+      spawnSingle(0.56+progress*0.18, 0.76+progress*0.12, w, 'mountain');
+      return;
+    }
+    // w4 - Storm Front: lightning debris, chaotic mixed pairs, very fast
+    if(lid==='w4'){
+      var w=36+Math.random()*18;
+      if(progress>0.25&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.04, 0.28, w, 'mountain')) return; }
+      spawnSingle(0.60+progress*0.18, 0.82+progress*0.08, w, 'mountain');
+      return;
+    }
+    // w5 - Celestial Ruins: ancient pillars, very tall paired obstacles
+    if(lid==='w5'){
+      var w=38+Math.random()*16;
+      if(progress>0.30&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.04, 0.26, w, 'mountain')) return; }
+      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      return;
+    }
+
+    // i1 - Frozen Tundra: ice walls, mostly paired, slippery feel
+    if(lid==='i1'){
+      var w=38+Math.random()*18;
+      if(progress>0.30&&Math.random()<0.55){ if(spawnPair(0.26,0.32,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.18, 0.80+progress*0.10, w, 'mountain');
+      return;
+    }
+    // i2 - Arctic Tundra: ice slides from top, penguins occasionally leap
+    if(lid==='i2'){
+      var w=36+Math.random()*18;
+      side=Math.random()<0.55?'top':'bottom';
+      if(progress>0.45&&Math.random()<0.55){ if(spawnPair(0.24,0.30,w,'mountain')) return; }
+      spawnSingle(0.60+progress*0.16, 0.80+progress*0.10, w, 'mountain');
+      if(progress>0.50&&Math.random()<0.15&&frogs.length<2)
+        frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+      return;
+    }
+    // i3 - Ice Cavern: stalactites top-heavy, narrow gaps
+    if(lid==='i3'){
+      var w=34+Math.random()*16;
+      side=Math.random()<0.65?'top':'bottom';
+      if(progress>0.40&&Math.random()<0.60){ if(spawnPair(0.22+progress*0.04,0.28,w,'mountain')) return; }
+      spawnSingle(0.62+progress*0.16, 0.82+progress*0.08, w, 'mountain');
+      return;
+    }
+    // i4 - Crystal Void: crystals from all sides, disorienting paired gaps
+    if(lid==='i4'){
+      var w=34+Math.random()*18;
+      if(progress>0.20&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.06,0.28,w,'mountain')) return; }
+      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      return;
+    }
+    // i5 - The Blizzard: maximum ice difficulty, relentless tight pairs
+    if(lid==='i5'){
+      var w=36+Math.random()*14;
+      if(Math.random()<0.78){ if(spawnPair(0.18+progress*0.04,0.24,w,'mountain')) return; }
+      spawnSingle(0.66+progress*0.14, 0.88+progress*0.06, w, 'mountain');
+      return;
+    }
+
+    // g1 - The Moon: moon craters low gravity feel, wide spaced but deadly
+    if(lid==='g1'){
+      var w=40+Math.random()*20;
+      side=Math.random()<0.60?'bottom':'top'; // craters from ground
+      if(progress>0.45&&Math.random()<0.50){ if(spawnPair(0.26,0.34,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.18, 0.80+progress*0.10, w, 'mountain');
+      return;
+    }
+    // g2 - Deep Space: asteroids from all directions, paired and fast
+    if(lid==='g2'){
+      var w=36+Math.random()*18;
+      if(progress>0.30&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.06,0.28,w,'mountain')) return; }
+      spawnSingle(0.60+progress*0.18, 0.82+progress*0.08, w, 'mountain');
+      return;
+    }
+    // g3 - Mars: red rock formations, dusty storms mid-level, tight gaps
+    if(lid==='g3'){
+      var w=38+Math.random()*18;
+      if(progress>0.25&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.06,0.26,w,'mountain')) return; }
+      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      return;
+    }
+    // g4 - Venus: volcanic paired obstacles, always tight, lava clouds
+    if(lid==='g4'){
+      var w=38+Math.random()*16;
+      if(Math.random()<0.72){ if(spawnPair(0.20+progress*0.04,0.26,w,'mountain')) return; }
+      spawnSingle(0.64+progress*0.16, 0.86+progress*0.08, w, 'mountain');
+      return;
+    }
+    // g5 - Saturn: ring obstacles from both sides, hardest level in game
+    if(lid==='g5'){
+      var w=40+Math.random()*16;
+      if(Math.random()<0.82){ if(spawnPair(0.16+progress*0.04,0.22,w,'mountain')) return; }
+      spawnSingle(0.68+progress*0.14, 0.90+progress*0.06, w, 'mountain');
+      return;
     }
     return;
   }
@@ -1305,6 +1848,108 @@ function getObstacleColors(os){
   return map[os]||map['default'];
 }
 
+function drawForestTreeObstacle(o, gameH){
+  var x=o.x, w=o.w, h=o.h, side=o.side;
+  ctx.save();
+  if(side==='bottom'){
+    // Trunk
+    var trunkW=w*0.38;
+    var trunkGrad=ctx.createLinearGradient(x+w*0.5,gameH,x+w*0.5,o.y+h*0.6);
+    trunkGrad.addColorStop(0,'#2a1208');
+    trunkGrad.addColorStop(0.5,'#3a1a0a');
+    trunkGrad.addColorStop(1,'#4a2510');
+    ctx.fillStyle=trunkGrad;
+    ctx.beginPath();
+    ctx.moveTo(x+w*0.5-trunkW*0.5, gameH);
+    ctx.bezierCurveTo(x+w*0.5-trunkW*0.6, gameH-h*0.3, x+w*0.5-trunkW*0.4, o.y+h*0.5, x+w*0.5-trunkW*0.3, o.y+h*0.55);
+    ctx.lineTo(x+w*0.5+trunkW*0.3, o.y+h*0.55);
+    ctx.bezierCurveTo(x+w*0.5+trunkW*0.4, o.y+h*0.5, x+w*0.5+trunkW*0.6, gameH-h*0.3, x+w*0.5+trunkW*0.5, gameH);
+    ctx.closePath();
+    ctx.fill();
+    // Bark texture lines
+    ctx.strokeStyle='rgba(20,8,0,0.4)';ctx.lineWidth=1.5;ctx.lineCap='round';
+    for(var bi=0;bi<3;bi++){
+      var bpct=0.2+bi*0.25;
+      ctx.beginPath();
+      ctx.moveTo(x+w*0.5-trunkW*0.4,gameH-h*bpct);
+      ctx.quadraticCurveTo(x+w*0.5,gameH-h*(bpct+0.05),x+w*0.5+trunkW*0.4,gameH-h*bpct);
+      ctx.stroke();
+    }
+    // Gnarled roots at base
+    ctx.strokeStyle='#2a1208';ctx.lineWidth=4;
+    for(var ri=0;ri<3;ri++){
+      var ra=(-0.5+ri*0.5);
+      ctx.beginPath();
+      ctx.moveTo(x+w*0.5,gameH-h*0.08);
+      ctx.quadraticCurveTo(x+w*0.5+Math.cos(ra)*w*0.8,gameH-4,x+w*0.5+Math.cos(ra)*w*1.1,gameH);
+      ctx.stroke();
+    }
+    // Canopy layers (3 overlapping puffs)
+    var canopyX=x+w*0.5;
+    var canopyY=o.y+h*0.55;
+    var canopyR=w*1.4;
+    for(var ci=0;ci<3;ci++){
+      var coff=[-canopyR*0.4, 0, canopyR*0.4];
+      var cyoff=[canopyR*0.3, 0, canopyR*0.3];
+      var cg=ctx.createRadialGradient(canopyX+coff[ci],canopyY+cyoff[ci],4,canopyX+coff[ci],canopyY+cyoff[ci],canopyR*0.85);
+      cg.addColorStop(0,'#2d8a18');
+      cg.addColorStop(0.4,'#1d6010');
+      cg.addColorStop(0.7,'#144808');
+      cg.addColorStop(1,'#0a3004');
+      ctx.fillStyle=cg;
+      ctx.beginPath();
+      ctx.ellipse(canopyX+coff[ci],canopyY+cyoff[ci],canopyR*0.85,canopyR*0.7,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    // Canopy glow
+    ctx.globalAlpha=0.18+Math.sin(frameN*0.025)*0.08;
+    var glowG=ctx.createRadialGradient(canopyX,canopyY,4,canopyX,canopyY,canopyR);
+    glowG.addColorStop(0,'rgba(80,255,40,0.5)');
+    glowG.addColorStop(1,'rgba(20,180,0,0)');
+    ctx.fillStyle=glowG;
+    ctx.beginPath();ctx.ellipse(canopyX,canopyY,canopyR,canopyR*0.8,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  } else {
+    // Top hanging tree (upside down — roots at top, canopy hanging down)
+    var trunkW2=w*0.38;
+    var trunkGrad2=ctx.createLinearGradient(x+w*0.5,0,x+w*0.5,o.h*0.6);
+    trunkGrad2.addColorStop(0,'#2a1208');
+    trunkGrad2.addColorStop(1,'#4a2510');
+    ctx.fillStyle=trunkGrad2;
+    ctx.beginPath();
+    ctx.moveTo(x+w*0.5-trunkW2*0.5,0);
+    ctx.bezierCurveTo(x+w*0.5-trunkW2*0.6,h*0.3,x+w*0.5-trunkW2*0.3,h*0.5,x+w*0.5-trunkW2*0.3,h*0.55);
+    ctx.lineTo(x+w*0.5+trunkW2*0.3,h*0.55);
+    ctx.bezierCurveTo(x+w*0.5+trunkW2*0.3,h*0.5,x+w*0.5+trunkW2*0.6,h*0.3,x+w*0.5+trunkW2*0.5,0);
+    ctx.closePath();
+    ctx.fill();
+    // Hanging canopy
+    var canopyX2=x+w*0.5;
+    var canopyY2=h*0.55;
+    var canopyR2=w*1.4;
+    for(var ci2=0;ci2<3;ci2++){
+      var coff2=[-canopyR2*0.4,0,canopyR2*0.4];
+      var cyoff2=[-canopyR2*0.3,0,-canopyR2*0.3];
+      var cg2=ctx.createRadialGradient(canopyX2+coff2[ci2],canopyY2+cyoff2[ci2],4,canopyX2+coff2[ci2],canopyY2+cyoff2[ci2],canopyR2*0.85);
+      cg2.addColorStop(0,'#2d8a18');
+      cg2.addColorStop(0.5,'#1d6010');
+      cg2.addColorStop(1,'#0a3004');
+      ctx.fillStyle=cg2;
+      ctx.beginPath();
+      ctx.ellipse(canopyX2+coff2[ci2],canopyY2+cyoff2[ci2],canopyR2*0.85,canopyR2*0.7,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha=0.15+Math.sin(frameN*0.025)*0.07;
+    var glowG2=ctx.createRadialGradient(canopyX2,canopyY2,4,canopyX2,canopyY2,canopyR2);
+    glowG2.addColorStop(0,'rgba(80,255,40,0.5)');
+    glowG2.addColorStop(1,'rgba(20,180,0,0)');
+    ctx.fillStyle=glowG2;
+    ctx.beginPath();ctx.ellipse(canopyX2,canopyY2,canopyR2,canopyR2*0.8,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
 function drawObstacles(){
   var bm=getBiome(currentLevel)||BIOMES[0];
   var nbm=getNextBiome(currentLevel)||BIOMES[0];
@@ -1319,7 +1964,11 @@ function drawObstacles(){
   for(var i=0;i<obstacles.length;i++){
     var o=obstacles[i];
     if(o.x+o.w<-20) {obstacles.splice(i,1);i--;continue;}
-    drawSolidObstacle(o,gameH,c0,c1,c2);
+    if(os==='root'||os==='branch'){
+      drawForestTreeObstacle(o,gameH);
+    } else {
+      drawSolidObstacle(o,gameH,c0,c1,c2);
+    }
   }
   for(var i=0;i<movingObst.length;i++){
     var m=movingObst[i];
@@ -1642,9 +2291,30 @@ function checkCollision(){
   var showHit=document.getElementById('optHitbox')&&document.getElementById('optHitbox').checked;
   if(showHit){ctx.strokeStyle='rgba(255,0,0,0.6)';ctx.lineWidth=1;ctx.strokeRect(hx,hy,hw,hh);}
   if(hy<0||hy+hh>gameH-4) return 'boundary';
+  var bm=getBiome(currentLevel)||BIOMES[0];
+  var os=bm.obstStyle||'default';
+  var isForest=(os==='root'||os==='branch');
   for(var i=0;i<obstacles.length;i++){
     var o=obstacles[i];
-    if(hx<o.x+o.w&&hx+hw>o.x&&hy<o.y+o.h&&hy+hh>o.y){
+    // For forest trees use trunk only for collision — canopy is visual
+    var ox,ow,oy,oh;
+    if(isForest){
+      var trunkW=o.w*0.38;
+      ox=o.x+o.w*0.5-trunkW*0.5;
+      ow=trunkW;
+      if(o.side==='bottom'){
+        // trunk is bottom 60% of obstacle
+        oy=o.y+o.h*0.4;
+        oh=o.h*0.6;
+      } else {
+        // trunk is top 60% of obstacle
+        oy=o.y;
+        oh=o.h*0.6;
+      }
+    } else {
+      ox=o.x; ow=o.w; oy=o.y; oh=o.h;
+    }
+    if(hx<ox+ow&&hx+hw>ox&&hy<oy+oh&&hy+hh>oy){
       if(infiniteActive){spawnDebris(o);obstacles.splice(i,1);return null;}
       return 'rock';
     }
@@ -1711,10 +2381,41 @@ function triggerLevelClear(){
   }
   try{sfxLevelClear();}catch(e){}
   state='levelclear';
-  lvTitle.textContent='LEVEL '+currentLevel+' CLEAR!';
+  lvTitle.textContent='LEVEL CLEAR!';
   lvSub.textContent='';
   lvOverlay.classList.add('show');
-  setTimeout(function(){lvOverlay.classList.remove('show');startNextLevel();},1500);
+  setTimeout(function(){
+    lvOverlay.classList.remove('show');
+    // If playing a world map level, advance to next level in world
+    if(currentWorldLevel){
+      var world=getWorldById(currentWorldLevel.worldId);
+      var nextIdx=currentWorldLevel.levelIdx+1;
+      if(nextIdx<world.levels.length){
+        var nextLevel=world.levels[nextIdx];
+        currentWorldLevel={worldId:world.id,levelIdx:nextIdx,level:nextLevel};
+        currentLevel=nextLevel.biomeIdx;
+        levelDuration=nextLevel.duration||80;
+        levelTimer=0; colorP=0; levelTransitioning=false;
+        speed=2.0; obstInterval=180; obstTimer=0;
+        obstacles=[]; frogs=[]; moths=[]; branches=[]; movingObst=[];
+        infiniteActive=false; infiniteTimer=0; infiniteMothSpawned=false; infMoth=null;
+        infMothSpawnTimer=0; debris=[]; steamParticles=[]; lightningBolts=[];
+        document.getElementById('infiniteHud').classList.remove('show');
+        fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
+        initBg(); updateLevelUI();
+        state='playing';
+        showToast(nextLevel.icon+' '+nextLevel.name+'!');
+      } else {
+        // Finished all levels in world — go back to world map
+        currentWorldLevel=null;
+        stopMusic();
+        showScreen('screenWorldMap');
+        buildWorldMap();
+      }
+    } else {
+      startNextLevel();
+    }
+  },1500);
 }
 
 function die(){
@@ -1766,10 +2467,25 @@ function update(){
   if(gameMode==='infinite'){
     speed=Math.min(maxSpeed,2.2+(score/2000)*(maxSpeed-2.2));
     obstInterval=Math.max(80,160-Math.floor(score/300));
-  } else if(currentWorldLevel && currentWorldLevel.worldId==='earth' && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
+  } else if(currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
     var prog=levelTimer/((levelDuration||80)*60);
-    speed=1.6+prog*1.2;
-    obstInterval=Math.max(100,200-Math.floor(prog*80));
+    speed=1.4+prog*prog*2.2;
+    obstInterval=Math.max(90, prog<0.7 ? Math.floor(220-prog*100) : Math.floor(160-prog*50));
+    if(prog>0.44&&prog<0.46&&windItems.length===0&&!windActive){
+      spawnWind();
+      showToast('\ud83c\udf2c\ufe0f Grab the wind to attract moths!');
+    }
+  } else if(currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.id!=='e1'){
+    var prog=levelTimer/((levelDuration||80)*60);
+    var lid2=currentWorldLevel.level.id;
+    // Speed and difficulty scale by world and level within world
+    var worldSpeeds={earth:2.0,fire:2.4,water:2.2,ice:2.3,galaxy:2.6};
+    var baseSpd=worldSpeeds[currentWorldLevel.worldId]||2.0;
+    speed=baseSpd+prog*prog*2.0;
+    var baseInterval=lid2==='f5'||lid2==='i5'||lid2==='g5'?160:
+                     lid2==='f4'||lid2==='i4'||lid2==='g4'?170:180;
+    obstInterval=Math.max(75, Math.floor(baseInterval-prog*90));
+    if(prog>0.44&&prog<0.46&&windItems.length===0&&!windActive) spawnWind();
   } else if(!currentWorldLevel){
     speed=getLevelSpeed(currentLevel);
   }
@@ -2027,7 +2743,15 @@ function restartGame(){
   initAudio();sfxMenuSelect();
   document.getElementById('overlayDead').classList.add('hidden');
   if(wingTrailRuns>0) wingTrailRuns--;
-  resetGame();state='playing';
+  var savedWorldLevel=currentWorldLevel;
+  resetGame();
+  if(savedWorldLevel){
+    currentWorldLevel=savedWorldLevel;
+    currentLevel=savedWorldLevel.level.biomeIdx;
+    levelDuration=savedWorldLevel.level.duration||80;
+    speed=2.0; obstInterval=180;
+  }
+  state='playing';
   gameStartTime=Date.now();
   if(AC) AC.resume().then(function(){playMusic('main');});
 }
@@ -2181,18 +2905,10 @@ var levelProgress = {};
 var currentWorldLevel = null;
 
 function worldUnlocked(world){
-  if(world.id==='earth') return true;
-  if(world.id==='galaxy') return ownedSkins.indexOf('legendary')>=0||ownedSkins.indexOf('galaxy')>=0;
-  if(!world.skinReq) return true;
-  for(var i=0;i<world.skinReq.length;i++) if(ownedSkins.indexOf(world.skinReq[i])>=0) return true;
-  return false;
+  return true;
 }
 function levelUnlocked(worldId, levelIdx){
-  if(!worldUnlocked(getWorldById(worldId))) return false;
-  if(levelIdx===0) return true;
-  var world=getWorldById(worldId);
-  var prevId=world.levels[levelIdx-1].id;
-  return levelProgress[prevId]!==undefined;
+  return true;
 }
 function getWorldById(id){ for(var i=0;i<WORLDS.length;i++) if(WORLDS[i].id===id) return WORLDS[i]; return WORLDS[0]; }
 
@@ -2275,7 +2991,7 @@ document.getElementById('ldPlayBtn').addEventListener('touchstart',function(e){
   var _sld3=document.getElementById('screenLevelDetail');
   if(_sld3){_sld3.classList.add('hidden');_sld3.style.display='none';}
   gameMode='story';
-  currentWorldLevel={worldId:_ldWorld.id,levelIdx:WORLDS.indexOf(_ldWorld),level:_ldLevel};
+  currentWorldLevel={worldId:_ldWorld.id,levelIdx:_ldWorld.levels.indexOf(_ldLevel),level:_ldLevel};
   var _targetBiome=_ldLevel.biomeIdx;
   showScreen(null);
   try{resetGame();}catch(ex){}
@@ -2297,7 +3013,7 @@ document.getElementById('ldPlayBtn').addEventListener('click',function(){
   try{sfxMenuSelect();}catch(ex){}
   var _sldh=document.getElementById('screenLevelDetail');if(_sldh){_sldh.classList.add('hidden');_sldh.style.display='none';}
   gameMode='story';
-  currentWorldLevel={worldId:_ldWorld.id,levelIdx:WORLDS.indexOf(_ldWorld),level:_ldLevel};
+  currentWorldLevel={worldId:_ldWorld.id,levelIdx:_ldWorld.levels.indexOf(_ldLevel),level:_ldLevel};
   var _targetBiome=_ldLevel.biomeIdx;
   showScreen(null);
   try{resetGame();}catch(ex){}
