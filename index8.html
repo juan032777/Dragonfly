@@ -2384,7 +2384,7 @@ try{
 
 }
 
-if(‘serviceWorker’ in navigator){
+if ('serviceWorker' in navigator) {
 navigator.serviceWorker.getRegistrations().then(function(regs){
 regs.forEach(function(reg){reg.unregister();});
 });
