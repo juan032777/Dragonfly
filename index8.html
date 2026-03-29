@@ -57,6 +57,10 @@ canvas { display:block; width:100%; height:100%; }
 .lv-bug { font-size:64px; animation:lvPulse 1s ease-in-out infinite; filter:drop-shadow(0 0 20px #fff); }
 .lv-title { font-size:30px; font-weight:700; color:#fff; text-shadow:0 0 30px #ffffffaa; letter-spacing:4px; text-align:center; }
 .lv-sub { font-family:'Crimson Text',serif; font-style:italic; font-size:15px; color:#c0d8ff; }
+.lv-stars { display:flex; gap:8px; align-items:center; justify-content:center; }
+.lv-star { font-size:36px; opacity:0; transform:scale(0.3) rotate(-30deg); transition:opacity 0.3s, transform 0.3s; filter:drop-shadow(0 0 10px #ffd700); }
+.lv-star.earned { opacity:1; transform:scale(1) rotate(0deg); }
+.lv-star.empty { opacity:0.2; transform:scale(1); filter:none; }
 @keyframes lvPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
 
 /* Moth pop */
@@ -258,6 +262,11 @@ canvas { display:block; width:100%; height:100%; }
 
   <div id="levelOverlay">
     <div class="lv-bug">🪲</div>
+    <div class="lv-stars" id="lvStars">
+      <div class="lv-star" id="lvStar1">⭐</div>
+      <div class="lv-star" id="lvStar2">⭐</div>
+      <div class="lv-star" id="lvStar3">⭐</div>
+    </div>
     <div class="lv-title" id="lvTitle">LEVEL CLEAR!</div>
     <div class="lv-sub" id="lvSub"></div>
   </div>
@@ -654,6 +663,30 @@ var lifetimeMoths=0, totalLevelsCleared=0, bestNoDamageLevels=0;
 var totalInfiniteUses=0, bestScore=0, worldsVisited=0;
 var totalNearMisses=0, totalInfiniteSeconds=0;
 var currentRunNoDamage=true;
+var currentRunMoths=0; // moths collected this level segment
+
+function calcStars(moths, noDamage){
+  if(moths>=15&&noDamage) return 3;
+  if(moths>=5) return 2;
+  return 1;
+}
+
+function showStarOverlay(stars){
+  var s1=document.getElementById('lvStar1');
+  var s2=document.getElementById('lvStar2');
+  var s3=document.getElementById('lvStar3');
+  if(!s1) return;
+  s1.className='lv-star'; s2.className='lv-star'; s3.className='lv-star';
+  setTimeout(function(){s1.className=stars>=1?'lv-star earned':'lv-star empty';},180);
+  setTimeout(function(){s2.className=stars>=2?'lv-star earned':'lv-star empty';},420);
+  setTimeout(function(){s3.className=stars>=3?'lv-star earned':'lv-star empty';},660);
+}
+
+function getStars(levelId){
+  var p=levelProgress[levelId];
+  if(!p) return 0;
+  return typeof p==='object'?p.stars:1;
+}
 
 function checkAchievements(){
   var newUnlock=false;
@@ -987,6 +1020,7 @@ function resetGame(){
   farOff=0; nearOff=0; ruinOff=0;
   skinTransformTimer=SKIN_TRANSFORM_DURATION;
   starlightParticles=[];
+  currentRunNoDamage=true; currentRunMoths=0;
   state='playing';
 }
 
@@ -3707,6 +3741,7 @@ function drawMovingObstacle(m,gameH,c0,c1,capC,os,c2){
     ctx.beginPath();ctx.arc(6,-m.w*0.36,2.5,0,Math.PI*2);ctx.fill();
     ctx.restore();
   } else {
+    var mg=ctx.createRadialGradient(m.x,m.y,4,m.x,m.y,m.w*0.5);
     mg.addColorStop(0,c0);mg.addColorStop(1,c1);
     ctx.fillStyle=mg;ctx.beginPath();ctx.arc(m.x,m.y,m.w*0.5,0,Math.PI*2);ctx.fill();
   }
@@ -3799,7 +3834,7 @@ function updateMoths(){
       comboTimer=COMBO_WINDOW; comboCount++;
       comboMult=comboCount>=5?3:comboCount>=3?2:1;
       var earned=m.value*comboMult;
-      mothsTotal+=earned; lifetimeMoths+=earned; sfxMothCollect(m.golden);
+      mothsTotal+=earned; lifetimeMoths+=earned; currentRunMoths+=earned; sfxMothCollect(m.golden);
       showMothPop(m.x,m.y,earned,m.golden,comboCount>=3?comboMult:0);
       updateMothUI();
     }
@@ -4264,7 +4299,10 @@ function triggerLevelClear(){
   if(currentWorldLevel){
     var lid=currentWorldLevel.level.id;
     var sc=Math.floor(score/10);
-    if(levelProgress[lid]===undefined||sc>levelProgress[lid]) levelProgress[lid]=sc;
+    var earnedStars=calcStars(currentRunMoths, currentRunNoDamage);
+    var prevStars=getStars(lid);
+    var prevScore=typeof levelProgress[lid]==='object'?levelProgress[lid].score:(levelProgress[lid]||0);
+    levelProgress[lid]={score:Math.max(sc,prevScore), stars:Math.max(earnedStars,prevStars)};
   }
   try{sfxLevelClear();}catch(e){}
   state='levelclear';
@@ -4272,7 +4310,12 @@ function triggerLevelClear(){
   totalLevelsCleared++;
   if(currentRunNoDamage) bestNoDamageLevels++;
   if(currentWorldLevel) worldsVisited=Math.max(worldsVisited,['earth','fire','water','ice','galaxy'].indexOf(currentWorldLevel.worldId)+1);
-  currentRunNoDamage=true;
+
+  // Stars for overlay
+  var overlayStars=currentWorldLevel?calcStars(currentRunMoths, currentRunNoDamage):0;
+  showStarOverlay(overlayStars);
+
+  currentRunNoDamage=true; currentRunMoths=0;
   checkAchievements();
   saveGame();
   // Show what's coming next
@@ -4317,7 +4360,7 @@ function triggerLevelClear(){
         initBg();
         skinTransformTimer=SKIN_TRANSFORM_DURATION;
         starlightParticles=[];
-        // Update HUD label AFTER overlay is gone and state is set to next level
+        currentRunNoDamage=true; currentRunMoths=0;
         updateLevelUI();
         state='playing';
       } else {
@@ -4960,12 +5003,21 @@ function buildWorldMap(){
           var isUnlocked=levelUnlocked(world.id,li2);
           var isDone=levelProgress[level.id]!==undefined;
           var isCurrent=isUnlocked&&!isDone;
+          var starCount=getStars(level.id);
           var dot=document.createElement('div');
           dot.className='lvl-dot'+(isDone?' done':isCurrent?' current':' locked-lvl');
           dot.style.background=isDone?world.border:isCurrent?'rgba('+world.glow+',0.3)':'rgba(0,0,0,0.3)';
           dot.style.color=isDone?'#000':'rgba(255,255,255,0.9)';
-          dot.textContent=li2+1;
-          dot.title=level.name;
+          dot.style.fontSize='9px';
+          // Show stars if done, otherwise level number
+          if(isDone&&starCount>0){
+            dot.textContent='★'.repeat(starCount)+'☆'.repeat(3-starCount);
+            dot.style.fontSize='7px'; dot.style.letterSpacing='-1px';
+            dot.style.color=starCount===3?'#ffd700':starCount===2?'#fff':'rgba(255,255,255,0.7)';
+          } else {
+            dot.textContent=li2+1;
+          }
+          dot.title=level.name+(isDone?' ('+starCount+'★)':'');
           if(isUnlocked){
             dot.addEventListener('click',function(){sfxMenuTap();showLevelDetail(world,level,li2);});
             dot.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuTap();showLevelDetail(world,level,li2);},{passive:false});
@@ -4989,7 +5041,10 @@ function showLevelDetail(world,level,li){
   if(world.skinReqName) req.textContent=(unlocked?'\u2713 Skin OK':'\ud83d\udd12 '+world.skinReqName);
   else req.textContent='';
   var best=levelProgress[level.id];
-  document.getElementById('ldBest').textContent=best!==undefined?best:'--';
+  var bestScore2=best!==undefined?(typeof best==='object'?best.score:best):'--';
+  var bestStars=getStars(level.id);
+  var starsHtml=bestStars>0?('<span style="color:#ffd700;letter-spacing:2px;">'+'★'.repeat(bestStars)+'<span style="opacity:0.25;">'+'★'.repeat(3-bestStars)+'</span></span> '):'';
+  document.getElementById('ldBest').innerHTML=starsHtml+bestScore2;
   var btn=document.getElementById('ldPlayBtn');
   if(isLvlUnlocked){btn.className='ld-play';btn.textContent='\u25b6 PLAY';}
   else{btn.className='ld-play locked-play';btn.textContent='\ud83d\udd12 LOCKED';}
