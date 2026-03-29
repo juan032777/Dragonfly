@@ -318,6 +318,7 @@ canvas { display:block; width:100%; height:100%; }
       <button class="mbtn mbtn-primary" id="btnWorldMap">🌍 &nbsp;WORLD MAP</button>
       <button class="mbtn mbtn-primary" id="btnPlayInfinite" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">▶ &nbsp;INFINITE MODE</button>
       <button class="mbtn mbtn-secondary" id="btnShop" style="display:flex;align-items:center;justify-content:center;gap:10px;">🎃 &nbsp;SHOP</button>
+      <button class="mbtn mbtn-secondary" id="btnAchievements">🏅 &nbsp;ACHIEVEMENTS</button>
       <button class="mbtn mbtn-secondary" id="btnLeaderboard">🏆 &nbsp;LEADERBOARD</button>
       <button class="mbtn mbtn-ghost" id="btnOptions">⚙️ &nbsp;OPTIONS</button>
     </div>
@@ -418,6 +419,16 @@ canvas { display:block; width:100%; height:100%; }
         <button class="shop-buy" data-action="moths-shield"><span class="bp">🦋 150</span></button>
       </div>
       <div class="shop-card">
+        <div class="shop-card-icon">⏱️</div>
+        <div style="flex:1"><div class="shop-card-name">Slow-Mo Bubble</div><div class="shop-card-desc">Time slows for 8 seconds</div></div>
+        <button class="shop-buy" data-action="moths-slowmo"><span class="bp">🦋 120</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">👻</div>
+        <div style="flex:1"><div class="shop-card-name">Ghost Mode</div><div class="shop-card-desc">Pass through one obstacle</div></div>
+        <button class="shop-buy" data-action="moths-ghost"><span class="bp">🦋 200</span></button>
+      </div>
+      <div class="shop-card">
         <div class="shop-card-icon">✨</div>
         <div style="flex:1"><div class="shop-card-name">Wing Trail Boost</div><div class="shop-card-desc">Rainbow sparkle trail for 3 runs</div></div>
         <button class="shop-buy" data-action="moths-trail"><span class="bp">🦋 80</span></button>
@@ -480,6 +491,20 @@ canvas { display:block; width:100%; height:100%; }
       </div>
       <button class="mbtn mbtn-primary" id="btnPlayStory2" style="margin-top:8px;">▶ &nbsp;START STORY</button>
     </div>
+  </div>
+
+  <!-- Achievements Screen -->
+
+  <div class="menu-screen hidden" id="screenAchievements">
+    <div class="topband"></div>
+    <div class="sub-header">
+      <div class="back-btn" id="achBack">←</div>
+      <div class="sub-title">ACHIEVEMENTS</div>
+    </div>
+    <div style="padding:4px 16px 8px;width:100%;text-align:center;">
+      <div id="achProgress" style="color:#b06eff;font-size:11px;letter-spacing:2px;">0 / 0 UNLOCKED</div>
+    </div>
+    <div id="achList" style="width:100%;padding:0 16px 20px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;"></div>
   </div>
 
   <!-- Leaderboard Screen -->
@@ -600,6 +625,101 @@ var debris=[], steamParticles=[], lightningBolts=[];
 var lightningTimer=0, lightningBurstActive=false, lightningBurstFrames=0, lightningBurstCooldown=0;
 
 var ownedSkins=['default'], activeSkin='default', noAds=false;
+
+// ── SLOW-MO POWERUP ──
+var slowMoActive=false, slowMoTimer=0, SLOW_MO_DURATION=480, slowMoCharges=0;
+// ── GHOST MODE POWERUP ──
+var ghostActive=false, ghostCharges=0;
+
+// ── ACHIEVEMENTS ──
+var achievements=[
+  {id:'first_flight',  icon:'🪲', name:'First Flight',      desc:'Complete your first level',          req:function(){return totalLevelsCleared>=1;},         reward:50},
+  {id:'moth_100',      icon:'🦋', name:'Moth Hunter',        desc:'Collect 100 moths total',            req:function(){return lifetimeMoths>=100;},            reward:100},
+  {id:'moth_1000',     icon:'🦋', name:'Moth Master',        desc:'Collect 1,000 moths total',          req:function(){return lifetimeMoths>=1000;},           reward:300},
+  {id:'moth_10000',    icon:'🦋', name:'Moth Legend',        desc:'Collect 10,000 moths total',         req:function(){return lifetimeMoths>=10000;},          reward:1000},
+  {id:'no_hit',        icon:'⭐', name:'Untouchable',        desc:'Complete a level without losing a life', req:function(){return bestNoDamageLevels>=1;},     reward:150},
+  {id:'skins_5',       icon:'🎨', name:'Collector',          desc:'Unlock 5 skins',                    req:function(){return ownedSkins.length>=5;},          reward:200},
+  {id:'skins_10',      icon:'🎨', name:'Wardrobe',           desc:'Unlock 10 skins',                   req:function(){return ownedSkins.length>=10;},         reward:500},
+  {id:'infinite',      icon:'⚡', name:'Infinite Power',     desc:'Activate Infinite Dragonfly',       req:function(){return totalInfiniteUses>=1;},          reward:100},
+  {id:'score_100',     icon:'🏅', name:'Century',            desc:'Score 100 points in one run',       req:function(){return bestScore>=100;},                reward:75},
+  {id:'score_500',     icon:'🏅', name:'High Flyer',         desc:'Score 500 points in one run',       req:function(){return bestScore>=500;},                reward:200},
+  {id:'score_1000',    icon:'🥇', name:'Legendary Run',      desc:'Score 1,000 points in one run',     req:function(){return bestScore>=1000;},               reward:500},
+  {id:'worlds_2',      icon:'🌍', name:'Explorer',           desc:'Complete a level in 2 worlds',      req:function(){return worldsVisited>=2;},              reward:150},
+  {id:'worlds_5',      icon:'🌍', name:'World Traveller',    desc:'Complete a level in all 5 worlds',  req:function(){return worldsVisited>=5;},              reward:500},
+  {id:'close_call',    icon:'😅', name:'Close Call',         desc:'Trigger 10 near misses',             req:function(){return totalNearMisses>=10;},           reward:100},
+  {id:'golden',        icon:'🪙', name:'Golden Hour',        desc:'Spend 60s in Infinite Dragonfly mode',req:function(){return totalInfiniteSeconds>=60;},    reward:200}
+];
+var unlockedAchievements={};
+var lifetimeMoths=0, totalLevelsCleared=0, bestNoDamageLevels=0;
+var totalInfiniteUses=0, bestScore=0, worldsVisited=0;
+var totalNearMisses=0, totalInfiniteSeconds=0;
+var currentRunNoDamage=true;
+
+function checkAchievements(){
+  var newUnlock=false;
+  for(var i=0;i<achievements.length;i++){
+    var a=achievements[i];
+    if(!unlockedAchievements[a.id] && a.req()){
+      unlockedAchievements[a.id]=Date.now();
+      mothsTotal+=a.reward;
+      updateMothUI();
+      showToast('🏅 '+a.name+'! +'+a.reward+' 🦋');
+      newUnlock=true;
+    }
+  }
+  if(newUnlock) saveGame();
+}
+
+function buildAchievements(){
+  var list=document.getElementById('achList');
+  var prog=document.getElementById('achProgress');
+  if(!list) return;
+  list.innerHTML='';
+  var unlocked=Object.keys(unlockedAchievements).length;
+  if(prog) prog.textContent=unlocked+' / '+achievements.length+' UNLOCKED';
+  for(var i=0;i<achievements.length;i++){
+    var a=achievements[i];
+    var done=!!unlockedAchievements[a.id];
+    var card=document.createElement('div');
+    card.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;border:1px solid '+(done?'#b06eff':'#3a1060')+';background:'+(done?'rgba(80,30,160,0.28)':'rgba(20,8,40,0.4)')+';';
+    card.innerHTML='<div style="font-size:26px;'+(done?'':'filter:grayscale(1);opacity:0.4;')+'">'+a.icon+'</div>'
+      +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+(done?'#e8d8ff':'#6a40aa')+';font-family:Cinzel,serif;letter-spacing:1px;">'+a.name+'</div>'
+      +'<div style="font-size:10px;color:#6a40aa;font-family:Crimson Text,serif;font-style:italic;margin-top:2px;">'+a.desc+'</div></div>'
+      +'<div style="text-align:right;"><div style="font-size:10px;color:'+(done?'#ffd700':'#4a1a6a')+';font-weight:700;">+'+a.reward+' 🦋</div>'
+      +(done?'<div style="font-size:9px;color:#6a40aa;margin-top:2px;">DONE</div>':'')+'</div>';
+    list.appendChild(card);
+  }
+}
+
+function drawSlowMoBubble(){
+  if(!slowMoActive) return;
+  var pct=slowMoTimer/SLOW_MO_DURATION;
+  ctx.save();
+  ctx.globalAlpha=0.12*pct;
+  ctx.fillStyle='rgba(100,200,255,0.3)';
+  ctx.fillRect(0,0,W,H);
+  // Blue vignette
+  var vg=ctx.createRadialGradient(W/2,H/2,H*0.15,W/2,H/2,H*0.7);
+  vg.addColorStop(0,'rgba(80,180,255,0)');
+  vg.addColorStop(1,'rgba(20,80,200,'+0.25*pct+')');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+}
+
+function drawGhostMode(){
+  if(!ghostActive) return;
+  ctx.save();
+  ctx.globalAlpha=0.06+Math.sin(frameN*0.1)*0.03;
+  ctx.fillStyle='rgba(200,220,255,0.2)';
+  ctx.fillRect(0,0,W,H);
+  ctx.restore();
+}
+// ── NEAR-MISS SLOW-MO ──
+// ── SCREEN SHAKE ──
+var shakeFrames=0, shakeIntensity=0;
+// ── NEAR-MISS SLOW-MO ──
+var nearMissActive=false, nearMissTimer=0, NEAR_MISS_DURATION=18;
+var nearMissCooldown=0;
 var shieldActive=false, wingTrailRuns=0;
 
 var bgStars=[],bgClouds=[],bgMtnFar=[],bgMtnNear=[],bgRuins=[];
@@ -785,6 +905,50 @@ function getHue(hex){
   return h;
 }
 
+function saveGame(){
+  try{
+    var data={
+      mothsTotal:mothsTotal, ownedSkins:ownedSkins, activeSkin:activeSkin,
+      highScoreStory:highScoreStory, highScoreInfinite:highScoreInfinite,
+      levelProgress:levelProgress, noAds:noAds, infiniteOwned:infiniteOwned,
+      wingTrailRuns:wingTrailRuns, leaderboard:leaderboard,
+      unlockedAchievements:unlockedAchievements,
+      lifetimeMoths:lifetimeMoths, totalLevelsCleared:totalLevelsCleared,
+      bestNoDamageLevels:bestNoDamageLevels, totalInfiniteUses:totalInfiniteUses,
+      bestScore:bestScore, worldsVisited:worldsVisited,
+      totalNearMisses:totalNearMisses, totalInfiniteSeconds:totalInfiniteSeconds
+    };
+    localStorage.setItem('dragonflySave',JSON.stringify(data));
+  }catch(e){}
+}
+
+function loadGame(){
+  try{
+    var raw=localStorage.getItem('dragonflySave');
+    if(!raw) return;
+    var data=JSON.parse(raw);
+    if(data.mothsTotal) mothsTotal=data.mothsTotal;
+    if(data.ownedSkins) ownedSkins=data.ownedSkins;
+    if(data.activeSkin) activeSkin=data.activeSkin;
+    if(data.highScoreStory) highScoreStory=data.highScoreStory;
+    if(data.highScoreInfinite) highScoreInfinite=data.highScoreInfinite;
+    if(data.levelProgress) levelProgress=data.levelProgress;
+    if(data.noAds) noAds=data.noAds;
+    if(data.infiniteOwned!==undefined) infiniteOwned=data.infiniteOwned;
+    if(data.wingTrailRuns) wingTrailRuns=data.wingTrailRuns;
+    if(data.leaderboard) leaderboard=data.leaderboard;
+    if(data.unlockedAchievements) unlockedAchievements=data.unlockedAchievements;
+    if(data.lifetimeMoths) lifetimeMoths=data.lifetimeMoths;
+    if(data.totalLevelsCleared) totalLevelsCleared=data.totalLevelsCleared;
+    if(data.bestNoDamageLevels) bestNoDamageLevels=data.bestNoDamageLevels;
+    if(data.totalInfiniteUses) totalInfiniteUses=data.totalInfiniteUses;
+    if(data.bestScore) bestScore=data.bestScore;
+    if(data.worldsVisited) worldsVisited=data.worldsVisited;
+    if(data.totalNearMisses) totalNearMisses=data.totalNearMisses;
+    if(data.totalInfiniteSeconds) totalInfiniteSeconds=data.totalInfiniteSeconds;
+  }catch(e){}
+}
+
 function initBg(){
   bgStars=[];
   for(var i=0;i<60;i++) bgStars.push({x:Math.random()*W,y:Math.random()*H*0.6,r:Math.random()*1.5+0.3,tw:Math.random()*Math.PI*2});
@@ -880,6 +1044,7 @@ function updateMothUI(){
     if(b){b.innerHTML='<span class="bp" style="color:#ffd700;">\u2713 OWNED</span>';b.classList.add('owned');}
     showToast('\u26A1 Infinite Dragonfly unlocked at 2,000 moths!');
   }
+  saveGame();
 }
 var toastTimer=null;
 function showToast(msg){
@@ -903,7 +1068,7 @@ function showMothPop(x,y,val,golden,mult){
 }
 
 function showScreen(id){
-  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap'];
+  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements'];
   for(var i=0;i<screens.length;i++){
     var el=document.getElementById(screens[i]);
     if(!el) continue;
@@ -3634,7 +3799,7 @@ function updateMoths(){
       comboTimer=COMBO_WINDOW; comboCount++;
       comboMult=comboCount>=5?3:comboCount>=3?2:1;
       var earned=m.value*comboMult;
-      mothsTotal+=earned; sfxMothCollect(m.golden);
+      mothsTotal+=earned; lifetimeMoths+=earned; sfxMothCollect(m.golden);
       showMothPop(m.x,m.y,earned,m.golden,comboCount>=3?comboMult:0);
       updateMothUI();
     }
@@ -3872,6 +4037,7 @@ function drawInfMoth(){
 function activateInfinite(){
   infiniteActive=true;
   infiniteTransformTimer=SKIN_TRANSFORM_DURATION;
+  totalInfiniteUses++;
   var FPS=60,total=levelDuration*FPS;
   infiniteTimer=Math.max(60,total-levelTimer);
   INFINITE_DURATION=infiniteTimer;
@@ -4021,7 +4187,18 @@ function checkCollision(){
     }
     if(hx<ox+ow&&hx+hw>ox&&hy<oy+oh&&hy+hh>oy){
       if(infiniteActive){spawnDebris(o);obstacles.splice(i,1);return null;}
+      if(ghostActive){ghostActive=false;obstacles.splice(i,1);showToast('👻 Ghost mode used!');return null;}
       return 'rock';
+    }
+    // Near-miss: within 12px but not hitting
+    if(nearMissCooldown<=0){
+      var nearX=hx<ox?ox-(hx+hw):hx>(ox+ow)?hx-(ox+ow):0;
+      var nearY=hy<oy?oy-(hy+hh):hy>(oy+oh)?hy-(oy+oh):0;
+      if(nearX>=0&&nearX<12&&nearY===0||nearY>=0&&nearY<12&&nearX===0){
+        nearMissActive=true; nearMissTimer=NEAR_MISS_DURATION; nearMissCooldown=90;
+        totalNearMisses++;
+        showToast('😅 CLOSE!');
+      }
     }
   }
   for(var i=0;i<movingObst.length;i++){
@@ -4071,7 +4248,9 @@ function loseLife(){
     obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
     return;
   }
+  currentRunNoDamage=false;
   lives--; updateLivesUI();
+  shakeFrames=14; shakeIntensity=7;
   try{sfxHitGeneric();}catch(e){}
   fly.vy=0; fly.y=H*0.42; fly.trail=[];
   obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
@@ -4090,6 +4269,12 @@ function triggerLevelClear(){
   try{sfxLevelClear();}catch(e){}
   state='levelclear';
   colorP=0;
+  totalLevelsCleared++;
+  if(currentRunNoDamage) bestNoDamageLevels++;
+  if(currentWorldLevel) worldsVisited=Math.max(worldsVisited,['earth','fire','water','ice','galaxy'].indexOf(currentWorldLevel.worldId)+1);
+  currentRunNoDamage=true;
+  checkAchievements();
+  saveGame();
   // Show what's coming next
   var _completedTitle, _completedSub;
   if(currentWorldLevel){
@@ -4163,10 +4348,32 @@ function die(){
   if(highScEl) highScEl.textContent='BEST: '+Math.max(highScoreStory,highScoreInfinite);
   var finEl=document.getElementById('finalScore');if(finEl) finEl.textContent=sc;
   document.getElementById('overlayDead').classList.remove('hidden');
+  bestScore=Math.max(bestScore,sc);
+  currentRunNoDamage=true;
+  ghostActive=false; slowMoActive=false;
+  checkAchievements();
+  saveGame();
 }
 
 function update(){
   if(state!=='playing') return;
+  // Near-miss slow-mo
+  if(nearMissCooldown>0) nearMissCooldown--;
+  if(nearMissActive){
+    nearMissTimer--;
+    if(nearMissTimer<=0) nearMissActive=false;
+    if(nearMissTimer%2===0) return;
+  }
+  // Slow-Mo powerup
+  if(slowMoActive){
+    slowMoTimer--;
+    if(slowMoTimer<=0){slowMoActive=false;showToast('⏱️ Slow-Mo faded');}
+    if(frameN%2===0) return; // half speed
+  }
+  // Screen shake tick
+  if(shakeFrames>0) shakeFrames--;
+  // Infinite seconds tracking
+  if(infiniteActive) totalInfiniteSeconds+=1/60;
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
   fly.vy += 0.38;
@@ -4234,6 +4441,12 @@ function update(){
 
 function draw(){
   ctx.clearRect(0,0,W,H);
+  // Screen shake
+  if(shakeFrames>0){
+    var sx=(Math.random()-0.5)*shakeIntensity*(shakeFrames/14);
+    var sy=(Math.random()-0.5)*shakeIntensity*(shakeFrames/14);
+    ctx.save(); ctx.translate(sx,sy);
+  }
   drawSky(); drawBg();
   drawObstacles();
   drawInfiniteLayer();
@@ -4249,6 +4462,8 @@ function draw(){
   updateSteam();
   updateLightning();
   updateTransParticles();
+  drawSlowMoBubble();
+  drawGhostMode();
   // Combo multiplier display
   if(comboCount>=3&&comboTimer>0&&state==='playing'){
     var comboAlpha=Math.min(1,comboTimer/30);
@@ -4263,6 +4478,18 @@ function draw(){
     ctx.shadowBlur=0;
     ctx.restore();
   }
+  // Near-miss flash vignette
+  if(nearMissActive){
+    var nmAlpha=(nearMissTimer/NEAR_MISS_DURATION)*0.25;
+    ctx.save();
+    var nmg=ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.8);
+    nmg.addColorStop(0,'rgba(255,255,255,0)');
+    nmg.addColorStop(1,'rgba(255,255,100,'+nmAlpha+')');
+    ctx.fillStyle=nmg; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+  // Close screen shake translate
+  if(shakeFrames>0) ctx.restore();
 }
 
 var _loopErr=false;
@@ -4403,6 +4630,8 @@ function buyWithMoths(itemId,cost){
   else if(itemId==='life5'){lives=Math.min(lives+5,99);updateLivesUI();showToast('\u2764\ufe0f +5 lives!');}
   else if(itemId==='life10'){lives=Math.min(lives+10,99);updateLivesUI();showToast('\u2764\ufe0f +10 lives!');}
   else if(itemId==='shield'){shieldActive=true;showToast('\ud83d\udee1\ufe0f Shield active!');}
+  else if(itemId==='slowmo'){slowMoActive=true;slowMoTimer=SLOW_MO_DURATION;showToast('⏱️ Slow-Mo active for 8 seconds!');}
+  else if(itemId==='ghost'){ghostActive=true;showToast('👻 Ghost mode ready — pass through 1 obstacle!');}
   else if(itemId==='trail'){wingTrailRuns=Math.min(wingTrailRuns+3,99);showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');}
 }
 
@@ -4419,6 +4648,8 @@ document.getElementById('screenShop').addEventListener('click',function(e){
   else if(a==='moths-life5') buyWithMoths('life5',800);
   else if(a==='moths-life10') buyWithMoths('life10',1800);
   else if(a==='moths-shield') buyWithMoths('shield',150);
+  else if(a==='moths-slowmo') buyWithMoths('slowmo',120);
+  else if(a==='moths-ghost') buyWithMoths('ghost',200);
   else if(a==='moths-trail') buyWithMoths('trail',80);
   else if(a==='buy-noads') buyItem('noads');
   else if(a==='buy-bundle') buyItem('bundle');
@@ -4506,7 +4737,7 @@ if(devUnlockSkinsBtn) devUnlockSkinsBtn.addEventListener('click',function(){sfxM
 if(devUnlockAllBtn) devUnlockAllBtn.addEventListener('click',function(){sfxMenuSelect();for(var i=0;i<SKINS.length;i++)if(ownedSkins.indexOf(SKINS[i].id)<0)ownedSkins.push(SKINS[i].id);buildSkins();showToast('\ud83d\udc51 All skins unlocked!');});
 if(devTestShieldBtn) devTestShieldBtn.addEventListener('click',function(){sfxMenuTap();shieldActive=true;showToast('\ud83d\udee1\ufe0f Shield activated!');});
 if(devTestWingsBtn) devTestWingsBtn.addEventListener('click',function(){sfxMenuTap();wingTrailRuns+=5;showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');});
-if(devResetBtn) devResetBtn.addEventListener('click',function(){sfxMenuBack();mothsTotal=0;ownedSkins=['default'];activeSkin='default';shieldActive=false;wingTrailRuns=0;updateCurrencyUI();updateMothUI();buildSkins();showToast('\ud83d\udd04 Progress reset');});
+if(devResetBtn) devResetBtn.addEventListener('click',function(){sfxMenuBack();mothsTotal=0;ownedSkins=['default'];activeSkin='default';shieldActive=false;wingTrailRuns=0;highScoreStory=0;highScoreInfinite=0;levelProgress={};leaderboard=[];try{localStorage.removeItem('dragonflySave');}catch(e){}updateCurrencyUI();updateMothUI();buildSkins();showToast('\ud83d\udd04 Progress reset');});
 
 function startGame(){
   initAudio();sfxMenuSelect();
@@ -4566,7 +4797,12 @@ if(storyBack) storyBack.addEventListener('click',function(){sfxMenuBack();showSc
 var worldMapBack=document.getElementById('worldMapBack');
 if(worldMapBack) worldMapBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
 if(worldMapBack) worldMapBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
-var btnLeaderboard=document.getElementById('btnLeaderboard');
+var btnAchievements=document.getElementById('btnAchievements');
+if(btnAchievements) btnAchievements.addEventListener('click',function(){sfxMenuTap();buildAchievements();showScreen('screenAchievements');});
+if(btnAchievements) btnAchievements.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuTap();buildAchievements();showScreen('screenAchievements');},{passive:false});
+var achBack=document.getElementById('achBack');
+if(achBack) achBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
+if(achBack) achBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
 if(btnLeaderboard) btnLeaderboard.addEventListener('click',function(){sfxMenuTap();updateLeaderboard();showScreen('screenLeaderboard');});
 if(btnLeaderboard) btnLeaderboard.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuTap();updateLeaderboard();showScreen('screenLeaderboard');},{passive:false});
 var lbBack=document.getElementById('lbBack');
@@ -4864,7 +5100,7 @@ if(document.readyState==='complete'||document.readyState==='interactive') buildP
 
 try{
   (function(){
-    var allScreens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard'];
+    var allScreens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenAchievements'];
     allScreens.forEach(function(id){
       var el=document.getElementById(id);
       if(el) el.classList.add('hidden');
@@ -4874,6 +5110,7 @@ try{
 
     var b=document.getElementById('buyInfiniteBtn');
     if(b&&infiniteOwned){b.innerHTML='<span class="bp" style="color:#ffd700;">\u2713 OWNED</span>';b.classList.add('owned');}
+    loadGame();
     updateCurrencyUI();updateMothUI();
     initBg(); loop();
   })();
