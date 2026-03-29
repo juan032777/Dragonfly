@@ -3489,8 +3489,8 @@ function doTap(){
   if(state!=='playing') return;
   if(TAP_COOLDOWN>0) return;
   if(Date.now()-gameStartTime < 300) return;
-  fly.vy = Math.max(-6.5, fly.vy - 3.2);
-  TAP_COOLDOWN=4;
+  fly.vy = Math.max(-8.0, fly.vy - 3.8);
+  TAP_COOLDOWN=3;
   try{ sfxTap(); }catch(e){}
 }
 
@@ -3589,9 +3589,9 @@ function update(){
   if(state!=='playing') return;
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
-  fly.vy += 0.18;
-  fly.vy *= 0.90;
-  fly.vy = Math.max(-5.5, Math.min(6.0, fly.vy));
+  fly.vy += 0.26;
+  fly.vy *= 0.92;
+  fly.vy = Math.max(-8.0, Math.min(8.0, fly.vy));
   fly.y += fly.vy;
   fly.trail.push({x:fly.x-20, y:fly.y});
   if(fly.trail.length>12) fly.trail.shift();
@@ -4013,9 +4013,9 @@ var WORLDS = [
   },
   {
     id: 'ice',
-    name: 'ICE REALM',
-    element: 'Ice & Wind',
-    icon: '\u2744\ufe0f',
+    name: 'AIR & WIND REALM',
+    element: 'Air & Wind',
+    icon: '\ud83c\udf2c\ufe0f',
     color: '#001828',
     border: '#80d8ff',
     glow: '128,216,255',
