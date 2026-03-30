@@ -828,23 +828,38 @@ function drawDragonBoss(){
     for(var di=0;di<b.deathParticles.length;di++){
       var dp=b.deathParticles[di];
       ctx.save();ctx.globalAlpha=dp.life;
-      ctx.fillStyle=dp.col;
+      ctx.fillStyle=dp.col;ctx.shadowColor=dp.col;ctx.shadowBlur=8;
       ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();
       ctx.restore();
     }
     return;
   }
 
-  // Breath fire particles
+  // ── EMBER GLOW AURA (behind everything) ──
+  ctx.save();
+  var auraCol=phase2?'rgba(255,30,0,':'rgba(255,90,0,';
+  var auraPulse=0.18+Math.sin(t*0.06)*0.08;
+  var ag2=ctx.createRadialGradient(b.x,b.y,10,b.x,b.y,110);
+  ag2.addColorStop(0,auraCol+(auraPulse*1.2)+')');
+  ag2.addColorStop(0.4,auraCol+(auraPulse*0.6)+')');
+  ag2.addColorStop(1,'rgba(200,0,0,0)');
+  ctx.fillStyle=ag2;ctx.beginPath();ctx.arc(b.x,b.y,110,0,Math.PI*2);ctx.fill();
+  // Secondary ember ring
+  ctx.globalAlpha=0.12+Math.sin(t*0.09+1)*0.05;
+  var ag3=ctx.createRadialGradient(b.x,b.y,40,b.x,b.y,160);
+  ag3.addColorStop(0,'rgba(255,140,0,0.5)');ag3.addColorStop(1,'rgba(255,20,0,0)');
+  ctx.fillStyle=ag3;ctx.beginPath();ctx.arc(b.x,b.y,160,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Fire breath particles
   if(b.breathParticles){
     for(var bi=b.breathParticles.length-1;bi>=0;bi--){
       var fp=b.breathParticles[bi];
-      fp.x+=fp.vx; fp.y+=fp.vy; fp.life-=0.03; fp.r+=0.8;
-      ctx.save();ctx.globalAlpha=fp.life*0.7;
+      fp.x+=fp.vx;fp.y+=fp.vy;fp.life-=0.025;fp.r+=1.2;
+      ctx.save();ctx.globalAlpha=fp.life*0.8;
+      ctx.shadowColor='rgba(255,100,0,0.8)';ctx.shadowBlur=12;
       var fg=ctx.createRadialGradient(fp.x,fp.y,0,fp.x,fp.y,fp.r);
-      fg.addColorStop(0,'rgba(255,255,200,0.9)');
-      fg.addColorStop(0.4,'rgba(255,120,10,0.6)');
-      fg.addColorStop(1,'rgba(200,30,0,0)');
+      fg.addColorStop(0,'rgba(255,255,180,0.95)');fg.addColorStop(0.35,'rgba(255,120,10,0.7)');fg.addColorStop(1,'rgba(200,20,0,0)');
       ctx.fillStyle=fg;ctx.beginPath();ctx.arc(fp.x,fp.y,fp.r,0,Math.PI*2);ctx.fill();
       ctx.restore();
       if(fp.life<=0) b.breathParticles.splice(bi,1);
@@ -853,230 +868,340 @@ function drawDragonBoss(){
 
   ctx.save();
   ctx.translate(b.x,b.y);
-  if(hurtFlash) ctx.globalAlpha=0.35;
+  if(hurtFlash) ctx.globalAlpha=0.3;
 
-  var bodyTilt=Math.sin(t*0.04)*0.08;
+  var bodyTilt=Math.sin(t*0.035)*0.07;
   ctx.rotate(bodyTilt);
 
-  // ── TAIL (drawn first, behind body) ──
-  var tailWag=Math.sin(t*0.07)*0.4;
+  // ── TAIL ── segmented, thickening toward body
+  var tailWag=Math.sin(t*0.065)*0.45;
   ctx.save();
-  ctx.strokeStyle='#6a1a00';ctx.lineWidth=18;ctx.lineCap='round';
-  ctx.shadowColor='#ff3300';ctx.shadowBlur=8;
-  ctx.beginPath();
-  ctx.moveTo(25,10);
-  ctx.bezierCurveTo(70,20+tailWag*15,100,10+tailWag*25,130,40+tailWag*30);
-  ctx.stroke();
-  ctx.lineWidth=10;ctx.strokeStyle='#8a2a00';
-  ctx.beginPath();
-  ctx.moveTo(25,10);
-  ctx.bezierCurveTo(70,20+tailWag*15,100,10+tailWag*25,130,40+tailWag*30);
-  ctx.stroke();
-  // Tail spikes
-  ctx.fillStyle='#cc4400';ctx.shadowBlur=0;
-  for(var si=0;si<5;si++){
-    var st=si/4;
-    var sx=25+st*(130-25), sy=10+st*(40-10)+tailWag*30*st;
-    ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.5+tailWag*st);
-    ctx.beginPath();ctx.moveTo(0,-8-si*1.5);ctx.lineTo(-4,0);ctx.lineTo(4,0);ctx.closePath();ctx.fill();
+  // Tail shadow/outline
+  ctx.strokeStyle='#1a0000';ctx.lineWidth=22;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(22,12);ctx.bezierCurveTo(65,22+tailWag*18,105,8+tailWag*28,138,38+tailWag*35);ctx.stroke();
+  // Tail main gradient
+  var tailG=ctx.createLinearGradient(22,0,138,0);
+  tailG.addColorStop(0,phase2?'#aa1800':'#881200');
+  tailG.addColorStop(0.5,phase2?'#882000':'#661500');
+  tailG.addColorStop(1,'#3a0800');
+  ctx.strokeStyle=tailG;ctx.lineWidth=16;
+  ctx.beginPath();ctx.moveTo(22,12);ctx.bezierCurveTo(65,22+tailWag*18,105,8+tailWag*28,138,38+tailWag*35);ctx.stroke();
+  // Tail scale segments
+  ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1.2;
+  for(var tsi=0;tsi<6;tsi++){
+    var tp=tsi/5;
+    var tsx=22+tp*116, tsy=12+tp*26+tailWag*tp*35;
+    var tsr=8-tsi*0.8;
+    ctx.beginPath();ctx.arc(tsx,tsy,tsr,0.3,Math.PI-0.3);ctx.stroke();
+  }
+  // Tail spines — pointed, not flat
+  ctx.fillStyle=phase2?'#ff5500':'#dd2200';
+  ctx.shadowColor='rgba(255,80,0,0.5)';ctx.shadowBlur=4;
+  for(var spi=0;spi<6;spi++){
+    var sp=spi/5;
+    var spx=22+sp*116, spy=12+sp*26+tailWag*sp*35-16;
+    var spSize=10-spi*1.2;
+    ctx.save();ctx.translate(spx,spy);ctx.rotate(-0.4+tailWag*sp*0.3);
+    ctx.beginPath();ctx.moveTo(0,-spSize*1.4);ctx.lineTo(-spSize*0.35,0);ctx.lineTo(spSize*0.35,0);ctx.closePath();ctx.fill();
     ctx.restore();
   }
+  ctx.shadowBlur=0;
   ctx.restore();
 
-  // ── WINGS ──
-  var wingFlap=Math.sin(t*0.14)*0.5+0.2;
-  if(b.chargeActive) wingFlap=0.9+Math.sin(t*0.3)*0.2;
+  // ── WINGS ── large leathery bat-like, detailed membrane
+  var wingFlap=Math.sin(t*0.13)*0.55+0.15;
+  if(b.chargeActive) wingFlap=1.0+Math.sin(t*0.28)*0.25;
 
-  // Left wing membrane
-  ctx.save();ctx.rotate(-wingFlap*0.6);
-  var wg=ctx.createLinearGradient(-110,0,0,0);
-  wg.addColorStop(0,phase2?'rgba(180,20,0,0.85)':'rgba(120,15,0,0.8)');
-  wg.addColorStop(0.5,phase2?'rgba(220,60,0,0.7)':'rgba(160,40,0,0.65)');
-  wg.addColorStop(1,'rgba(80,10,0,0.4)');
-  ctx.fillStyle=wg;
-  // Main membrane
-  ctx.beginPath();
-  ctx.moveTo(0,-5);
-  ctx.bezierCurveTo(-30,-40,-80,-50,-110,-20);
-  ctx.bezierCurveTo(-100,10,-60,25,-20,18);
-  ctx.bezierCurveTo(-10,15,-5,8,0,5);
-  ctx.closePath();ctx.fill();
-  // Wing bone structure
-  ctx.strokeStyle='rgba(60,8,0,0.7)';ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(-110,-20);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-5,5);ctx.lineTo(-80,-30);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-10,12);ctx.lineTo(-55,-10);ctx.stroke();
-  // Wing finger extensions
-  ctx.strokeStyle='rgba(40,5,0,0.5)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(-110,-20);ctx.lineTo(-125,-35);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-80,-30);ctx.lineTo(-95,-48);ctx.stroke();
-  ctx.restore();
-
-  // Right wing (mirrored)
-  ctx.save();ctx.scale(-1,1);ctx.rotate(-wingFlap*0.6);
-  ctx.fillStyle=wg;
-  ctx.beginPath();
-  ctx.moveTo(0,-5);
-  ctx.bezierCurveTo(-30,-40,-80,-50,-110,-20);
-  ctx.bezierCurveTo(-100,10,-60,25,-20,18);
-  ctx.bezierCurveTo(-10,15,-5,8,0,5);
-  ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(60,8,0,0.7)';ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(-110,-20);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-5,5);ctx.lineTo(-80,-30);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-10,12);ctx.lineTo(-55,-10);ctx.stroke();
-  ctx.strokeStyle='rgba(40,5,0,0.5)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(-110,-20);ctx.lineTo(-125,-35);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-80,-30);ctx.lineTo(-95,-48);ctx.stroke();
-  ctx.restore();
-
-  // ── BODY ──
-  var bodyG=ctx.createRadialGradient(-8,-5,8,0,8,38);
-  bodyG.addColorStop(0,phase2?'#cc3a00':'#aa2a00');
-  bodyG.addColorStop(0.4,phase2?'#882000':'#661500');
-  bodyG.addColorStop(1,'#2a0800');
-  ctx.fillStyle=bodyG;
-  ctx.beginPath();
-  ctx.ellipse(0,8,30,26,0,0,Math.PI*2);ctx.fill();
-  // Belly scales — lighter underbelly
-  var bellyG=ctx.createLinearGradient(-10,0,-10,30);
-  bellyG.addColorStop(0,'rgba(255,140,40,0.25)');
-  bellyG.addColorStop(1,'rgba(200,80,0,0.1)');
-  ctx.fillStyle=bellyG;
-  ctx.beginPath();ctx.ellipse(0,14,16,14,0,0,Math.PI*2);ctx.fill();
-  // Scale texture
-  ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=0.8;
-  for(var sci=0;sci<4;sci++){
-    ctx.beginPath();ctx.ellipse(-5+sci*4,sci*6-5,7-sci,4,0,0,Math.PI);ctx.stroke();
-  }
-  // Back spines
-  ctx.fillStyle=phase2?'#ff4400':'#cc2200';
-  for(var spi=0;spi<5;spi++){
-    ctx.save();ctx.translate(-12+spi*6,-18+spi*4);
-    ctx.rotate(-0.3+spi*0.12);
-    ctx.beginPath();ctx.moveTo(0,-14+spi*1.5);ctx.lineTo(-4,0);ctx.lineTo(4,0);ctx.closePath();ctx.fill();
+  for(var wi=0;wi<2;wi++){
+    ctx.save();
+    if(wi===1) ctx.scale(-1,1);
+    ctx.rotate(-wingFlap*0.7);
+    // Membrane — dark red with texture
+    var wmG=ctx.createLinearGradient(-120,0,0,0);
+    wmG.addColorStop(0,phase2?'rgba(160,15,0,0.88)':'rgba(100,10,0,0.82)');
+    wmG.addColorStop(0.45,phase2?'rgba(200,40,0,0.72)':'rgba(140,25,0,0.65)');
+    wmG.addColorStop(1,'rgba(60,5,0,0.3)');
+    ctx.fillStyle=wmG;
+    ctx.beginPath();
+    ctx.moveTo(0,-8);
+    ctx.bezierCurveTo(-25,-50,-70,-65,-115,-35);
+    ctx.bezierCurveTo(-108,0,-72,22,-28,18);
+    ctx.bezierCurveTo(-14,16,-6,10,0,6);
+    ctx.closePath();ctx.fill();
+    // Main wing spar bone
+    ctx.strokeStyle='rgba(40,4,0,0.8)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(0,-8);ctx.bezierCurveTo(-50,-42,-100,-38,-115,-35);ctx.stroke();
+    // Secondary finger bones
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(-6,5);ctx.bezierCurveTo(-45,-20,-85,-28,-98,-22);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-12,14);ctx.bezierCurveTo(-45,-4,-70,-8,-80,-4);ctx.stroke();
+    // Wing tip claw
+    ctx.strokeStyle='rgba(20,2,0,0.9)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(-115,-35);ctx.bezierCurveTo(-122,-44,-126,-52,-118,-58);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-98,-22);ctx.bezierCurveTo(-106,-32,-108,-40,-100,-44);ctx.stroke();
+    // Membrane veins
+    ctx.strokeStyle='rgba(80,8,0,0.3)';ctx.lineWidth=0.8;
+    for(var vi2=0;vi2<4;vi2++){
+      var vf=0.15+vi2*0.2;
+      ctx.beginPath();ctx.moveTo(-vf*115,-8+vf*14);ctx.bezierCurveTo(-vf*115-10,-18,-vf*115-5,-35,-vf*115+5,-38);ctx.stroke();
+    }
     ctx.restore();
   }
-  // Front legs
-  ctx.strokeStyle='#4a1000';ctx.lineWidth=7;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(-14,18);ctx.lineTo(-22,36);ctx.lineTo(-18,48);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(14,18);ctx.lineTo(22,36);ctx.lineTo(18,48);ctx.stroke();
-  // Claws
-  ctx.strokeStyle='#880800';ctx.lineWidth=2.5;
-  for(var ci=0;ci<3;ci++){
-    ctx.beginPath();ctx.moveTo(-18+ci*4,48);ctx.lineTo(-20+ci*4,58);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(18+ci*4-8,48);ctx.lineTo(16+ci*4,58);ctx.stroke();
-  }
 
-  // ── NECK ──
-  var neckBob=Math.sin(t*0.05)*0.15;
-  ctx.save();ctx.rotate(neckBob);
-  var neckG=ctx.createLinearGradient(-8,-20,-8,-55);
-  neckG.addColorStop(0,phase2?'#882000':'#661800');
-  neckG.addColorStop(1,phase2?'#aa2800':'#7a2000');
-  ctx.fillStyle=neckG;
-  ctx.beginPath();
-  ctx.moveTo(-10,-18);ctx.bezierCurveTo(-14,-32,-12,-46,-8,-56);
-  ctx.bezierCurveTo(-4,-58,4,-58,6,-56);
-  ctx.bezierCurveTo(8,-46,10,-32,10,-18);
-  ctx.closePath();ctx.fill();
-  // Neck scales
+  // ── BODY ── muscular, scaled, with underbelly
+  ctx.save();
+  // Body shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath();ctx.ellipse(4,14,34,28,0.1,0,Math.PI*2);ctx.fill();
+  // Main body
+  var bG=ctx.createRadialGradient(-10,-4,6,0,8,42);
+  bG.addColorStop(0,phase2?'#cc2800':'#aa1e00');
+  bG.addColorStop(0.35,phase2?'#8a1800':'#6a1200');
+  bG.addColorStop(0.7,'#3a0800');bG.addColorStop(1,'#1a0300');
+  ctx.fillStyle=bG;ctx.beginPath();ctx.ellipse(0,8,32,28,0,0,Math.PI*2);ctx.fill();
+  // Dorsal scale ridge
+  ctx.fillStyle=phase2?'#ff4400':'#cc2000';
+  ctx.shadowColor='rgba(255,60,0,0.4)';ctx.shadowBlur=5;
+  for(var dsi=0;dsi<6;dsi++){
+    var ds=dsi/5;
+    ctx.save();ctx.translate(-14+ds*28,-22+ds*8);ctx.rotate(-0.25+ds*0.1);
+    var dss=12-dsi*1.2;
+    ctx.beginPath();ctx.moveTo(0,-dss*1.5);ctx.bezierCurveTo(-dss*0.4,-dss*0.5,dss*0.4,-dss*0.5,dss*0.35,0);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.shadowBlur=0;
+  // Underbelly plates — lighter, segmented
+  var ubG=ctx.createLinearGradient(-8,4,-8,32);
+  ubG.addColorStop(0,'rgba(200,80,20,0.3)');ubG.addColorStop(1,'rgba(160,50,10,0.12)');
+  ctx.fillStyle=ubG;ctx.beginPath();ctx.ellipse(0,18,18,14,0,0,Math.PI*2);ctx.fill();
+  // Belly scale lines
   ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;
-  for(var ni=0;ni<4;ni++){
-    ctx.beginPath();ctx.ellipse(-1,-26-ni*8,6,3,0,0,Math.PI*2);ctx.stroke();
+  for(var ubi=0;ubi<4;ubi++){
+    ctx.beginPath();ctx.ellipse(0,10+ubi*5,13-ubi*1.5,3,-0.05,0,Math.PI);ctx.stroke();
   }
+  // Body scale texture
+  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=0.8;
+  for(var sci=0;sci<3;sci++){
+    for(var scj=0;scj<3;scj++){
+      ctx.beginPath();ctx.arc(-10+sci*10,-5+scj*8,4.5,0.2,Math.PI-0.2);ctx.stroke();
+    }
+  }
+  // Shoulder muscles
+  ctx.fillStyle=phase2?'#9a1600':'#781000';
+  ctx.beginPath();ctx.ellipse(-16,-2,12,10,-0.4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(16,-2,12,10,0.4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // ── FRONT LEGS ── muscular, with three-toed claws
+  ctx.save();
+  ctx.strokeStyle='#2a0400';ctx.lineWidth=10;ctx.lineCap='round';
+  // Left leg
+  ctx.beginPath();ctx.moveTo(-16,20);ctx.bezierCurveTo(-24,30,-22,40,-18,50);ctx.stroke();
+  ctx.lineWidth=7;ctx.strokeStyle='#4a0a00';
+  ctx.beginPath();ctx.moveTo(-16,20);ctx.bezierCurveTo(-24,30,-22,40,-18,50);ctx.stroke();
+  // Right leg
+  ctx.lineWidth=10;ctx.strokeStyle='#2a0400';
+  ctx.beginPath();ctx.moveTo(16,20);ctx.bezierCurveTo(24,30,22,40,18,50);ctx.stroke();
+  ctx.lineWidth=7;ctx.strokeStyle='#4a0a00';
+  ctx.beginPath();ctx.moveTo(16,20);ctx.bezierCurveTo(24,30,22,40,18,50);ctx.stroke();
+  // Claws
+  ctx.strokeStyle='#1a0200';ctx.lineWidth=2.5;ctx.lineCap='round';
+  for(var ci=0;ci<3;ci++){
+    ctx.beginPath();ctx.moveTo(-18+(ci-1)*5,50);ctx.bezierCurveTo(-20+(ci-1)*5,56,-18+(ci-1)*5,62,-14+(ci-1)*4,60);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(18+(ci-1)*5,50);ctx.bezierCurveTo(20+(ci-1)*5,56,18+(ci-1)*5,62,14+(ci-1)*4,60);ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── NECK ── thick, muscular, with spine ridges
+  var neckBob=Math.sin(t*0.045)*0.18;
+  ctx.save();ctx.rotate(neckBob-0.05);
+  // Neck shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.beginPath();ctx.moveTo(-12,-18);ctx.bezierCurveTo(-16,-34,-14,-52,-8,-62);ctx.bezierCurveTo(-2,-66,6,-66,10,-62);ctx.bezierCurveTo(14,-52,16,-34,12,-18);ctx.closePath();ctx.fill();
+  // Neck body
+  var nkG=ctx.createLinearGradient(-10,-18,-10,-62);
+  nkG.addColorStop(0,phase2?'#9a1600':'#781000');
+  nkG.addColorStop(0.5,phase2?'#b82000':'#8a1400');
+  nkG.addColorStop(1,phase2?'#cc2800':'#aa1e00');
+  ctx.fillStyle=nkG;
+  ctx.beginPath();ctx.moveTo(-12,-18);ctx.bezierCurveTo(-16,-34,-13,-52,-8,-62);ctx.bezierCurveTo(-3,-66,5,-66,9,-62);ctx.bezierCurveTo(13,-52,15,-34,12,-18);ctx.closePath();ctx.fill();
+  // Neck scale rings
+  ctx.strokeStyle='rgba(0,0,0,0.22)';ctx.lineWidth=1;
+  for(var nri=0;nri<5;nri++){
+    var ny=-22-nri*8;
+    ctx.beginPath();ctx.ellipse(0,ny,9-nri*0.3,3,0,0,Math.PI*2);ctx.stroke();
+  }
+  // Neck throat glow — fiery belly
+  ctx.globalAlpha=0.25+Math.sin(t*0.08)*0.1;
+  var tg2=ctx.createLinearGradient(0,-20,0,-62);
+  tg2.addColorStop(0,'rgba(255,120,0,0.6)');tg2.addColorStop(1,'rgba(255,200,0,0.2)');
+  ctx.fillStyle=tg2;
+  ctx.beginPath();ctx.ellipse(0,-40,5,18,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=hurtFlash?0.3:1;
   // Neck spines
-  ctx.fillStyle=phase2?'#ff5500':'#cc2200';
-  for(var nsi=0;nsi<3;nsi++){
-    ctx.save();ctx.translate(-12,-28-nsi*10);ctx.rotate(-0.4);
-    ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(-3,0);ctx.lineTo(3,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle=phase2?'#ff5500':'#dd2000';
+  ctx.shadowColor='rgba(255,80,0,0.5)';ctx.shadowBlur=4;
+  for(var nsi=0;nsi<4;nsi++){
+    ctx.save();ctx.translate(-12,-26-nsi*9);ctx.rotate(-0.4);
+    ctx.beginPath();ctx.moveTo(0,-8+nsi);ctx.lineTo(-3,0);ctx.lineTo(3,0);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.shadowBlur=0;
+  ctx.restore(); // neck
+
+  // ── HEAD ── heavy, angular, realistic dragon skull
+  ctx.save();
+  ctx.translate(-2,-64);
+  ctx.rotate(Math.sin(t*0.045)*0.12+neckBob*0.5);
+
+  // Head shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath();ctx.ellipse(-2,2,26,18,0.25,0,Math.PI*2);ctx.fill();
+
+  // Main skull
+  var hdG2=ctx.createRadialGradient(-8,-4,5,0,0,26);
+  hdG2.addColorStop(0,phase2?'#cc2800':'#aa2000');
+  hdG2.addColorStop(0.4,phase2?'#8a1800':'#6a1200');
+  hdG2.addColorStop(0.8,'#3a0800');hdG2.addColorStop(1,'#1a0200');
+  ctx.fillStyle=hdG2;
+  ctx.beginPath();
+  ctx.moveTo(8,-14);
+  ctx.bezierCurveTo(14,-12,16,-6,14,0);
+  ctx.bezierCurveTo(12,6,8,10,4,12);
+  ctx.bezierCurveTo(-2,14,-10,14,-16,10);
+  ctx.bezierCurveTo(-22,6,-24,0,-22,-8);
+  ctx.bezierCurveTo(-20,-16,-14,-18,-8,-16);
+  ctx.bezierCurveTo(-4,-14,2,-16,8,-14);
+  ctx.closePath();ctx.fill();
+
+  // Extended snout/muzzle
+  var snG=ctx.createLinearGradient(-24,4,-6,4);
+  snG.addColorStop(0,'#3a0800');snG.addColorStop(0.5,phase2?'#882000':'#661800');snG.addColorStop(1,phase2?'#aa2400':'#881c00');
+  ctx.fillStyle=snG;
+  ctx.beginPath();ctx.moveTo(-8,2);
+  ctx.bezierCurveTo(-14,0,-22,-2,-28,4);
+  ctx.bezierCurveTo(-28,10,-22,14,-16,14);
+  ctx.bezierCurveTo(-10,14,-6,10,-4,8);
+  ctx.closePath();ctx.fill();
+
+  // Lower jaw — slightly open, threatening
+  var jawG=ctx.createLinearGradient(-26,10,-6,10);
+  jawG.addColorStop(0,'#280600');jawG.addColorStop(1,phase2?'#881800':'#661200');
+  ctx.fillStyle=jawG;
+  ctx.beginPath();ctx.moveTo(-8,8);
+  ctx.bezierCurveTo(-14,10,-22,12,-26,14);
+  ctx.bezierCurveTo(-25,20,-18,22,-12,20);
+  ctx.bezierCurveTo(-8,18,-4,14,-2,10);
+  ctx.closePath();ctx.fill();
+
+  // Teeth — upper
+  ctx.fillStyle='#f8ead0';ctx.shadowColor='rgba(0,0,0,0.4)';ctx.shadowBlur=2;
+  for(var ti3=0;ti3<5;ti3++){
+    var tx3=-24+ti3*4.5,ty3=12;
+    ctx.save();ctx.translate(tx3,ty3);
+    ctx.beginPath();ctx.moveTo(-1.5,0);ctx.lineTo(0,8);ctx.lineTo(1.5,0);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  // Teeth — lower (smaller)
+  ctx.fillStyle='#e8d8c0';
+  for(var ti4=0;ti4<4;ti4++){
+    ctx.save();ctx.translate(-22+ti4*5,16);
+    ctx.beginPath();ctx.moveTo(-1,0);ctx.lineTo(0,-5);ctx.lineTo(1,0);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.shadowBlur=0;
+
+  // Nostrils — with heat glow
+  ctx.fillStyle='#1a0200';
+  ctx.beginPath();ctx.ellipse(-22,6,3,2,0.3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(-18,4,2.5,1.8,-0.2,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.globalAlpha=0.5+Math.sin(t*0.12)*0.25;
+  ctx.fillStyle='rgba(255,120,0,0.5)';
+  ctx.beginPath();ctx.arc(-22,6,5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(-18,4,4,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Head armor ridges / brow
+  ctx.fillStyle=phase2?'#cc2200':'#991800';
+  ctx.beginPath();ctx.ellipse(-4,-12,14,4,0.15,0,Math.PI*2);ctx.fill();
+  // Cheek scale plates
+  ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=0.8;
+  for(var hi=0;hi<3;hi++){
+    ctx.beginPath();ctx.ellipse(-14+hi*5,-4,4,3,0.1*hi,0,Math.PI*2);ctx.stroke();
+  }
+
+  // Curved horns — dark, with base
+  ctx.fillStyle='#0f0000';
+  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=3;
+  // Left horn
+  ctx.beginPath();ctx.moveTo(2,-14);ctx.bezierCurveTo(0,-22,4,-34,12,-40);ctx.bezierCurveTo(14,-40,16,-38,14,-36);ctx.bezierCurveTo(8,-30,6,-22,6,-14);ctx.closePath();ctx.fill();
+  // Right horn (shorter, swept back)
+  ctx.beginPath();ctx.moveTo(8,-12);ctx.bezierCurveTo(8,-18,12,-26,16,-30);ctx.bezierCurveTo(17,-30,18,-28,17,-26);ctx.bezierCurveTo(14,-22,12,-16,10,-12);ctx.closePath();ctx.fill();
+  // Small side horns
+  ctx.fillStyle='#1a0200';
+  ctx.beginPath();ctx.moveTo(-14,-12);ctx.lineTo(-18,-22);ctx.lineTo(-12,-12);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Eyes — large amber slit pupils, glowing with inner fire
+  var eyePulse=0.85+Math.sin(t*0.09)*0.15;
+  var eyeOuter=phase2?'#ff1a00':'#ff8800';
+  var eyeInner=phase2?'#ff6600':'#ffcc00';
+  for(var ei=0;ei<2;ei++){
+    var ex3=(ei===0?-12:2), ey3=-6;
+    // Outer glow
+    ctx.save();
+    ctx.globalAlpha=eyePulse*0.7;
+    ctx.shadowColor=eyeOuter;ctx.shadowBlur=14;
+    var eG=ctx.createRadialGradient(ex3,ey3,0,ex3,ey3,14);
+    eG.addColorStop(0,eyeInner);eG.addColorStop(0.4,eyeOuter);eG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=eG;ctx.beginPath();ctx.arc(ex3,ey3,14,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // Iris — bright amber/red
+    ctx.fillStyle=eyeInner;ctx.shadowColor=eyeOuter;ctx.shadowBlur=6;
+    ctx.beginPath();ctx.ellipse(ex3,ey3,6,5,0,0,Math.PI*2);ctx.fill();
+    // Slit pupil — vertical
+    ctx.fillStyle='#000';ctx.shadowBlur=0;
+    ctx.beginPath();ctx.ellipse(ex3,ey3,1.8,5,0,0,Math.PI*2);ctx.fill();
+    // Highlight
+    ctx.fillStyle='rgba(255,255,200,0.55)';
+    ctx.beginPath();ctx.arc(ex3-1.5,ey3-1.8,1.4,0,Math.PI*2);ctx.fill();
+    // Brow ridge shadow over eye
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath();ctx.ellipse(ex3,ey3-5,7,3,0,0,Math.PI);ctx.fill();
+  }
+
+  // Phase 2: intense red aura around head
+  if(phase2){
+    ctx.save();ctx.globalAlpha=0.22+Math.sin(t*0.1)*0.1;
+    var hAura=ctx.createRadialGradient(-4,0,8,-4,0,40);
+    hAura.addColorStop(0,'rgba(255,40,0,0.7)');hAura.addColorStop(1,'rgba(255,0,0,0)');
+    ctx.fillStyle=hAura;ctx.beginPath();ctx.arc(-4,0,40,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 
-  // ── HEAD ──
-  ctx.save();ctx.translate(-2,-58);ctx.rotate(Math.sin(t*0.05)*0.1);
-  // Head base
-  var hdG=ctx.createRadialGradient(-5,-5,4,0,0,22);
-  hdG.addColorStop(0,phase2?'#cc3000':'#aa2200');
-  hdG.addColorStop(0.5,phase2?'#882000':'#661500');
-  hdG.addColorStop(1,'#2a0800');
-  ctx.fillStyle=hdG;
-  ctx.beginPath();ctx.ellipse(-4,0,22,16,0.3,0,Math.PI*2);ctx.fill();
-  // Snout / jaw
-  ctx.fillStyle=phase2?'#992200':'#771800';
-  ctx.beginPath();ctx.ellipse(-18,6,14,8,-0.3,0,Math.PI*2);ctx.fill();
-  // Lower jaw
-  ctx.fillStyle=phase2?'#881e00':'#661400';
-  ctx.beginPath();ctx.ellipse(-18,11,13,5,-0.3,0,Math.PI*2);ctx.fill();
-  // Teeth
-  ctx.fillStyle='#fff8e0';
-  for(var ti2=0;ti2<5;ti2++){
-    ctx.beginPath();ctx.moveTo(-26+ti2*3,8);ctx.lineTo(-25+ti2*3,14);ctx.lineTo(-24+ti2*3,8);ctx.closePath();ctx.fill();
-  }
-  // Nostril smoke
-  ctx.fillStyle='rgba(80,80,80,0.4)';
-  ctx.beginPath();ctx.arc(-22,3,2,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(-20,2,1.5,0,Math.PI*2);ctx.fill();
-  // Head horns
-  ctx.fillStyle='#1a0800';
-  ctx.beginPath();ctx.moveTo(6,-12);ctx.lineTo(14,-28);ctx.lineTo(10,-12);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(0,-14);ctx.lineTo(6,-24);ctx.lineTo(4,-14);ctx.closePath();ctx.fill();
-  // Brow ridges
-  ctx.fillStyle='#551000';
-  ctx.beginPath();ctx.ellipse(-2,-8,10,4,0.2,0,Math.PI*2);ctx.fill();
-  // Eyes — slit pupils, glowing orange/red
-  var eyePulse=0.8+Math.sin(t*0.08)*0.2;
-  var eyeMain=phase2?'#ff2200':'#ff6600';
-  for(var ei=0;ei<2;ei++){
-    var ex2=(ei===0?-8:4),ey2=-6;
-    // Outer glow
-    ctx.save();ctx.globalAlpha=eyePulse*0.6;
-    var eg=ctx.createRadialGradient(ex2,ey2,1,ex2,ey2,10);
-    eg.addColorStop(0,eyeMain);eg.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=eg;ctx.beginPath();ctx.arc(ex2,ey2,10,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-    // Iris
-    ctx.fillStyle=phase2?'#ff3300':'#ff7700';
-    ctx.beginPath();ctx.ellipse(ex2,ey2,5,4,0,0,Math.PI*2);ctx.fill();
-    // Slit pupil
-    ctx.fillStyle='#000';
-    ctx.beginPath();ctx.ellipse(ex2,ey2,1.5,4,0,0,Math.PI*2);ctx.fill();
-    // Highlight
-    ctx.fillStyle='rgba(255,255,255,0.5)';
-    ctx.beginPath();ctx.arc(ex2-1.5,ey2-1.5,1.2,0,Math.PI*2);ctx.fill();
-  }
-  // Phase 2 head glow
-  if(phase2){
-    ctx.save();ctx.globalAlpha=0.2+Math.sin(t*0.1)*0.1;
-    var hg=ctx.createRadialGradient(0,0,5,0,0,30);
-    hg.addColorStop(0,'rgba(255,60,0,0.8)');hg.addColorStop(1,'rgba(255,0,0,0)');
-    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(0,0,30,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-  }
   ctx.restore(); // head
-  ctx.restore(); // neck
-  ctx.restore(); // body tilt+translate
+  ctx.restore(); // body translate+rotate
 
   // Hurt flash damage number
-  if(boss.hurtTimer>0){
-    ctx.save();ctx.globalAlpha=boss.hurtTimer/20;
-    ctx.fillStyle='#ff4400';ctx.font='bold 16px Cinzel,serif';ctx.textAlign='center';
-    ctx.fillText('-1',b.x,b.y-80);ctx.restore();
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,b.hurtTimer/15);
+    ctx.fillStyle='#ff4400';ctx.shadowColor='#ff8800';ctx.shadowBlur=10;
+    ctx.font='bold 18px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',b.x,b.y-90);ctx.restore();
   }
 
-  // Feather projectiles (fireballs for dragon)
+  // Fireballs
   for(var fi2=0;fi2<bossFeathers.length;fi2++){
     var f=bossFeathers[fi2];
     ctx.save();ctx.translate(f.x,f.y);
-    var fbg=ctx.createRadialGradient(0,0,1,0,0,8);
-    fbg.addColorStop(0,'rgba(255,255,180,1)');
-    fbg.addColorStop(0.4,'rgba(255,120,10,0.9)');
-    fbg.addColorStop(1,'rgba(200,20,0,0)');
-    ctx.fillStyle=fbg;ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();
-    // Fireball trail
-    ctx.globalAlpha=0.4;
-    ctx.strokeStyle='rgba(255,100,0,0.6)';ctx.lineWidth=3;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-f.vx*4,-f.vy*4);ctx.stroke();
+    ctx.shadowColor='rgba(255,80,0,0.8)';ctx.shadowBlur=10;
+    var fbg=ctx.createRadialGradient(0,0,0,0,0,10);
+    fbg.addColorStop(0,'rgba(255,255,180,1)');fbg.addColorStop(0.35,'rgba(255,130,10,0.9)');fbg.addColorStop(0.7,'rgba(220,30,0,0.6)');fbg.addColorStop(1,'rgba(150,0,0,0)');
+    ctx.fillStyle=fbg;ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();
+    // Trail
+    ctx.globalAlpha=0.5;ctx.shadowBlur=0;
+    ctx.strokeStyle='rgba(255,120,0,0.7)';ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-f.vx*5,-f.vy*5);ctx.stroke();
     ctx.restore();
   }
 }
@@ -1285,7 +1410,7 @@ function updateBoss(){
       // Target just in front of the player — close enough to hit
       b.tx=fly.x+60;
       b.ty=fly.y;
-      showToast('\uD83E\uDD89 TAP NOW!');
+      showToast('\uD83E\uDD89 ATTACK NOW!');
     }
   }
 
@@ -1633,7 +1758,7 @@ function getBossType(){
 }
 function initBoss(){
   var type=getBossType();
-  bossHP=bossMaxHP=(type==='dragon'?60:50);
+  bossHP=bossMaxHP=(type==='dragon'?80:50);
   bossPhase=1;
   bossActive=true;
   bossDefeated=false;
@@ -1692,7 +1817,8 @@ var BIOMES=[
  {name:'Venus',skyTop:'#201000',skyMid:'#504000',skyBot:'#806010',moonCol:'#ffee80',moonShadow:'#201000',hasSun:true,sunCol:'#ffff80',sunGlowCol:'255,255,100',starCol:'255,240,100',auroraCol:'255,200,40',cloudCol:'200,180,60',mtnFar:'#504010',mtnNear0:'#706020',mtnNear1:'#504010',iceCap:'255,240,120',groundTop:'#a08030',groundBot:'#706020',glowR:255,glowG:200,glowB:40,ruinCol:'#806030',ruinWin:'255,230,80',treeCol:['#503010','#604020','#402008'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'venus',obstStyle:'venuslava',groundStyle:'venusrock',fogCol:'220,180,40'},
  {name:'Saturn',skyTop:'#000010',skyMid:'#080028',skyBot:'#100840',moonCol:'#ffffff',moonShadow:'#000010',hasSun:false,starCol:'255,255,255',auroraCol:'180,100,255',cloudCol:'140,80,200',mtnFar:'#180838',mtnNear0:'#281058',mtnNear1:'#180838',iceCap:'255,200,255',groundTop:'#281058',groundBot:'#180838',glowR:200,glowG:100,glowB:255,ruinCol:'#301068',ruinWin:'220,150,255',treeCol:['#180838','#281058','#100828'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'saturn',obstStyle:'ring',groundStyle:'ringtile',fogCol:'160,80,255'},
  {name:'Ruined Kingdom II',skyTop:'#04001a',skyMid:'#0d0530',skyBot:'#200848',moonCol:'#c8b0ff',moonShadow:'#04001a',hasSun:false,starCol:'200,160,255',auroraCol:'176,110,255',cloudCol:'80,40,140',mtnFar:'#1a0840',mtnNear0:'#280c50',mtnNear1:'#180630',iceCap:'200,160,255',groundTop:'#200840',groundBot:'#100420',glowR:176,glowG:80,glowB:255,ruinCol:'#280c50',ruinWin:'160,100,255',treeCol:['#1a0840','#240c50','#100428'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'default',obstStyle:'default',groundStyle:'cobble',fogCol:'80,40,160'},
- {name:'Mushroom Forest',skyTop:'#004a8a',skyMid:'#0080c0',skyBot:'#40c0e0',moonCol:'#fffce0',moonShadow:'#004a8a',hasSun:true,sunCol:'#ffee60',sunGlowCol:'255,240,80',starCol:'200,240,255',auroraCol:'255,255,200',cloudCol:'255,255,255',mtnFar:'#226600',mtnNear0:'#2a7a10',mtnNear1:'#1a5008',iceCap:'220,255,160',groundTop:'#2a7a10',groundBot:'#1a5008',glowR:120,glowG:255,glowB:60,ruinCol:'#226600',ruinWin:'180,255,80',treeCol:['#1a5000','#226600','#143800'],hasMoving:true,hasFrogs:true,hasForest:true,bgStyle:'mushroom',obstStyle:'mushroom',groundStyle:'sporemoss',fogCol:'140,240,60'}
+ {name:'Mushroom Forest',skyTop:'#004a8a',skyMid:'#0080c0',skyBot:'#40c0e0',moonCol:'#fffce0',moonShadow:'#004a8a',hasSun:true,sunCol:'#ffee60',sunGlowCol:'255,240,80',starCol:'200,240,255',auroraCol:'255,255,200',cloudCol:'255,255,255',mtnFar:'#226600',mtnNear0:'#2a7a10',mtnNear1:'#1a5008',iceCap:'220,255,160',groundTop:'#2a7a10',groundBot:'#1a5008',glowR:120,glowG:255,glowB:60,ruinCol:'#226600',ruinWin:'180,255,80',treeCol:['#1a5000','#226600','#143800'],hasMoving:true,hasFrogs:true,hasForest:true,bgStyle:'mushroom',obstStyle:'mushroom',groundStyle:'sporemoss',fogCol:'140,240,60'},
+ {name:'Dragon Lair',skyTop:'#080000',skyMid:'#0f0100',skyBot:'#1a0200',moonCol:'#ff4400',moonShadow:'#080000',hasSun:false,starCol:'255,80,20',auroraCol:'255,40,0',cloudCol:'80,10,0',mtnFar:'#200400',mtnNear0:'#300600',mtnNear1:'#1a0300',iceCap:'255,80,20',groundTop:'#1a0300',groundBot:'#0a0100',glowR:255,glowG:50,glowB:0,ruinCol:'#280400',ruinWin:'255,60,10',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'dragonlair',obstStyle:'dragonlair',groundStyle:'lava',fogCol:'200,40,0'}
 ];
 
 function getBiome(level){
@@ -2169,6 +2295,113 @@ function drawFarLayer(mfC,gameH){
       drawBgTree(rx,gameH,m.h*0.8,m.w*0.5,'#0e1800','#1a3008','#0e2004','rgba(60,160,10,0.3)');
     }
 
+  } else if(style==='dragonlair'){
+    // ── DRAGON LAIR CAVE BACKGROUND ──
+
+    // 1. Solid cave rock ceiling band
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#050000';
+    ctx.fillRect(0,0,W,gameH*0.06);
+
+    // 2. Large hanging stalactites from ceiling — thick, varied, deeply shadowed
+    for(var sti=0;sti<12;sti++){
+      var stx=((sti*W/10+farOff*0.08)%W+W)%W;
+      var sth=gameH*(0.10+Math.sin(sti*1.7+2)*0.08);
+      var stw=18+Math.sin(sti*2.3)*8;
+      var lavaGlow=Math.sin(frameN*0.04+sti*0.9)*0.5>0;
+      // Main rock body
+      var stG=ctx.createLinearGradient(stx,0,stx+stw,sth);
+      stG.addColorStop(0,'#120100');stG.addColorStop(0.5,'#1e0200');stG.addColorStop(1,'#0a0100');
+      ctx.fillStyle=stG;
+      ctx.beginPath();
+      ctx.moveTo(stx-stw*0.5,0);
+      ctx.bezierCurveTo(stx-stw*0.6,sth*0.25,stx-stw*0.25,sth*0.8,stx,sth);
+      ctx.bezierCurveTo(stx+stw*0.25,sth*0.8,stx+stw*0.6,sth*0.25,stx+stw*0.5,0);
+      ctx.closePath();ctx.globalAlpha=0.95;ctx.fill();
+      // Lava drip glow at tip
+      if(lavaGlow){
+        ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.06+sti)*0.25;
+        var dg2=ctx.createRadialGradient(stx,sth,0,stx,sth,16);
+        dg2.addColorStop(0,'rgba(255,160,10,1)');dg2.addColorStop(0.5,'rgba(255,60,0,0.5)');dg2.addColorStop(1,'rgba(200,10,0,0)');
+        ctx.fillStyle=dg2;ctx.beginPath();ctx.arc(stx,sth,16,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 3. Deep cave rock face background — layered dark walls
+    ctx.globalAlpha=0.88;
+    var wallG=ctx.createLinearGradient(0,0,0,gameH);
+    wallG.addColorStop(0,'#0d0100');wallG.addColorStop(0.3,'#100100');wallG.addColorStop(0.7,'#0a0100');wallG.addColorStop(1,'#060000');
+    ctx.fillStyle=wallG;ctx.fillRect(0,gameH*0.06,W,gameH*0.94);
+
+    // 4. Mid-ground cave rock formations — large organic boulders
+    ctx.globalAlpha=0.75;
+    for(var ri=0;ri<5;ri++){
+      var rx2=((ri*W/4+farOff*0.12)%W+W)%W;
+      var rh=gameH*0.18+Math.sin(ri*2.1)*gameH*0.1;
+      var rw=60+Math.sin(ri*1.3)*30;
+      var rgG=ctx.createRadialGradient(rx2,gameH-rh*0.5,8,rx2,gameH-rh*0.5,rw);
+      rgG.addColorStop(0,'#200200');rgG.addColorStop(0.6,'#150100');rgG.addColorStop(1,'#080000');
+      ctx.fillStyle=rgG;
+      ctx.beginPath();
+      ctx.moveTo(rx2-rw*0.5,gameH);
+      ctx.bezierCurveTo(rx2-rw*0.55,gameH-rh*0.5,rx2-rw*0.2,gameH-rh,rx2,gameH-rh);
+      ctx.bezierCurveTo(rx2+rw*0.2,gameH-rh,rx2+rw*0.55,gameH-rh*0.5,rx2+rw*0.5,gameH);
+      ctx.closePath();ctx.fill();
+    }
+
+    // 5. Glowing lava vein cracks running down cave walls — animated
+    for(var cvi=0;cvi<6;cvi++){
+      var cvx=((cvi*W/5+farOff*0.06)%W+W)%W;
+      var pulse=0.35+Math.sin(frameN*0.04+cvi*1.1)*0.18;
+      ctx.save();ctx.globalAlpha=pulse;
+      ctx.strokeStyle='rgba(255,80,0,0.9)';ctx.lineWidth=1.5+Math.sin(frameN*0.05+cvi)*0.5;ctx.lineCap='round';
+      ctx.shadowColor='rgba(255,60,0,0.8)';ctx.shadowBlur=6;
+      ctx.beginPath();
+      ctx.moveTo(cvx,gameH*0.08);
+      ctx.bezierCurveTo(cvx+14,gameH*0.22,cvx-12,gameH*0.38,cvx+8,gameH*0.52);
+      ctx.bezierCurveTo(cvx-10,gameH*0.65,cvx+16,gameH*0.78,cvx+4,gameH*0.9);
+      ctx.stroke();
+      // Branching crack
+      ctx.beginPath();
+      ctx.moveTo(cvx+8,gameH*0.52);
+      ctx.bezierCurveTo(cvx+22,gameH*0.58,cvx+28,gameH*0.65,cvx+18,gameH*0.72);
+      ctx.stroke();
+      ctx.shadowBlur=0;ctx.restore();
+    }
+
+    // 6. Lava pools on ground — glowing molten rock
+    ctx.globalAlpha=0.8;
+    for(var lpi=0;lpi<5;lpi++){
+      var lpx=((lpi*W/4+farOff*0.1)%W+W)%W;
+      var lpPulse=0.85+Math.sin(frameN*0.05+lpi*0.7)*0.15;
+      var lpg3=ctx.createRadialGradient(lpx,gameH,2,lpx,gameH-4,55);
+      lpg3.addColorStop(0,'rgba(255,240,100,'+lpPulse+')');
+      lpg3.addColorStop(0.3,'rgba(255,100,0,0.8)');
+      lpg3.addColorStop(0.7,'rgba(200,30,0,0.5)');
+      lpg3.addColorStop(1,'rgba(100,5,0,0)');
+      ctx.fillStyle=lpg3;
+      ctx.beginPath();ctx.ellipse(lpx,gameH,55+Math.sin(frameN*0.03+lpi)*8,20,0,0,Math.PI*2);ctx.fill();
+    }
+
+    // 7. Rising ember particles — constant stream
+    if(frameN%3===0){
+      transParticles.push({
+        x:Math.random()*W,y:gameH-10,
+        vx:(Math.random()-0.5)*1.2,vy:-(0.8+Math.random()*2),
+        life:0.9,decay:0.006,r:1+Math.random()*2.5,
+        col:'hsl('+(Math.floor(Math.random()*50))+',100%,'+(60+Math.floor(Math.random()*30))+'%)'
+      });
+    }
+
+    // 8. Ambient hot glow across floor
+    ctx.globalAlpha=0.18+Math.sin(frameN*0.02)*0.06;
+    var floorG=ctx.createLinearGradient(0,gameH*0.75,0,gameH);
+    floorG.addColorStop(0,'rgba(255,40,0,0)');floorG.addColorStop(1,'rgba(255,80,0,0.6)');
+    ctx.fillStyle=floorG;ctx.fillRect(0,gameH*0.75,W,gameH*0.25);
+
+    ctx.globalAlpha=1;
+
   } else if(style==='volcano'||style==='burningcity'){
     ctx.globalAlpha=0.5;
     // Volcano silhouette
@@ -2441,6 +2674,48 @@ function drawNearLayer(mn0,gameH){
     ctx.fillStyle='rgba(255,255,0,0.5)';
     ctx.beginPath();ctx.arc(alx+10,gameH-17,2,0,Math.PI*2);ctx.fill();
     ctx.beginPath();ctx.arc(alx+18,gameH-17,2,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+
+  } else if(style==='dragonlair'){
+    // Thick foreground cave rock ledges
+    ctx.globalAlpha=0.95;
+    for(var smi=0;smi<9;smi++){
+      var smx=((smi*W/7+nearOff*0.55)%W+W)%W;
+      var smh=gameH*0.14+Math.sin(smi*2.1)*gameH*0.07;
+      var smw=30+Math.sin(smi*1.4)*14;
+      var smG=ctx.createLinearGradient(smx,gameH-smh,smx,gameH);
+      smG.addColorStop(0,'#220200');smG.addColorStop(0.6,'#180100');smG.addColorStop(1,'#0a0000');
+      ctx.fillStyle=smG;
+      ctx.beginPath();
+      ctx.moveTo(smx-smw*0.5,gameH);
+      ctx.bezierCurveTo(smx-smw*0.55,gameH-smh*0.4,smx-smw*0.2,gameH-smh*0.9,smx,gameH-smh);
+      ctx.bezierCurveTo(smx+smw*0.2,gameH-smh*0.9,smx+smw*0.55,gameH-smh*0.4,smx+smw*0.5,gameH);
+      ctx.closePath();ctx.fill();
+      // Orange lava glow at tip
+      ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.05+smi*1.1)*0.25;
+      var stg2=ctx.createRadialGradient(smx,gameH-smh,0,smx,gameH-smh,18);
+      stg2.addColorStop(0,'rgba(255,180,20,1)');stg2.addColorStop(0.4,'rgba(255,70,0,0.6)');stg2.addColorStop(1,'rgba(200,20,0,0)');
+      ctx.fillStyle=stg2;ctx.beginPath();ctx.arc(smx,gameH-smh,18,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // Lava river flowing along ground
+    ctx.globalAlpha=0.75;
+    var lrG=ctx.createLinearGradient(0,gameH-18,0,gameH);
+    lrG.addColorStop(0,'rgba(255,160,0,0.9)');lrG.addColorStop(0.5,'rgba(255,60,0,0.7)');lrG.addColorStop(1,'rgba(180,10,0,0.4)');
+    ctx.fillStyle=lrG;
+    ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(W,gameH);
+    for(var lrx=W;lrx>=0;lrx-=20){
+      ctx.lineTo(lrx,gameH-14+Math.sin((lrx+nearOff*0.8)*0.06)*6);
+    }
+    ctx.closePath();ctx.fill();
+    // Lava surface highlight shimmer
+    ctx.globalAlpha=0.4+Math.sin(frameN*0.06)*0.15;
+    ctx.strokeStyle='rgba(255,240,100,0.7)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,gameH-13);
+    for(var lsx=0;lsx<W;lsx+=25){
+      ctx.lineTo(lsx+12,gameH-13+Math.sin((lsx+nearOff)*0.07)*4);
+    }
+    ctx.stroke();
     ctx.globalAlpha=1;
 
   } else if(style==='volcano'||style==='burningcity'){
@@ -2909,6 +3184,16 @@ function drawAtmosphere(style,icC,gameH){
     return;
   }
   if(frameN%3!==0) return;
+  if(style==='dragonlair'){
+    // Lava drip from ceiling — wide stalactite obstacles
+    ctx.save();ctx.globalAlpha=0.55+Math.sin(frameN*0.04)*0.1;
+    ctx.strokeStyle='rgba(255,90,0,0.6)';ctx.lineWidth=2;
+    for(var dri=0;dri<2;dri++){
+      var drx=((dri*W/1.5+nearOff*0.3)%W+W)%W;
+      ctx.beginPath();ctx.moveTo(drx,0);ctx.bezierCurveTo(drx+5,gameH*0.2,drx-5,gameH*0.35,drx+3,gameH*0.45);ctx.stroke();
+    }
+    ctx.restore();
+  }
   if(style==='volcano'||style==='burningcity'){
     ctx.save();ctx.globalAlpha=0.35;
     for(var ai=0;ai<5;ai++){var ax=(ai*W/4+frameN*0.4)%W,ay=H*0.12+Math.sin(frameN*0.018+ai)*H*0.06;var ag=ctx.createRadialGradient(ax,ay,5,ax,ay,40+ai*8);ag.addColorStop(0,'rgba(60,30,10,0.5)');ag.addColorStop(1,'rgba(40,20,5,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.ellipse(ax,ay,50+ai*10,14+ai*4,Math.sin(ai*0.8)*0.2,0,Math.PI*2);ctx.fill();}
@@ -3534,6 +3819,17 @@ function spawnObstacle(){
       spawnSingle(0.66+progress*0.14, 0.86+progress*0.08, w, 'mountain');
       return;
     }
+    // f6 - Dragon Lair boss: cave stalactites from top + stalagmites from bottom, brutal
+    if(lid==='f6'){
+      var w=34+Math.random()*18;
+      var r=Math.random();
+      if(r<0.55){ if(spawnPair(0.20+progress*0.06, 0.26+progress*0.04, w, 'dragonlair')) return; }
+      // Stalactites from ceiling heavy
+      side=Math.random()<0.65?'top':'bottom';
+      _spawnSide=side;
+      spawnSingle(0.62+progress*0.18, 0.86+progress*0.08, w, 'dragonlair');
+      return;
+    }
 
     // w1 - Crystal Void: floating crystal shards from all sides, eerie spacing
     if(lid==='w1'){
@@ -3786,7 +4082,8 @@ function getObstacleColors(os){
     'asteroid':  {main:'#555566',dark:'#222233',accent:'#9999bb'},
     'marsrock':  {main:'#aa3311',dark:'#551508',accent:'#ff6633'},
     'venuslava': {main:'#aa7711',dark:'#553308',accent:'#ffcc33'},
-    'ring':      {main:'#6622cc',dark:'#2a0a66',accent:'#cc66ff'}
+    'ring':      {main:'#6622cc',dark:'#2a0a66',accent:'#cc66ff'},
+    'dragonlair':{main:'#2a0800',dark:'#180300',accent:'#ff4400'}
   };
   return map[os]||map['default'];
 }
@@ -3898,7 +4195,56 @@ function drawThemedObstacle(o, gameH, os){
   var cx=x+w*0.5;
   ctx.save();
 
-  // ---- JUNGLE: tall jungle trees with dense canopy ----
+  // ---- DRAGONLAIR: jagged volcanic cave rock with lava glow ----
+  if(os==='dragonlair'){
+    // Dark volcanic rock body
+    var rg=ctx.createLinearGradient(cx,side==='bottom'?gameH:0,cx,side==='bottom'?o.y:o.y+h);
+    rg.addColorStop(0,'#1a0200');rg.addColorStop(0.5,'#2a0400');rg.addColorStop(1,'#0d0100');
+    ctx.fillStyle=rg;
+    ctx.beginPath();
+    if(side==='bottom'){
+      // Jagged rock rising from ground
+      ctx.moveTo(x,gameH);
+      ctx.lineTo(x,o.y+h*0.6);
+      ctx.bezierCurveTo(x+w*0.1,o.y+h*0.25,x+w*0.2,o.y+h*0.1,x+w*0.3,o.y);
+      ctx.bezierCurveTo(x+w*0.45,o.y+h*0.08,x+w*0.55,o.y,x+w*0.65,o.y+h*0.05);
+      ctx.bezierCurveTo(x+w*0.78,o.y+h*0.15,x+w*0.88,o.y+h*0.35,x+w,o.y+h*0.6);
+      ctx.lineTo(x+w,gameH);
+    } else {
+      // Jagged stalactite hanging from ceiling
+      ctx.moveTo(x,0);
+      ctx.lineTo(x,o.y+h*0.4);
+      ctx.bezierCurveTo(x+w*0.12,o.y+h*0.7,x+w*0.22,o.y+h*0.88,x+w*0.35,o.y+h);
+      ctx.bezierCurveTo(x+w*0.48,o.y+h*0.88,x+w*0.58,o.y+h,x+w*0.7,o.y+h*0.85);
+      ctx.bezierCurveTo(x+w*0.82,o.y+h*0.65,x+w*0.9,o.y+h*0.4,x+w,o.y+h*0.35);
+      ctx.lineTo(x+w,0);
+    }
+    ctx.closePath();ctx.fill();
+    // Lava glow along exposed edge
+    ctx.save();
+    ctx.globalAlpha=0.55+Math.sin(frameN*0.05+o.x*0.01)*0.2;
+    ctx.strokeStyle='rgba(255,80,0,0.8)';ctx.lineWidth=2.5;ctx.lineCap='round';
+    if(side==='bottom'){
+      ctx.beginPath();
+      ctx.moveTo(x+w*0.3,o.y);
+      ctx.bezierCurveTo(x+w*0.45,o.y+h*0.08,x+w*0.55,o.y,x+w*0.65,o.y+h*0.05);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x+w*0.35,o.y+h);
+      ctx.bezierCurveTo(x+w*0.48,o.y+h*0.88,x+w*0.58,o.y+h,x+w*0.7,o.y+h*0.85);
+      ctx.stroke();
+    }
+    // Orange lava crack veins
+    ctx.strokeStyle='rgba(255,120,0,0.4)';ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(cx-w*0.1,side==='bottom'?o.y+h*0.3:o.y+h*0.7);
+    ctx.bezierCurveTo(cx,side==='bottom'?o.y+h*0.15:o.y+h*0.85,cx+w*0.1,side==='bottom'?o.y+h*0.25:o.y+h*0.75,cx+w*0.15,side==='bottom'?o.y:o.y+h);
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+    return;
+  }
   if(os==='jungle'){
     // Trunk — full height solid column
     var tg=ctx.createLinearGradient(cx,side==='bottom'?gameH:0,cx,side==='bottom'?o.y:o.y+h);
@@ -4465,6 +4811,7 @@ function drawObstacles(){
     if(lid3==='f1'||lid3==='f4'||lid3==='f5') os='lava';
     else if(lid3==='f2') os='sandstone';
     else if(lid3==='f3') os='rubble';
+    else if(lid3==='f6') os='dragonlair';
     else if(lid3==='w1'||lid3==='i4') os='crystal';
     else if(lid3==='w2'||lid3==='i3') os='icicle';
     else if(lid3==='w4') os='storm';
@@ -5286,8 +5633,22 @@ function update(){
   if(fly.trail.length>12) fly.trail.shift();
 
   obstTimer++;
-  if(obstTimer>=obstInterval&&!isBossLevel()){spawnObstacle();obstTimer=0;obstInterval=Math.max(80,obstInterval-1.5);}
-  if(isBossLevel()&&!bossActive&&!bossDefeated&&levelTimer<120){obstacles=[];} // clear before boss arrives
+  if(!isBossLevel()){
+    if(obstTimer>=obstInterval){spawnObstacle();obstTimer=0;obstInterval=Math.max(80,obstInterval-1.5);}
+  } else if(bossActive&&!bossDefeated&&getBossType()==='owl'){
+    var bossObstInterval=bossPhase>=2?110:150;
+    if(obstTimer>=bossObstInterval){
+      obstTimer=0;
+      var gameH2=H-20;
+      var x=W+30;
+      var side=Math.random()<0.55?'bottom':'top';
+      var w=32+Math.random()*14;
+      var h2=gameH2*(0.25+Math.random()*0.18);
+      var y2=side==='bottom'?gameH2-h2:0;
+      obstacles.push({x:x,y:y2,w:w,h:h2,side:side,type:'tree',phase:Math.random()*Math.PI*2});
+    }
+  }
+  if(isBossLevel()&&!bossActive&&!bossDefeated&&levelTimer<120){obstacles=[];}
   var activeSpeed=speed*diffMult*(infiniteActive?1.35:1.0);
   var newObs=[];
   for(var i=0;i<obstacles.length;i++){
@@ -5764,7 +6125,7 @@ var WORLDS = [
       { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:12, desc:'Crumbling buildings engulfed in fire',   duration:86 },
       { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:10, desc:'Deep underground rivers of magma',       duration:89 },
       { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:2,  desc:'The eye of an eternal firestorm',        duration:92 },
-      { id:'f6', name:'The Inferno Drake',  icon:'\uD83D\uDC09', biomeIdx:2,  desc:'Face the lord of fire and destruction',  duration:120, isBoss:true, bossType:'dragon' }
+      { id:'f6', name:'The Inferno Drake',  icon:'\uD83D\uDC09', biomeIdx:27,  desc:'Face the lord of fire and destruction',  duration:120, isBoss:true, bossType:'dragon' }
     ]
   },
   {
