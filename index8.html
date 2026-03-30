@@ -218,6 +218,13 @@ canvas { display:block; width:100%; height:100%; }
 .ld-play { background:linear-gradient(135deg,#3a00a0,#7020d0,#3a00a0); border:2px solid #b06eff; color:#f0e8ff; font-family:'Cinzel',serif; font-size:14px; font-weight:700; letter-spacing:3px; padding:14px 40px; cursor:pointer; -webkit-tap-highlight-color:transparent; border-radius:4px; width:100%; }
 .ld-play:active { transform:scale(0.97); }
 .ld-play.locked-play { background:rgba(80,30,160,0.2); border-color:#3a1060; color:#6a40aa; pointer-events:none; }
+/* Boss HP Bar */
+#bossHud{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:80%;display:none;flex-direction:column;align-items:center;gap:4px;}
+#bossHud.show{display:flex;}
+#bossName{font-size:11px;font-weight:700;color:#ff9944;letter-spacing:3px;text-shadow:0 0 8px #ff440080;font-family:'Cinzel',serif;}
+#bossHpWrap{width:100%;height:14px;background:rgba(0,0,0,0.6);border-radius:7px;border:1px solid #ff4400;overflow:hidden;}
+#bossHpFill{height:100%;border-radius:7px;background:linear-gradient(90deg,#ff2200,#ff8800,#ffcc00);transition:width 0.15s;}
+#bossHpText{font-size:9px;color:#ff9944;letter-spacing:1px;}
 
 </style>
 
@@ -256,6 +263,11 @@ canvas { display:block; width:100%; height:100%; }
     </div>
     <div id="screenFlash"></div>
     <div id="controls"></div>
+    <div id="bossHud">
+      <div id="bossName">🦉 THE GREAT OWL</div>
+      <div id="bossHpWrap"><div id="bossHpFill" style="width:100%"></div></div>
+      <div id="bossHpText">TAP NEAR OWL TO ATTACK</div>
+    </div>
   </div>
 
   <!-- Level Clear -->
@@ -635,7 +647,38 @@ var lightningTimer=0, lightningBurstActive=false, lightningBurstFrames=0, lightn
 
 var ownedSkins=['default'], activeSkin='default', noAds=false;
 
-// ── SLOW-MO POWERUP ──
+// ── OWL BOSS ──
+var boss=null, bossActive=false, bossPhase=0, bossHP=0, bossMaxHP=0;
+var bossFeathers=[], bossShakeTimer=0, bossDefeated=false;
+var bossEntryTimer=0, BOSS_ENTRY_DURATION=180;
+var bossAnnounceDone=false;
+
+function isBossLevel(){
+  return currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.isBoss;
+}
+
+function initBoss(){
+  bossHP=bossMaxHP=50;
+  bossPhase=1;
+  bossActive=true;
+  bossDefeated=false;
+  bossFeathers=[];
+  bossEntryTimer=BOSS_ENTRY_DURATION;
+  bossAnnounceDone=false;
+  boss={
+    x:W+120, y:H*0.35,
+    tx:W*0.72, ty:H*0.35,
+    vy:0, phase:0,
+    wingAngle:0, eyeFlash:0,
+    attackTimer:0, attackCooldown:120,
+    swoopActive:false, swoopTarget:0,
+    chargeActive:false, chargeTimer:0, CHARGE_DURATION:45,
+    deathTimer:0, deathParticles:[],
+    hurtTimer:0
+  };
+  showToast('\uD83E\uDD89 FLY CLOSE & TAP TO ATTACK!');
+  shakeFrames=20; shakeIntensity=8;
+}
 var slowMoActive=false, slowMoTimer=0, SLOW_MO_DURATION=480, slowMoCharges=0;
 // ── GHOST MODE POWERUP ──
 var ghostActive=false, ghostCharges=0;
@@ -721,6 +764,310 @@ function buildAchievements(){
       +'<div style="text-align:right;"><div style="font-size:10px;color:'+(done?'#ffd700':'#4a1a6a')+';font-weight:700;">+'+a.reward+' 🦋</div>'
       +(done?'<div style="font-size:9px;color:#6a40aa;margin-top:2px;">DONE</div>':'')+'</div>';
     list.appendChild(card);
+  }
+}
+
+function drawBoss(){
+  if(!boss||!bossActive) return;
+  var b=boss, t=frameN*0.05;
+  var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
+
+  // Death particles
+  if(bossDefeated){
+    for(var di=0;di<b.deathParticles.length;di++){
+      var dp=b.deathParticles[di];
+      ctx.save();ctx.globalAlpha=dp.life;
+      ctx.fillStyle=dp.col;
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    return;
+  }
+
+  ctx.save();ctx.translate(b.x,b.y);
+  if(hurtFlash) ctx.globalAlpha=0.4;
+
+  // Wing span
+  var wingFlap=Math.sin(frameN*0.18)*0.35+0.1;
+  if(b.swoopActive) wingFlap=0.6+Math.sin(frameN*0.35)*0.2;
+
+  // Left wing
+  ctx.save();ctx.rotate(-wingFlap);
+  var lwg=ctx.createLinearGradient(-80,0,0,0);
+  lwg.addColorStop(0,'#1a1008');lwg.addColorStop(0.5,'#3a2810');lwg.addColorStop(1,'#5a4020');
+  ctx.fillStyle=lwg;
+  ctx.beginPath();ctx.moveTo(-10,-5);ctx.bezierCurveTo(-40,-30,-80,-20,-85,10);
+  ctx.bezierCurveTo(-70,25,-30,20,-10,8);ctx.closePath();ctx.fill();
+  // Wing feather lines
+  ctx.strokeStyle='rgba(80,60,20,0.6)';ctx.lineWidth=1;
+  for(var wi=0;wi<4;wi++){ctx.beginPath();ctx.moveTo(-10+wi*(-18),3);ctx.lineTo(-25+wi*(-18),-18);ctx.stroke();}
+  ctx.restore();
+
+  // Right wing
+  ctx.save();ctx.scale(-1,1);ctx.rotate(-wingFlap);
+  ctx.fillStyle=lwg;
+  ctx.beginPath();ctx.moveTo(-10,-5);ctx.bezierCurveTo(-40,-30,-80,-20,-85,10);
+  ctx.bezierCurveTo(-70,25,-30,20,-10,8);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(80,60,20,0.6)';ctx.lineWidth=1;
+  for(var wi2=0;wi2<4;wi2++){ctx.beginPath();ctx.moveTo(-10+wi2*(-18),3);ctx.lineTo(-25+wi2*(-18),-18);ctx.stroke();}
+  ctx.restore();
+
+  // Body
+  var bodyG=ctx.createRadialGradient(-5,-5,4,0,0,32);
+  bodyG.addColorStop(0,'#8a6a30');bodyG.addColorStop(0.5,'#5a4018');bodyG.addColorStop(1,'#2a1a08');
+  ctx.fillStyle=bodyG;
+  ctx.beginPath();ctx.ellipse(0,5,22,28,0,0,Math.PI*2);ctx.fill();
+  // Chest feather pattern
+  ctx.strokeStyle='rgba(120,90,30,0.5)';ctx.lineWidth=1.2;
+  for(var fi=0;fi<5;fi++){
+    ctx.beginPath();ctx.ellipse(0,fi*8-8,14-fi*1.5,5,0,0,Math.PI);ctx.stroke();
+  }
+  // Talons
+  ctx.strokeStyle='#2a1a08';ctx.lineWidth=2.5;ctx.lineCap='round';
+  for(var ti=0;ti<3;ti++){
+    var tx2=(ti-1)*8;
+    ctx.beginPath();ctx.moveTo(tx2,30);ctx.lineTo(tx2-4,42);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(tx2,30);ctx.lineTo(tx2+4,42);ctx.stroke();
+  }
+
+  // Head
+  var headG=ctx.createRadialGradient(-4,-32,4,0,-30,20);
+  headG.addColorStop(0,'#aa8840');headG.addColorStop(0.6,'#6a4818');headG.addColorStop(1,'#2a1808');
+  ctx.fillStyle=headG;
+  ctx.beginPath();ctx.ellipse(0,-30,20,22,0,0,Math.PI*2);ctx.fill();
+  // Ear tufts
+  ctx.fillStyle='#3a2808';
+  ctx.beginPath();ctx.moveTo(-14,-44);ctx.lineTo(-10,-56);ctx.lineTo(-6,-44);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(6,-44);ctx.lineTo(10,-56);ctx.lineTo(14,-44);ctx.closePath();ctx.fill();
+  // Facial disc
+  ctx.strokeStyle='rgba(180,140,60,0.5)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(0,-30,16,18,0,0,Math.PI*2);ctx.stroke();
+  // Beak
+  ctx.fillStyle='#cc8820';
+  ctx.beginPath();ctx.moveTo(-4,-26);ctx.lineTo(0,-20);ctx.lineTo(4,-26);ctx.closePath();ctx.fill();
+  // Eyes — big glowing amber
+  var eyeGlow=0.7+Math.sin(frameN*0.08)*0.3;
+  var phase2=bossPhase>=2;
+  var eyeCol=phase2?'#ff2200':'#ffaa00';
+  for(var ei=0;ei<2;ei++){
+    var ex=(ei===0?-8:8), ey=-33;
+    ctx.save();
+    var eg=ctx.createRadialGradient(ex,ey,1,ex,ey,8);
+    eg.addColorStop(0,'#ffffff');eg.addColorStop(0.3,eyeCol);eg.addColorStop(1,'rgba(0,0,0,0.8)');
+    ctx.fillStyle=eg;ctx.beginPath();ctx.arc(ex,ey,8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=eyeGlow*0.5;
+    var eg2=ctx.createRadialGradient(ex,ey,2,ex,ey,16);
+    eg2.addColorStop(0,eyeCol);eg2.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=eg2;ctx.beginPath();ctx.arc(ex,ey,16,0,Math.PI*2);ctx.fill();
+    // Pupil
+    ctx.globalAlpha=1;ctx.fillStyle='#000';
+    ctx.beginPath();ctx.arc(ex,ey,3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  // Phase 2: red eye glow aura
+  if(bossPhase>=2){
+    ctx.save();ctx.globalAlpha=0.15+Math.sin(frameN*0.1)*0.1;
+    var rg=ctx.createRadialGradient(0,-30,8,0,-30,50);
+    rg.addColorStop(0,'rgba(255,0,0,0.6)');rg.addColorStop(1,'rgba(255,0,0,0)');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,-30,50,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  // HP indicator on boss (small floating text)
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=b.hurtTimer/20;
+    ctx.fillStyle='#ff4400';ctx.font='bold 14px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',0,-70);ctx.restore();
+  }
+  ctx.restore();
+
+  // Feather projectiles
+  for(var fi2=0;fi2<bossFeathers.length;fi2++){
+    var f=bossFeathers[fi2];
+    ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.ang);
+    ctx.fillStyle='#6a4818';
+    ctx.beginPath();ctx.ellipse(0,0,3,10,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(120,90,30,0.5)';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(0,10);ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function updateBoss(){
+  if(!isBossLevel()) return;
+  if(!bossActive&&!bossDefeated&&state==='playing'){
+    // Start boss after short delay when level begins
+    if(levelTimer===120) initBoss();
+  }
+  if(!boss) return;
+  if(!bossActive&&!bossDefeated) return; // not started yet
+  var b=boss;
+  // Run death sequence even when bossActive=false
+  if(bossDefeated){
+    b.deathTimer++;
+    for(var pi=0;pi<3;pi++){
+      b.deathParticles.push({
+        x:b.x+(Math.random()-0.5)*60,y:b.y+(Math.random()-0.5)*60,
+        vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-2,
+        r:4+Math.random()*8,life:1.0,
+        col:Math.random()<0.5?'#ff8800':'#ffee44'
+      });
+    }
+    for(var pi2=b.deathParticles.length-1;pi2>=0;pi2--){
+      var dp=b.deathParticles[pi2];
+      dp.x+=dp.vx;dp.y+=dp.vy;dp.life-=0.018;dp.r+=0.15;
+      if(dp.life<=0) b.deathParticles.splice(pi2,1);
+    }
+    if(b.deathTimer===60){shakeFrames=40;shakeIntensity=14;}
+    if(b.deathTimer>=180){
+      bossActive=false;
+      document.getElementById('bossHud').classList.remove('show');
+      if(!levelTransitioning){levelTransitioning=true;triggerLevelClear();}
+    }
+    return; // don't run normal boss logic during death
+  }
+  if(!bossActive) return;
+  var b=boss;
+  b.phase+=0.04;
+  if(b.hurtTimer>0) b.hurtTimer--;
+
+  // Entry animation — fly in from right
+  if(bossEntryTimer>0){
+    bossEntryTimer--;
+    var ep=1-(bossEntryTimer/BOSS_ENTRY_DURATION);
+    b.x=W+120-(W+120-W*0.72)*ep;
+    if(bossEntryTimer===0){
+      // Dramatic entrance effects
+      shakeFrames=25; shakeIntensity=10;
+      var sf=document.getElementById('screenFlash');
+      if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},300);}
+      document.getElementById('bossHud').classList.add('show');
+      showToast('\uD83E\uDD89 FLY CLOSE & TAP TO ATTACK!');
+      // Remind again after 4 seconds
+      setTimeout(function(){if(bossActive&&!bossDefeated) showToast('\u2695\uFE0F TAP NEAR THE OWL TO DEAL DAMAGE!');},4000);
+    }
+    return;
+  }
+
+  // HP phases
+  var hpPct=bossHP/bossMaxHP;
+  if(hpPct<0.5&&bossPhase<2){
+    bossPhase=2;
+    showToast('\uD83D\uDD25 THE OWL ENRAGES!');
+    shakeFrames=30; shakeIntensity=12;
+  }
+
+  // CHARGE ATTACK — owl dives close to player, giving them a chance to tap
+  if(!b.chargeActive&&!b.swoopActive){
+    b.attackTimer++;
+    var chargeCooldown=bossPhase>=2?220:360;
+    if(b.attackTimer>=chargeCooldown){
+      b.attackTimer=0;
+      b.chargeActive=true;
+      b.chargeTimer=0;
+      // Target just in front of the player — close enough to hit
+      b.tx=fly.x+60;
+      b.ty=fly.y;
+      showToast('\uD83E\uDD89 TAP NOW!');
+    }
+  }
+
+  if(b.chargeActive){
+    b.chargeTimer++;
+    // Fast lunge toward player
+    b.x+=(b.tx-b.x)*0.18;
+    b.y+=(b.ty-b.y)*0.18;
+    if(b.chargeTimer>=b.CHARGE_DURATION){
+      b.chargeActive=false;
+      // Retreat back to right side after charge
+      b.tx=W*0.72;
+      b.ty=H*0.25+Math.random()*H*0.45;
+      // Fire feathers on retreat
+      fireFeathers();
+    }
+  } else {
+    // Normal float — stay on right side
+    var floatAmplitude=bossPhase>=2?H*0.22:H*0.16;
+    b.ty=H*0.38+Math.sin(b.phase*0.6)*floatAmplitude;
+    // Smooth drift back to right position
+    b.x+=(b.tx-b.x)*0.03;
+    b.y+=(b.ty-b.y)*0.03;
+  }
+
+  // Periodic feather volleys
+  if(bossPhase>=2&&frameN%70===0) fireFeathers();
+  else if(bossPhase<2&&frameN%110===0) fireFeathers();
+
+  // Update feathers
+  var newF=[];
+  for(var fi=0;fi<bossFeathers.length;fi++){
+    var f=bossFeathers[fi];
+    f.x+=f.vx; f.y+=f.vy; f.ang+=0.12;
+    f.vy+=0.08; // gravity
+    if(f.x>-20&&f.x<W+20&&f.y<H+20) newF.push(f);
+  }
+  bossFeathers=newF;
+
+  // Check dragonfly collision with boss body
+  var dx=fly.x-b.x, dy=fly.y-b.y;
+  if(!infiniteActive&&Math.sqrt(dx*dx+dy*dy)<44){
+    loseLife();
+    b.x=W*0.72; // push back after hit
+  }
+  // Check dragonfly collision with feathers
+  for(var fi2=0;fi2<bossFeathers.length;fi2++){
+    var f2=bossFeathers[fi2];
+    if(!infiniteActive&&Math.abs(fly.x-f2.x)<14&&Math.abs(fly.y-f2.y)<14){
+      loseLife();
+      bossFeathers.splice(fi2,1); fi2--;
+    }
+  }
+  // Infinite dragonfly destroys feathers it touches
+  if(infiniteActive){
+    for(var fi3=bossFeathers.length-1;fi3>=0;fi3--){
+      var f3=bossFeathers[fi3];
+      if(Math.abs(fly.x-f3.x)<20&&Math.abs(fly.y-f3.y)<20){
+        bossFeathers.splice(fi3,1);
+        hitBoss(); // infinite mode damages boss
+      }
+    }
+  }
+}
+
+function fireFeathers(){
+  if(!boss) return;
+  var numFeathers=bossPhase>=2?(2+Math.floor(Math.random()*4)):(2+Math.floor(Math.random()*3));
+  // phase 1: 2-4, phase 2: 2-5
+  for(var i=0;i<numFeathers;i++){
+    var ang=Math.random()*Math.PI*2;
+    var speed2=bossPhase>=2?3.5+Math.random()*2:2+Math.random()*1.5;
+    // Phase 2: aim some feathers at player
+    if(bossPhase>=2&&i<3){
+      var dx=fly.x-boss.x, dy2=fly.y-boss.y;
+      var len=Math.sqrt(dx*dx+dy2*dy2)||1;
+      bossFeathers.push({x:boss.x,y:boss.y,vx:(dx/len)*speed2+(Math.random()-0.5)*0.8,vy:(dy2/len)*speed2,ang:Math.random()*Math.PI*2});
+    } else {
+      bossFeathers.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*speed2,vy:Math.sin(ang)*speed2,ang:ang});
+    }
+  }
+}
+
+function hitBoss(){
+  if(!boss||bossDefeated) return;
+  bossHP--;
+  boss.hurtTimer=20;
+  shakeFrames=8; shakeIntensity=5;
+  var pct=bossHP/bossMaxHP;
+  var fill=document.getElementById('bossHpFill');
+  if(fill) fill.style.width=(Math.max(0,pct)*100)+'%';
+  if(fill) fill.style.background=pct>0.5?'linear-gradient(90deg,#ff2200,#ff8800,#ffcc00)':pct>0.25?'linear-gradient(90deg,#ff2200,#ff5500)':'#ff0000';
+  if(bossHP<=0){
+    bossDefeated=true;
+    bossActive=false; // stop collision
+    bossFeathers=[];
+    showToast('\uD83C\uDF1F THE OWL IS DEFEATED!');
+    shakeFrames=50; shakeIntensity=16;
+    var sf=document.getElementById('screenFlash');
+    if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},500);}
   }
 }
 
@@ -1021,6 +1368,9 @@ function resetGame(){
   skinTransformTimer=SKIN_TRANSFORM_DURATION;
   starlightParticles=[];
   currentRunNoDamage=true; currentRunMoths=0;
+  boss=null; bossActive=false; bossDefeated=false; bossFeathers=[];
+  bossEntryTimer=0; bossPhase=0;
+  var bh=document.getElementById('bossHud');if(bh)bh.classList.remove('show');
   state='playing';
 }
 
@@ -4259,6 +4609,16 @@ function doTap(){
   if(Date.now()-gameStartTime < 300) return;
   fly.vy = Math.max(-8.0, fly.vy - 5.2);
   TAP_COOLDOWN=3;
+  // Boss mechanic: tap near the boss to damage it
+  if(isBossLevel()&&boss&&bossActive&&!bossDefeated){
+    var dx=fly.x-boss.x, dy=fly.y-boss.y;
+    if(Math.sqrt(dx*dx+dy*dy)<130){
+      hitBoss();
+      // Visual feedback — brief white flash on hit
+      var sf2=document.getElementById('screenFlash');
+      if(sf2){sf2.classList.add('flash');setTimeout(function(){sf2.classList.remove('flash');},120);}
+    }
+  }
   try{ sfxTap(); }catch(e){}
 }
 
@@ -4427,7 +4787,8 @@ function update(){
   if(fly.trail.length>12) fly.trail.shift();
 
   obstTimer++;
-  if(obstTimer>=obstInterval){spawnObstacle();obstTimer=0;obstInterval=Math.max(80,obstInterval-1.5);}
+  if(obstTimer>=obstInterval&&!isBossLevel()){spawnObstacle();obstTimer=0;obstInterval=Math.max(80,obstInterval-1.5);}
+  if(isBossLevel()&&!bossActive&&!bossDefeated&&levelTimer<120){obstacles=[];} // clear before boss arrives
   var activeSpeed=speed*diffMult*(infiniteActive?1.35:1.0);
   var newObs=[];
   for(var i=0;i<obstacles.length;i++){
@@ -4442,6 +4803,7 @@ function update(){
   updateMovingObstacles();
   updateFrogs();
   updateMagnet();
+  updateBoss();
 
   score++;
   if(gameMode==='infinite'){
@@ -4477,7 +4839,8 @@ function update(){
   if(timerFill) timerFill.style.width=(colorP*100)+'%';
   if(timerTxt) timerTxt.textContent=secsLeft+'s';
 
-  if(colorP>=1&&!levelTransitioning){levelTransitioning=true;triggerLevelClear();return;}
+  if(colorP>=1&&!levelTransitioning&&!isBossLevel()){levelTransitioning=true;triggerLevelClear();return;}
+  if(isBossLevel()&&colorP>=1) colorP=0.99; // freeze timer during boss
   var hit=checkCollision();
   if(hit && !infiniteActive) loseLife();
 }
@@ -4505,6 +4868,7 @@ function draw(){
   updateSteam();
   updateLightning();
   updateTransParticles();
+  drawBoss();
   drawSlowMoBubble();
   drawGhostMode();
   // Combo multiplier display
@@ -4876,7 +5240,8 @@ var WORLDS = [
       { id:'e3', name:'Frog Swamp',      icon:'\ud83d\udc38', biomeIdx:8,  desc:'Leaping frogs in murky waters',     duration:86  },
       { id:'e4', name:'Tropical Beach',  icon:'\ud83c\udfd6', biomeIdx:15, desc:'Waves and palm trees in the sun',   duration:89  },
       { id:'e5', name:'Mountain Lake',   icon:'\ud83d\udca7', biomeIdx:16, desc:'Jumping fish and fishing poles',    duration:92  },
-      { id:'e6', name:'Mushroom Forest', icon:'\ud83c\udf44', biomeIdx:25, desc:'Glowing spores and swooping bats',  duration:90  }
+      { id:'e6', name:'Enchanted Forest',icon:'\ud83c\udf33', biomeIdx:7,  desc:'Ancient magic pulses through the trees', duration:90 },
+      { id:'e7', name:'The Great Owl',   icon:'\ud83e\udd89', biomeIdx:4,  desc:'Face the guardian of the forest', duration:120, isBoss:true }
     ]
   },
   {
