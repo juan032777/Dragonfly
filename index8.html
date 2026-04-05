@@ -335,9 +335,9 @@ canvas { display:block; width:100%; height:100%; }
     <div id="screenFlash"></div>
     <div id="controls"></div>
     <div id="bossHud">
-      <div id="bossName">🦉 THE GREAT OWL</div>
+      <div id="bossName">BOSS</div>
       <div id="bossHpWrap"><div id="bossHpFill" style="width:100%"></div></div>
-      <div id="bossHpText">TAP NEAR OWL TO ATTACK</div>
+      <div id="bossHpText">TAP TO ATTACK</div>
     </div>
   </div>
 
@@ -741,6 +741,7 @@ var infiniteOwned=true;
 var infiniteActive=false, infiniteTimer=0, INFINITE_DURATION=720;
 var infiniteMothSpawned=false, infMoth=null;
 var infMothSpawnTimer=0;
+var deathStreakOnLevel=0, lastDeathLevelId=null;
 var debris=[], steamParticles=[], lightningBolts=[];
 var lightningTimer=0, lightningBurstActive=false, lightningBurstFrames=0, lightningBurstCooldown=0;
 
@@ -1249,9 +1250,1006 @@ function drawDragonBoss(){
   }
 }
 
+function drawLeviathan(){
+  if(!boss) return;
+  var b=boss, t=frameN;
+  var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
+  var phase2=bossPhase>=2;
+
+  // Death particles
+  if(bossDefeated){
+    for(var di=0;di<b.deathParticles.length;di++){
+      var dp=b.deathParticles[di];
+      ctx.save();ctx.globalAlpha=dp.life;ctx.fillStyle=dp.col;ctx.shadowColor=dp.col;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    return;
+  }
+
+  // Ink cloud overlay — phase 2 attack
+  if(b.inkActive&&b.inkAlpha>0){
+    ctx.save();ctx.globalAlpha=b.inkAlpha*0.6;
+    ctx.fillStyle='#000814';ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  // Bubble projectiles
+  for(var bi2=0;bi2<bossFeathers.length;bi2++){
+    var bf=bossFeathers[bi2];
+    ctx.save();ctx.translate(bf.x,bf.y);
+    var size=bf.r||12;
+    ctx.globalAlpha=0.7+Math.sin(t*0.1+bi2)*0.15;
+    ctx.shadowColor='rgba(0,200,255,0.8)';ctx.shadowBlur=12;
+    var bubG=ctx.createRadialGradient(-size*0.3,-size*0.3,0,0,0,size);
+    bubG.addColorStop(0,'rgba(200,255,255,0.9)');
+    bubG.addColorStop(0.4,'rgba(0,200,255,0.5)');
+    bubG.addColorStop(0.85,'rgba(0,100,200,0.3)');
+    bubG.addColorStop(1,'rgba(0,50,150,0)');
+    ctx.fillStyle=bubG;ctx.beginPath();ctx.arc(0,0,size,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(100,255,255,0.4)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,size,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+
+  // Bioluminescent aura behind creature
+  ctx.save();
+  var aCol=phase2?'rgba(255,0,100,':'rgba(0,200,255,';
+  var aP=0.12+Math.sin(t*0.055)*0.06;
+  var levAura=ctx.createRadialGradient(b.x,b.y,20,b.x,b.y,140);
+  levAura.addColorStop(0,aCol+aP+')');levAura.addColorStop(0.5,aCol+(aP*0.5)+')');levAura.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=levAura;ctx.beginPath();ctx.arc(b.x,b.y,140,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // ── SERPENT BODY — long coiling segments ──
+  var segs=10;
+  var segPts=[];
+  for(var si=0;si<segs;si++){
+    var sf=si/segs;
+    var segX=b.x+sf*120;
+    var segY=b.y+Math.sin(t*0.05+si*0.7)*28*(1-sf*0.4);
+    if(b.segOffsets) segY+=b.segOffsets[si%b.segOffsets.length]*8;
+    segPts.push({x:segX,y:segY,r:28-si*1.8});
+  }
+
+  // Draw body segments back to front
+  for(var si2=segs-1;si2>=0;si2--){
+    var sp=segPts[si2];
+    if(hurtFlash){ctx.globalAlpha=0.35;}
+    var segG=ctx.createRadialGradient(sp.x-sp.r*0.3,sp.y-sp.r*0.2,2,sp.x,sp.y,sp.r);
+    segG.addColorStop(0,phase2?'#220040':'#003344');
+    segG.addColorStop(0.4,phase2?'#440060':'#005566');
+    segG.addColorStop(0.7,phase2?'#220030':'#003355');
+    segG.addColorStop(1,'#001122');
+    ctx.fillStyle=segG;
+    ctx.beginPath();ctx.arc(sp.x,sp.y,sp.r,0,Math.PI*2);ctx.fill();
+    // Bioluminescent stripe along back
+    ctx.save();ctx.globalAlpha=(0.4+Math.sin(t*0.06+si2*0.5)*0.2)*(hurtFlash?0.2:1);
+    ctx.fillStyle=phase2?'rgba(255,0,150,0.7)':'rgba(0,255,200,0.6)';
+    ctx.shadowColor=phase2?'rgba(255,0,100,0.9)':'rgba(0,255,200,0.8)';ctx.shadowBlur=8;
+    ctx.beginPath();ctx.ellipse(sp.x,sp.y-sp.r*0.55,sp.r*0.35,sp.r*0.18,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // Scale texture
+    ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.arc(sp.x,sp.y,sp.r*0.85,0.2,Math.PI-0.2);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  // ── NECK ── connects body to head
+  var neckWave=Math.sin(t*0.04)*0.2;
+  ctx.save();ctx.translate(b.x,b.y);ctx.rotate(neckWave);
+  var nkG2=ctx.createLinearGradient(0,-10,0,-55);
+  nkG2.addColorStop(0,phase2?'#330055':'#004455');
+  nkG2.addColorStop(1,phase2?'#550077':'#006677');
+  ctx.fillStyle=nkG2;
+  ctx.beginPath();ctx.moveTo(-14,0);ctx.bezierCurveTo(-18,-20,-16,-45,-10,-58);ctx.bezierCurveTo(-4,-64,4,-64,8,-58);ctx.bezierCurveTo(14,-45,16,-20,14,0);ctx.closePath();ctx.fill();
+  if(hurtFlash) ctx.globalAlpha=0.35;
+  // Neck bioluminescent stripes
+  ctx.save();ctx.globalAlpha=0.5+Math.sin(t*0.07)*0.2;
+  ctx.fillStyle=phase2?'rgba(255,0,150,0.7)':'rgba(0,255,200,0.6)';
+  ctx.shadowColor=phase2?'rgba(255,0,100,0.8)':'rgba(0,255,180,0.8)';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.ellipse(-1,-30,4,22,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // Neck fins
+  ctx.fillStyle=phase2?'rgba(200,0,255,0.5)':'rgba(0,200,255,0.5)';
+  for(var nfi=0;nfi<3;nfi++){
+    ctx.save();ctx.translate(14,-15-nfi*14);ctx.rotate(0.3+nfi*0.1);
+    ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(12,-4,16,-12,10,-18);ctx.bezierCurveTo(4,-14,0,-8,0,0);ctx.fill();
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+
+  // ── HEAD ──
+  ctx.save();ctx.translate(-2,-62);ctx.rotate(Math.sin(t*0.04)*0.12+neckWave*0.6);
+  if(hurtFlash) ctx.globalAlpha=0.3;
+
+  // Head shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(0,2,28,20,0.2,0,Math.PI*2);ctx.fill();
+  // Main skull
+  var hdG3=ctx.createRadialGradient(-8,-4,4,0,0,28);
+  hdG3.addColorStop(0,phase2?'#440066':'#005566');
+  hdG3.addColorStop(0.5,phase2?'#220044':'#003355');
+  hdG3.addColorStop(1,'#001122');
+  ctx.fillStyle=hdG3;ctx.beginPath();ctx.ellipse(-2,0,26,20,0.15,0,Math.PI*2);ctx.fill();
+
+  // Elongated snout
+  var snG2=ctx.createLinearGradient(-28,4,-4,4);
+  snG2.addColorStop(0,'#001122');snG2.addColorStop(0.5,phase2?'#330055':'#004455');snG2.addColorStop(1,phase2?'#440066':'#005566');
+  ctx.fillStyle=snG2;ctx.beginPath();ctx.moveTo(-6,2);ctx.bezierCurveTo(-14,0,-24,-2,-30,4);ctx.bezierCurveTo(-30,10,-22,14,-14,14);ctx.bezierCurveTo(-8,14,-4,10,-2,8);ctx.closePath();ctx.fill();
+
+  // Lower jaw
+  ctx.fillStyle=phase2?'#220033':'#002233';
+  ctx.beginPath();ctx.moveTo(-6,8);ctx.bezierCurveTo(-14,10,-24,12,-28,14);ctx.bezierCurveTo(-26,20,-18,22,-10,20);ctx.bezierCurveTo(-4,18,-2,14,0,10);ctx.closePath();ctx.fill();
+
+  // Fangs
+  ctx.fillStyle='rgba(200,255,255,0.9)';ctx.shadowColor='rgba(0,200,255,0.5)';ctx.shadowBlur=4;
+  for(var fi5=0;fi5<4;fi5++){
+    ctx.save();ctx.translate(-24+fi5*5,12);ctx.beginPath();ctx.moveTo(-2,0);ctx.lineTo(0,9);ctx.lineTo(2,0);ctx.closePath();ctx.fill();ctx.restore();
+  }
+  ctx.shadowBlur=0;
+
+  // Head fins — swept back like a sea creature
+  ctx.fillStyle=phase2?'rgba(200,0,255,0.55)':'rgba(0,200,255,0.5)';
+  ctx.beginPath();ctx.moveTo(8,-14);ctx.bezierCurveTo(18,-20,28,-18,32,-10);ctx.bezierCurveTo(26,-6,14,-4,8,-8);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(6,-8);ctx.bezierCurveTo(14,-10,20,-8,22,-3);ctx.bezierCurveTo(16,0,10,0,6,-2);ctx.closePath();ctx.fill();
+
+  // Nostrils with water jet glow
+  ctx.fillStyle='rgba(0,0,0,0.8)';
+  ctx.beginPath();ctx.ellipse(-24,4,3,2,0.3,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.globalAlpha=0.4+Math.sin(t*0.12)*0.2;
+  ctx.fillStyle='rgba(0,200,255,0.5)';ctx.beginPath();ctx.arc(-24,4,6,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Eye — massive glowing amber with slit, bioluminescent
+  var eyePulse2=0.8+Math.sin(t*0.09)*0.2;
+  var eyeC=phase2?'#ff00aa':'#00ffcc';
+  var eyeC2=phase2?'#ff44cc':'#44ffee';
+  ctx.save();ctx.globalAlpha=eyePulse2*0.7;
+  ctx.shadowColor=eyeC;ctx.shadowBlur=18;
+  var eG2=ctx.createRadialGradient(-8,-6,0,-8,-6,16);
+  eG2.addColorStop(0,eyeC2);eG2.addColorStop(0.4,eyeC);eG2.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=eG2;ctx.beginPath();ctx.arc(-8,-6,16,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.fillStyle=eyeC2;ctx.shadowColor=eyeC;ctx.shadowBlur=8;
+  ctx.beginPath();ctx.ellipse(-8,-6,7,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#000';ctx.shadowBlur=0;
+  ctx.beginPath();ctx.ellipse(-8,-6,2,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath();ctx.arc(-10,-8,1.5,0,Math.PI*2);ctx.fill();
+
+  // Phase 2 head aura
+  if(phase2){
+    ctx.save();ctx.globalAlpha=0.2+Math.sin(t*0.1)*0.08;
+    var hA2=ctx.createRadialGradient(-2,0,6,-2,0,38);
+    hA2.addColorStop(0,'rgba(255,0,150,0.6)');hA2.addColorStop(1,'rgba(255,0,100,0)');
+    ctx.fillStyle=hA2;ctx.beginPath();ctx.arc(-2,0,38,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+
+  ctx.restore();// head
+  ctx.restore();// neck+translate
+
+  // Damage number
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,b.hurtTimer/15);
+    ctx.fillStyle='#00ffcc';ctx.shadowColor='#00ffcc';ctx.shadowBlur=10;
+    ctx.font='bold 18px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',b.x,b.y-95);ctx.restore();
+  }
+}
+
+function drawTempest(){
+  if(!boss) return;
+  var b=boss, t=frameN;
+  var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
+  var phase2=bossPhase>=2;
+
+  if(bossDefeated){
+    for(var di=0;di<b.deathParticles.length;di++){
+      var dp=b.deathParticles[di];
+      ctx.save();ctx.globalAlpha=dp.life;ctx.fillStyle=dp.col;ctx.shadowColor=dp.col;ctx.shadowBlur=12;
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    return;
+  }
+
+  // Falling feather storm — phase 2
+  if(b.featherStorm&&bossPhase>=2){
+    for(var fsi=0;fsi<b.featherStorm.length;fsi++){
+      var fs2=b.featherStorm[fsi];
+      ctx.save();ctx.translate(fs2.x,fs2.y);ctx.rotate(fs2.ang);
+      ctx.fillStyle='rgba(160,170,255,0.7)';ctx.shadowColor='rgba(180,190,255,0.6)';ctx.shadowBlur=4;
+      ctx.beginPath();ctx.ellipse(0,0,2,7,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Lightning projectiles
+  for(var li=0;li<bossFeathers.length;li++){
+    var lf=bossFeathers[li];
+    ctx.save();
+    ctx.strokeStyle='rgba(220,230,255,0.9)';ctx.lineWidth=2+Math.random();
+    ctx.shadowColor='rgba(180,200,255,1)';ctx.shadowBlur=15;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(lf.x,lf.y);
+    ctx.lineTo(lf.x-lf.vx*3+(Math.random()-0.5)*6,lf.y-lf.vy*3+(Math.random()-0.5)*4);
+    ctx.lineTo(lf.x-lf.vx*6,lf.y-lf.vy*6);
+    ctx.stroke();
+    // Bolt head glow
+    ctx.globalAlpha=0.8;var boltG=ctx.createRadialGradient(lf.x,lf.y,0,lf.x,lf.y,10);
+    boltG.addColorStop(0,'rgba(255,255,255,1)');boltG.addColorStop(0.4,'rgba(180,200,255,0.7)');boltG.addColorStop(1,'rgba(100,120,255,0)');
+    ctx.fillStyle=boltG;ctx.beginPath();ctx.arc(lf.x,lf.y,10,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Storm aura
+  ctx.save();
+  var sAura=ctx.createRadialGradient(b.x,b.y,15,b.x,b.y,150);
+  sAura.addColorStop(0,phase2?'rgba(255,255,255,0.15)':'rgba(150,170,255,0.12)');
+  sAura.addColorStop(0.5,phase2?'rgba(200,210,255,0.08)':'rgba(80,100,255,0.06)');
+  sAura.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sAura;ctx.beginPath();ctx.arc(b.x,b.y,150,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  ctx.save();ctx.translate(b.x,b.y);
+  if(hurtFlash) ctx.globalAlpha=0.3;
+
+  var bodyBob=Math.sin(t*0.05)*0.08;
+  ctx.rotate(bodyBob);
+
+  // ── TAIL FAN — broad eagle tail, layered primary feathers ──
+  ctx.save();
+  var tailSpread=0.28+Math.sin(t*0.06)*0.06;
+  // Draw tail feathers back-to-front so they layer properly
+  for(var tfi=4;tfi>=0;tfi--){
+    var tfa=(tfi-2)*tailSpread;
+    ctx.save();ctx.rotate(tfa);
+    var tfCol=phase2?['#18183a','#202050','#28285e']:['#222248','#2a2a58','#323268'];
+    var tfG=ctx.createLinearGradient(0,12,0,72);
+    tfG.addColorStop(0,tfCol[0]);tfG.addColorStop(0.5,tfCol[1]);tfG.addColorStop(1,tfCol[2]);
+    ctx.fillStyle=tfG;
+    // Realistic feather shape — narrow base, broad tip, rounded end
+    ctx.beginPath();
+    ctx.moveTo(-3,12);
+    ctx.bezierCurveTo(-5,28,-7,48,-5,68);
+    ctx.bezierCurveTo(-3,72,3,72,5,68);
+    ctx.bezierCurveTo(7,48,5,28,3,12);
+    ctx.closePath();ctx.fill();
+    // Central shaft
+    ctx.strokeStyle='rgba(100,110,180,0.4)';ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(0,12);ctx.lineTo(0,70);ctx.stroke();
+    // Barb lines — herringbone pattern
+    ctx.strokeStyle='rgba(60,70,140,0.25)';ctx.lineWidth=0.5;
+    for(var bi3=0;bi3<8;bi3++){
+      var by=18+bi3*6;
+      var bw=3+bi3*0.5;
+      ctx.beginPath();ctx.moveTo(0,by);ctx.lineTo(-bw,by-3);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,by);ctx.lineTo(bw,by-3);ctx.stroke();
+    }
+    // Lightning vein along shaft
+    if(phase2){
+      ctx.strokeStyle='rgba(180,200,255,0.35)';ctx.lineWidth=0.8;
+      ctx.shadowColor='rgba(180,200,255,0.5)';ctx.shadowBlur=4;
+      ctx.beginPath();ctx.moveTo(0,14);ctx.lineTo(2,28);ctx.lineTo(-1,42);ctx.lineTo(1,58);ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // ── WINGS — layered flight feathers, true bird wing shape ──
+  var wingFlap=Math.sin(t*0.12)*0.55+0.18;
+  if(b.chargeActive) wingFlap=1.0+Math.sin(t*0.3)*0.2;
+
+  for(var wi=0;wi<2;wi++){
+    ctx.save();
+    if(wi===1) ctx.scale(-1,1);
+    ctx.rotate(-wingFlap*0.6);
+
+    // ── Wing coverts — upper wing surface, dark layered feathers ──
+    // Scapular/lesser coverts (inner wing top)
+    var wcG=ctx.createLinearGradient(-30,-10,-90,-30);
+    wcG.addColorStop(0,phase2?'#282850':'#303262');wcG.addColorStop(1,phase2?'#181838':'#222248');
+    ctx.fillStyle=wcG;
+    ctx.beginPath();ctx.moveTo(-4,-8);
+    ctx.bezierCurveTo(-20,-22,-50,-32,-75,-28);
+    ctx.bezierCurveTo(-70,-18,-40,-12,-8,-4);
+    ctx.closePath();ctx.fill();
+    // Median coverts
+    var mcG=ctx.createLinearGradient(-20,-4,-100,-20);
+    mcG.addColorStop(0,phase2?'#202045':'#282858');mcG.addColorStop(1,phase2?'#141430':'#1e1e48');
+    ctx.fillStyle=mcG;
+    ctx.beginPath();ctx.moveTo(-4,0);
+    ctx.bezierCurveTo(-30,-14,-70,-22,-105,-18);
+    ctx.bezierCurveTo(-100,-8,-65,2,-20,8);
+    ctx.bezierCurveTo(-14,10,-6,6,-4,0);
+    ctx.closePath();ctx.fill();
+
+    // ── Primary flight feathers — 7 distinct feathers at wing tip ──
+    var primBase={x:-105,y:-18};
+    for(var pi=0;pi<7;pi++){
+      var pf=pi/6;
+      var pAngle=-0.4+pf*0.6; // fan out
+      var pLen=55+Math.sin(pi*0.8)*8;
+      var pW=6-pi*0.4;
+      ctx.save();
+      ctx.translate(primBase.x+pi*5,primBase.y+pi*2);
+      ctx.rotate(pAngle);
+      var pfG=ctx.createLinearGradient(0,0,0,pLen);
+      pfG.addColorStop(0,phase2?'#181838':'#1e1e48');
+      pfG.addColorStop(0.6,phase2?'#101028':'#181838');
+      pfG.addColorStop(1,phase2?'#0a0a1e':'#101028');
+      ctx.fillStyle=pfG;
+      // Asymmetric feather shape (outer vane narrower than inner — realistic)
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.bezierCurveTo(-pW*0.6,pLen*0.3,-pW*0.8,pLen*0.7,-pW*0.4,pLen);
+      ctx.bezierCurveTo(0,pLen+3,pW*1.2,pLen,pW*1.4,pLen*0.7);
+      ctx.bezierCurveTo(pW*1.2,pLen*0.4,pW*0.8,pLen*0.15,0,0);
+      ctx.closePath();ctx.fill();
+      // Central rachis (shaft)
+      ctx.strokeStyle='rgba(80,90,160,0.5)';ctx.lineWidth=0.9;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,pLen);ctx.stroke();
+      // Barbs
+      ctx.strokeStyle='rgba(50,60,130,0.2)';ctx.lineWidth=0.5;
+      for(var pb=2;pb<8;pb++){
+        var pby=pb*(pLen/9);
+        ctx.beginPath();ctx.moveTo(0,pby);ctx.lineTo(-pW*0.6,pby-3);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,pby);ctx.lineTo(pW*1.1,pby-3);ctx.stroke();
+      }
+      // Lightning trace on primaries
+      if(Math.sin(t*0.14+pi*1.8+wi*3)>0.4){
+        ctx.strokeStyle=phase2?'rgba(255,255,255,0.55)':'rgba(180,200,255,0.45)';
+        ctx.lineWidth=1;ctx.shadowColor='rgba(180,200,255,0.7)';ctx.shadowBlur=6;
+        ctx.beginPath();ctx.moveTo(0,4);ctx.lineTo(pW*0.3,pLen*0.4);ctx.lineTo(-pW*0.1,pLen*0.7);ctx.lineTo(pW*0.2,pLen);ctx.stroke();
+        ctx.shadowBlur=0;
+      }
+      ctx.restore();
+    }
+
+    // ── Secondary flight feathers — trailing edge of inner wing ──
+    for(var si3=0;si3<5;si3++){
+      var sf2=si3/4;
+      ctx.save();
+      ctx.translate(-20-si3*14,8+si3*2);
+      ctx.rotate(0.15+si3*0.08);
+      var sLen=38+si3*4;
+      var sG2=ctx.createLinearGradient(0,0,0,sLen);
+      sG2.addColorStop(0,phase2?'#1a1a3e':'#222252');sG2.addColorStop(1,phase2?'#0e0e28':'#141438');
+      ctx.fillStyle=sG2;
+      ctx.beginPath();ctx.moveTo(-4,0);
+      ctx.bezierCurveTo(-5,sLen*0.3,-4,sLen*0.7,-2,sLen);
+      ctx.bezierCurveTo(0,sLen+2,5,sLen,6,sLen*0.7);
+      ctx.bezierCurveTo(7,sLen*0.4,5,sLen*0.1,4,0);
+      ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(70,80,150,0.35)';ctx.lineWidth=0.7;
+      ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(0,sLen);ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── Alula — small thumb feathers at wing bend ──
+    ctx.fillStyle=phase2?'#151530':'#1e1e42';
+    ctx.beginPath();ctx.moveTo(-22,-18);
+    ctx.bezierCurveTo(-28,-28,-32,-30,-30,-22);
+    ctx.bezierCurveTo(-28,-16,-24,-14,-22,-18);
+    ctx.closePath();ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ── BODY — eagle torso with breast feathers ──
+  ctx.save();
+  // Main body silhouette
+  var bBodyG=ctx.createRadialGradient(-6,-2,5,0,8,34);
+  bBodyG.addColorStop(0,phase2?'#2a2a55':'#323268');
+  bBodyG.addColorStop(0.4,phase2?'#1a1a3a':'#222250');
+  bBodyG.addColorStop(0.8,'#0e0e22');bBodyG.addColorStop(1,'#050510');
+  ctx.fillStyle=bBodyG;
+  ctx.beginPath();
+  ctx.ellipse(0,8,26,22,0,0,Math.PI*2);
+  ctx.fill();
+  // Breast feather rows — scalloped edges
+  for(var bri=0;bri<5;bri++){
+    var brY=-6+bri*7, brW=18-bri*1.5;
+    ctx.strokeStyle='rgba(70,80,150,0.28)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(0,brY,brW,3.5,0,0,Math.PI);ctx.stroke();
+    // Individual feather tips
+    ctx.fillStyle='rgba(35,40,80,0.35)';
+    for(var bfj=0;bfj<5;bfj++){
+      var bfx=-brW+bfj*(brW*2/4);
+      ctx.beginPath();ctx.ellipse(bfx,brY,4,3,-0.1,0,Math.PI*2);ctx.fill();
+    }
+  }
+  // Keel/sternum ridge
+  ctx.strokeStyle='rgba(50,60,120,0.3)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,-10);ctx.bezierCurveTo(2,4,2,18,0,28);ctx.stroke();
+  // Lightning chest crackle
+  ctx.save();ctx.globalAlpha=0.45+Math.sin(t*0.12)*0.2;
+  ctx.strokeStyle=phase2?'rgba(255,255,255,0.8)':'rgba(180,200,255,0.65)';ctx.lineWidth=1.5;
+  ctx.shadowColor=phase2?'rgba(255,255,255,0.9)':'rgba(160,180,255,0.8)';ctx.shadowBlur=10;
+  for(var cli=0;cli<3;cli++){
+    var ca=cli*(Math.PI*0.7)-0.3+t*0.06;
+    ctx.beginPath();ctx.moveTo(Math.cos(ca)*7,Math.sin(ca)*7+4);
+    ctx.lineTo(Math.cos(ca)*16+(Math.random()-0.5)*5,Math.sin(ca)*16+4+(Math.random()-0.5)*5);
+    ctx.stroke();
+  }
+  ctx.shadowBlur=0;ctx.restore();
+  ctx.restore();
+
+  // ── LEGS / TALONS — feathered upper legs, scaled lower ──
+  ctx.save();
+  // Feathered thighs
+  ctx.fillStyle=phase2?'#1a1a38':'#222248';
+  ctx.beginPath();ctx.ellipse(-14,24,8,12,-0.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(14,24,8,12,0.2,0,Math.PI*2);ctx.fill();
+  // Lower legs — scaled
+  ctx.strokeStyle='#0c0c20';ctx.lineWidth=8;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-14,32);ctx.bezierCurveTo(-18,40,-16,48,-14,54);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(14,32);ctx.bezierCurveTo(18,40,16,48,14,54);ctx.stroke();
+  ctx.lineWidth=5;ctx.strokeStyle='#141430';
+  ctx.beginPath();ctx.moveTo(-14,32);ctx.bezierCurveTo(-18,40,-16,48,-14,54);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(14,32);ctx.bezierCurveTo(18,40,16,48,14,54);ctx.stroke();
+  // Scale rings on legs
+  ctx.strokeStyle='rgba(30,30,70,0.5)';ctx.lineWidth=0.8;
+  for(var li2=0;li2<4;li2++){
+    ctx.beginPath();ctx.arc(-14,34+li2*5,4,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(14,34+li2*5,4,0,Math.PI*2);ctx.stroke();
+  }
+  // Three curved talons each foot
+  ctx.strokeStyle='#080818';ctx.lineWidth=2.5;ctx.lineCap='round';
+  var talonAngles=[-0.5,0,0.5];
+  for(var ti6=0;ti6<3;ti6++){
+    var ta=talonAngles[ti6];
+    ctx.beginPath();ctx.moveTo(-14+Math.sin(ta)*4,54);
+    ctx.bezierCurveTo(-14+Math.sin(ta)*4-4,60,-16+Math.sin(ta)*6,64,-12+Math.sin(ta)*5,62);
+    ctx.stroke();
+    ctx.beginPath();ctx.moveTo(14+Math.sin(ta)*4,54);
+    ctx.bezierCurveTo(14+Math.sin(ta)*4+4,60,16+Math.sin(ta)*6,64,12+Math.sin(ta)*5,62);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── NECK ──
+  var nBob=Math.sin(t*0.045)*0.15;
+  ctx.save();ctx.rotate(nBob);
+  var nkG3=ctx.createLinearGradient(0,-16,0,-58);
+  nkG3.addColorStop(0,phase2?'#1e1e40':'#262650');nkG3.addColorStop(1,phase2?'#282858':'#303068');
+  ctx.fillStyle=nkG3;
+  ctx.beginPath();ctx.moveTo(-11,-16);ctx.bezierCurveTo(-15,-32,-13,-50,-8,-60);
+  ctx.bezierCurveTo(-3,-65,3,-65,7,-60);ctx.bezierCurveTo(12,-50,14,-32,11,-16);ctx.closePath();ctx.fill();
+  // Neck lightning
+  ctx.save();ctx.globalAlpha=0.4+Math.sin(t*0.1)*0.2;
+  ctx.strokeStyle=phase2?'rgba(255,255,255,0.7)':'rgba(180,200,255,0.6)';ctx.lineWidth=1;
+  ctx.shadowColor='rgba(180,200,255,0.8)';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.moveTo(-3,-20);ctx.lineTo(2,-32);ctx.lineTo(-4,-44);ctx.lineTo(1,-56);ctx.stroke();
+  ctx.shadowBlur=0;ctx.restore();
+  ctx.restore();
+
+  // ── HEAD ── realistic eagle anatomy
+  ctx.save();ctx.translate(-2,-62);ctx.rotate(Math.sin(t*0.045)*0.12+nBob*0.5);
+  if(hurtFlash) ctx.globalAlpha=0.3;
+
+  // ── SKULL — round cranium, compressed face ──
+  var hG4=ctx.createRadialGradient(6,-2,3,4,0,22);
+  hG4.addColorStop(0,phase2?'#383868':'#404078');
+  hG4.addColorStop(0.5,phase2?'#202045':'#282858');
+  hG4.addColorStop(1,'#0e0e22');
+  ctx.fillStyle=hG4;
+  ctx.beginPath();
+  ctx.moveTo(16,2);
+  ctx.bezierCurveTo(18,-8,14,-18,6,-20);
+  ctx.bezierCurveTo(0,-22,-8,-20,-14,-14);
+  ctx.bezierCurveTo(-18,-10,-20,-4,-18,4);
+  ctx.bezierCurveTo(-16,10,-8,14,0,14);
+  ctx.bezierCurveTo(8,14,16,10,16,2);
+  ctx.closePath();ctx.fill();
+
+  // Facial feather texture — fine scale marks
+  ctx.strokeStyle='rgba(50,55,110,0.2)';ctx.lineWidth=0.6;
+  for(var ffi=0;ffi<6;ffi++){
+    var ffy=-12+ffi*4;
+    ctx.beginPath();ctx.ellipse(-4,ffy,8-Math.abs(ffi-3)*0.5,2,0.05,0,Math.PI);ctx.stroke();
+  }
+
+  // ── CERE — fleshy nostril base, slightly paler ──
+  ctx.fillStyle=phase2?'#2a2a52':'#303268';
+  ctx.beginPath();
+  ctx.moveTo(-10,-12);ctx.bezierCurveTo(-14,-15,-16,-12,-16,-9);
+  ctx.bezierCurveTo(-16,-6,-13,-4,-10,-5);ctx.bezierCurveTo(-8,-5,-6,-7,-7,-10);
+  ctx.closePath();ctx.fill();
+  // Nostril opening
+  ctx.fillStyle='rgba(0,0,0,0.65)';
+  ctx.beginPath();ctx.ellipse(-13,-9,2.5,1.5,0.5,0,Math.PI*2);ctx.fill();
+
+  // ── UPPER MANDIBLE — strongly decurved hook ──
+  var ubG=ctx.createLinearGradient(-8,-10,-34,2);
+  ubG.addColorStop(0,phase2?'#222245':'#2a2a55');
+  ubG.addColorStop(0.5,'#18182e');ubG.addColorStop(1,'#0e0e1e');
+  ctx.fillStyle=ubG;
+  ctx.beginPath();
+  ctx.moveTo(-6,-10); // attach at cere
+  ctx.bezierCurveTo(-12,-13,-22,-12,-28,-9); // culmen ridge runs forward
+  ctx.bezierCurveTo(-34,-6,-36,-1,-35,3); // curves down to tip
+  ctx.bezierCurveTo(-34,6,-32,8,-30,7); // hooked tip, curves DOWN sharply
+  ctx.bezierCurveTo(-28,5,-24,2,-20,-1); // tomium — cutting edge
+  ctx.bezierCurveTo(-15,-4,-10,-6,-8,-8);
+  ctx.closePath();ctx.fill();
+  // Culmen ridge highlight
+  ctx.strokeStyle='rgba(50,55,110,0.45)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(-8,-11);ctx.bezierCurveTo(-18,-13,-30,-10,-35,3);ctx.stroke();
+  // Tomium edge — sharper line
+  ctx.strokeStyle='rgba(30,30,60,0.6)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(-10,-7);ctx.bezierCurveTo(-20,-3,-30,2,-35,3);ctx.stroke();
+
+  // ── LOWER MANDIBLE — shorter, straight, rami visible ──
+  var lbG=ctx.createLinearGradient(-8,-2,-30,6);
+  lbG.addColorStop(0,'#141428');lbG.addColorStop(1,'#0a0a18');
+  ctx.fillStyle=lbG;
+  ctx.beginPath();
+  ctx.moveTo(-8,-4);
+  ctx.bezierCurveTo(-14,-4,-24,-2,-30,0);
+  ctx.bezierCurveTo(-32,1,-32,5,-30,6);
+  ctx.bezierCurveTo(-26,7,-18,5,-12,3);
+  ctx.bezierCurveTo(-10,2,-8,-1,-8,-4);
+  ctx.closePath();ctx.fill();
+  // Ramus (jaw line) visible as slight ridge
+  ctx.strokeStyle='rgba(20,20,50,0.4)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(-8,-2);ctx.bezierCurveTo(-16,-1,-24,1,-30,4);ctx.stroke();
+
+  // ── BROW RIDGE — heavy, overhanging, key eagle feature ──
+  var browG=ctx.createLinearGradient(-14,-20,4,-10);
+  browG.addColorStop(0,phase2?'#1a1a3a':'#222250');browG.addColorStop(1,phase2?'#141430':'#1a1a40');
+  ctx.fillStyle=browG;
+  ctx.beginPath();
+  ctx.moveTo(-14,-15);ctx.bezierCurveTo(-8,-22,2,-24,8,-22);
+  ctx.bezierCurveTo(14,-20,16,-16,14,-13);
+  ctx.bezierCurveTo(8,-13,-2,-13,-10,-13);
+  ctx.bezierCurveTo(-13,-13,-15,-14,-14,-15);
+  ctx.closePath();ctx.fill();
+
+  // ── BACK OF HEAD — swept crest feathers ──
+  ctx.fillStyle=phase2?'#1a1a3a':'#222252';
+  for(var cfi=0;cfi<5;cfi++){
+    ctx.save();ctx.translate(12+cfi*2,-6-cfi*3);ctx.rotate(0.18+cfi*0.16);
+    var cfl=9+cfi*3;
+    ctx.beginPath();ctx.moveTo(0,0);
+    ctx.bezierCurveTo(2,-cfl*0.4,2,-cfl*0.75,0,-cfl);
+    ctx.bezierCurveTo(-2,-cfl*0.75,-2,-cfl*0.4,0,0);
+    ctx.closePath();ctx.fill();
+    // Central shaft
+    ctx.strokeStyle='rgba(60,70,140,0.35)';ctx.lineWidth=0.6;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-cfl);ctx.stroke();
+    if(phase2){
+      ctx.strokeStyle='rgba(180,200,255,0.25)';ctx.lineWidth=0.7;
+      ctx.shadowColor='rgba(180,200,255,0.4)';ctx.shadowBlur=3;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-cfl);ctx.stroke();ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+
+  // ── EYE — deep-set, fierce, ringed by orbital feathers ──
+  var eyePulse3=0.85+Math.sin(t*0.1)*0.15;
+  var eColT=phase2?'#ffffff':'#c8d8ff';
+  var ex4=-4, ey4=-8;
+  // Orbital ring feathers — concentric dark ring around eye
+  ctx.fillStyle='rgba(8,8,20,0.7)';ctx.beginPath();ctx.arc(ex4,ey4,9,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(20,22,50,0.5)';ctx.beginPath();ctx.arc(ex4,ey4,7,0,Math.PI*2);ctx.fill();
+  // Outer glow
+  ctx.save();ctx.globalAlpha=eyePulse3*0.75;
+  ctx.shadowColor=eColT;ctx.shadowBlur=18;
+  var eG3=ctx.createRadialGradient(ex4,ey4,0,ex4,ey4,11);
+  eG3.addColorStop(0,'rgba(255,255,255,1)');eG3.addColorStop(0.3,eColT);eG3.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=eG3;ctx.beginPath();ctx.arc(ex4,ey4,11,0,Math.PI*2);ctx.fill();ctx.restore();
+  // Iris
+  ctx.fillStyle=eColT;ctx.shadowColor=eColT;ctx.shadowBlur=6;
+  ctx.beginPath();ctx.ellipse(ex4,ey4,5,4.5,0.08,0,Math.PI*2);ctx.fill();
+  // Pupil — round, eagle-like
+  ctx.fillStyle='#020208';ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(ex4,ey4,2.6,0,Math.PI*2);ctx.fill();
+  // Catchlight
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.beginPath();ctx.arc(ex4-1.2,ey4-1.5,1.2,0,Math.PI*2);ctx.fill();
+  // Supraorbital brow shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath();ctx.ellipse(ex4,ey4-5,7,3,0.1,0,Math.PI);ctx.fill();
+
+  // Phase 2 full lightning aura
+  if(phase2){
+    ctx.save();ctx.globalAlpha=0.25+Math.sin(t*0.1)*0.1;
+    var hA3=ctx.createRadialGradient(-2,0,5,-2,0,36);
+    hA3.addColorStop(0,'rgba(255,255,255,0.6)');hA3.addColorStop(1,'rgba(150,170,255,0)');
+    ctx.fillStyle=hA3;ctx.beginPath();ctx.arc(-2,0,36,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+
+  ctx.restore();// head
+  ctx.restore();// body
+
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,b.hurtTimer/15);
+    ctx.fillStyle='#c8d8ff';ctx.shadowColor='#c8d8ff';ctx.shadowBlur=10;
+    ctx.font='bold 18px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',b.x,b.y-90);ctx.restore();
+  }
+}
+
+function drawJeanJacket(){
+  if(!boss) return;
+  var b=boss, t=frameN;
+  var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
+  var phase2=bossPhase>=2;
+
+  if(bossDefeated){
+    for(var di=0;di<b.deathParticles.length;di++){
+      var dp=b.deathParticles[di];ctx.save();ctx.globalAlpha=dp.life;ctx.fillStyle=dp.col;ctx.shadowColor=dp.col;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    return;
+  }
+
+  // Star projectiles
+  for(var pi=0;pi<bossFeathers.length;pi++){
+    var pf=bossFeathers[pi];
+    ctx.save();ctx.translate(pf.x,pf.y);ctx.rotate(pf.ang||t*0.1);
+    ctx.globalAlpha=0.85;ctx.fillStyle='rgba(255,220,180,0.9)';
+    ctx.shadowColor='rgba(255,200,100,0.8)';ctx.shadowBlur=8;
+    for(var si=0;si<5;si++){
+      var sa=si*(Math.PI*2/5);
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sa)*9,Math.sin(sa)*9);ctx.lineTo(Math.cos(sa+Math.PI/5)*4,Math.sin(sa+Math.PI/5)*4);ctx.closePath();ctx.fill();
+    }
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Invisibility — fade in/out
+  var vis=b.visibility!==undefined?b.visibility:1;
+  if(vis<=0.02) return; // fully invisible
+  ctx.save();ctx.globalAlpha=vis*(hurtFlash?0.3:1);
+  ctx.translate(b.x,b.y);
+
+  // ── JEAN JACKET — organic manta/jellyfish creature ──
+  var pulse=Math.sin(t*0.08)*0.12; // breathing undulation
+  var ripple=Math.sin(t*0.12)*8;
+
+  // Outer bioluminescent rim glow
+  ctx.save();ctx.globalAlpha=vis*(0.3+Math.sin(t*0.06)*0.12);
+  var rimG=ctx.createRadialGradient(0,0,55,0,0,115);
+  rimG.addColorStop(0,'rgba(0,0,0,0)');
+  rimG.addColorStop(0.7,phase2?'rgba(255,50,50,0.15)':'rgba(220,200,150,0.12)');
+  rimG.addColorStop(1,phase2?'rgba(255,100,0,0.25)':'rgba(200,180,120,0.2)');
+  ctx.fillStyle=rimG;ctx.beginPath();ctx.arc(0,0,115,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Main body — flat undulating disc, wider than tall
+  var bG=ctx.createRadialGradient(-10,-8,8,0,0,70);
+  bG.addColorStop(0,phase2?'rgba(80,20,0,0.95)':'rgba(60,45,25,0.92)');
+  bG.addColorStop(0.4,phase2?'rgba(50,10,0,0.88)':'rgba(40,30,15,0.85)');
+  bG.addColorStop(0.8,phase2?'rgba(30,5,0,0.7)':'rgba(25,18,8,0.7)');
+  bG.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bG;
+  ctx.beginPath();
+  // Undulating edge — like fabric rippling
+  ctx.save();ctx.scale(1.5,0.7); // flatten into disc shape
+  ctx.beginPath();
+  for(var a=0;a<Math.PI*2;a+=0.15){
+    var r=62+Math.sin(a*4+t*0.1)*8+Math.sin(a*7+t*0.15)*4+pulse*12;
+    var px2=Math.cos(a)*r, py2=Math.sin(a)*r;
+    if(a===0) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+  }
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // Ripple rings — concentric waves across body
+  for(var ri3=0;ri3<4;ri3++){
+    var rr=15+ri3*14+Math.sin(t*0.08+ri3*0.8)*3;
+    ctx.save();ctx.scale(1.5,0.7);
+    ctx.globalAlpha=0.12+Math.sin(t*0.06+ri3)*0.06;
+    ctx.strokeStyle=phase2?'rgba(255,100,50,0.6)':'rgba(200,180,120,0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(0,0,rr,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+
+  // Bioluminescent pattern — spots that pulse
+  var spotCols=phase2?['rgba(255,80,0,','rgba(255,150,0,']:['rgba(220,200,120,','rgba(180,160,80,'];
+  for(var spi=0;spi<12;spi++){
+    var spA=spi*(Math.PI*2/12)+t*0.01;
+    var spR=(25+spi%3*12)*1.5; var spRy=(25+spi%3*12)*0.7;
+    var spx=Math.cos(spA)*spR, spy=Math.sin(spA)*spRy;
+    var spAlpha=(0.4+Math.sin(t*0.1+spi*0.9)*0.35)*vis;
+    ctx.globalAlpha=spAlpha;
+    var spG=ctx.createRadialGradient(spx,spy,0,spx,spy,6);
+    spG.addColorStop(0,spotCols[spi%2]+'0.9)');spG.addColorStop(1,spotCols[spi%2]+'0)');
+    ctx.fillStyle=spG;ctx.beginPath();ctx.arc(spx,spy,6,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=vis;
+
+  // Trailing tentacles — long rippling appendages
+  ctx.save();
+  for(var ti7=0;ti7<6;ti7++){
+    var tA=ti7*(Math.PI/3)+Math.PI*0.5; // mostly below
+    var tLen=45+ti7%2*20;
+    var tWave=Math.sin(t*0.08+ti7*1.1)*12;
+    ctx.globalAlpha=vis*(0.35+Math.sin(t*0.06+ti7)*0.15);
+    ctx.strokeStyle=phase2?'rgba(255,80,0,0.6)':'rgba(200,180,100,0.5)';ctx.lineWidth=2.5-ti7*0.2;ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(tA)*30,Math.sin(tA)*22);
+    ctx.bezierCurveTo(
+      Math.cos(tA)*50+tWave,Math.sin(tA)*35+tWave*0.5,
+      Math.cos(tA)*65+tWave*0.5,Math.sin(tA)*45+tWave,
+      Math.cos(tA)*tLen,Math.sin(tA)*tLen*0.7
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.restore(); // visibility + translate
+
+  // Hurt number
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,b.hurtTimer/15);
+    ctx.fillStyle='#ffcc80';ctx.shadowColor='#ffcc80';ctx.shadowBlur=10;
+    ctx.font='bold 18px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',b.x,b.y-80);ctx.restore();
+  }
+}
+
+function drawGrey(){
+  if(!boss) return;
+  var b=boss, t=frameN;
+  var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
+  var phase2=bossPhase>=2;
+
+  if(bossDefeated){
+    for(var di=0;di<b.deathParticles.length;di++){
+      var dp=b.deathParticles[di];ctx.save();ctx.globalAlpha=dp.life;ctx.fillStyle=dp.col;ctx.shadowColor=dp.col;ctx.shadowBlur=10;
+      ctx.beginPath();ctx.arc(dp.x,dp.y,dp.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    return;
+  }
+
+  // Plasma orb projectiles
+  for(var pi2=0;pi2<bossFeathers.length;pi2++){
+    var pf2=bossFeathers[pi2];
+    ctx.save();ctx.translate(pf2.x,pf2.y);
+    var pSize=pf2.r||10;
+    ctx.shadowColor='rgba(0,255,150,0.9)';ctx.shadowBlur=14;
+    var plG=ctx.createRadialGradient(0,0,0,0,0,pSize);
+    plG.addColorStop(0,'rgba(200,255,220,0.95)');plG.addColorStop(0.4,'rgba(0,255,130,0.7)');plG.addColorStop(1,'rgba(0,180,80,0)');
+    ctx.fillStyle=plG;ctx.beginPath();ctx.arc(0,0,pSize,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Tractor beam — phase 2 or during charge
+  if(b.beamActive){
+    ctx.save();
+    ctx.globalAlpha=0.18+Math.sin(t*0.15)*0.08;
+    var beamG=ctx.createLinearGradient(b.x,b.y,fly.x,fly.y);
+    beamG.addColorStop(0,'rgba(0,255,150,0.4)');beamG.addColorStop(1,'rgba(0,255,150,0)');
+    ctx.strokeStyle='rgba(0,255,150,0.5)';ctx.lineWidth=40;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(b.x,b.y+30);ctx.lineTo(fly.x,fly.y);ctx.stroke();
+    // Beam edge lines
+    ctx.lineWidth=2;ctx.globalAlpha=0.4+Math.sin(t*0.2)*0.2;
+    ctx.strokeStyle='rgba(100,255,180,0.7)';
+    ctx.beginPath();ctx.moveTo(b.x-20,b.y+30);ctx.lineTo(fly.x-10,fly.y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(b.x+20,b.y+30);ctx.lineTo(fly.x+10,fly.y);ctx.stroke();
+    ctx.restore();
+  }
+
+  // Green aura
+  ctx.save();
+  var gAura=ctx.createRadialGradient(b.x,b.y,10,b.x,b.y,120);
+  gAura.addColorStop(0,phase2?'rgba(0,255,100,0.16)':'rgba(0,255,130,0.1)');
+  gAura.addColorStop(0.5,phase2?'rgba(0,200,80,0.08)':'rgba(0,180,80,0.05)');
+  gAura.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gAura;ctx.beginPath();ctx.arc(b.x,b.y,120,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  ctx.save();ctx.translate(b.x,b.y);
+  if(hurtFlash) ctx.globalAlpha=0.3;
+
+  var bodyBob2=Math.sin(t*0.04)*5;
+  ctx.translate(0,bodyBob2);
+
+  // Acid drip glow under body
+  ctx.save();ctx.globalAlpha=0.25+Math.sin(t*0.06)*0.1;
+  var levG=ctx.createRadialGradient(0,38,2,0,38,32);
+  levG.addColorStop(0,'rgba(0,255,80,0.7)');levG.addColorStop(1,'rgba(0,255,80,0)');
+  ctx.fillStyle=levG;ctx.beginPath();ctx.ellipse(0,38,22,8,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // ── TAIL — long segmented whip tail ──
+  ctx.save();
+  var tailWave=Math.sin(t*0.07)*18;
+  var tailG=ctx.createLinearGradient(0,30,tailWave,90);
+  tailG.addColorStop(0,'#1a2a10');tailG.addColorStop(1,'#0a1408');
+  ctx.strokeStyle='#1a2a10';ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(4,28);
+  ctx.bezierCurveTo(8+tailWave*0.3,45,12+tailWave*0.6,62,6+tailWave,80);
+  ctx.stroke();
+  ctx.lineWidth=5;ctx.strokeStyle='#0e1a0a';
+  ctx.beginPath();ctx.moveTo(4,28);
+  ctx.bezierCurveTo(8+tailWave*0.3,45,12+tailWave*0.6,62,6+tailWave,80);
+  ctx.stroke();
+  // Tail tip spike
+  ctx.fillStyle='#0a1408';
+  ctx.beginPath();ctx.moveTo(6+tailWave,80);ctx.lineTo(4+tailWave,92);ctx.lineTo(10+tailWave,84);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // ── BODY — biomechanical ribcage, hunched posture ──
+  var bodyG2=ctx.createRadialGradient(-4,4,4,0,8,28);
+  bodyG2.addColorStop(0,phase2?'#2a3a1a':'#1e2e12');
+  bodyG2.addColorStop(0.4,phase2?'#1a2812':'#14200e');
+  bodyG2.addColorStop(1,'#0a1208');
+  ctx.fillStyle=bodyG2;
+  ctx.beginPath();
+  ctx.moveTo(-18,-10);
+  ctx.bezierCurveTo(-22,4,-20,18,-16,28);
+  ctx.bezierCurveTo(-10,34,10,34,16,28);
+  ctx.bezierCurveTo(20,18,22,4,18,-10);
+  ctx.bezierCurveTo(12,-16,-12,-16,-18,-10);
+  ctx.closePath();ctx.fill();
+
+  // Biomechanical rib tubes — raised ridges on torso
+  ctx.strokeStyle='rgba(30,50,18,0.7)';ctx.lineWidth=3.5;ctx.lineCap='round';
+  for(var ri4=0;ri4<5;ri4++){
+    var ry=-4+ri4*7;
+    var rw=14-ri4*0.8;
+    ctx.beginPath();ctx.moveTo(-rw,ry);ctx.bezierCurveTo(-rw-5,ry+2,rw+5,ry+2,rw,ry);ctx.stroke();
+  }
+  // Dorsal tubes — pipes running down the back spine
+  ctx.strokeStyle='rgba(20,35,12,0.8)';ctx.lineWidth=4;
+  for(var dti=0;dti<3;dti++){
+    var dtx=-6+dti*6;
+    ctx.beginPath();ctx.moveTo(dtx,-10);ctx.lineTo(dtx,26);ctx.stroke();
+    // Tube end nub
+    ctx.fillStyle='#0a1408';ctx.beginPath();ctx.arc(dtx,-10,3,0,Math.PI*2);ctx.fill();
+  }
+
+  // ── ARMS — segmented, powerful, 4 fingers with claws ──
+  for(var ai5=0;ai5<2;ai5++){
+    var asx=(ai5===0?-16:16), asy=2;
+    var aEx=(ai5===0?-30:30), aEy=22;
+    ctx.strokeStyle='#141e0c';ctx.lineWidth=8;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(asx,asy);ctx.bezierCurveTo(asx+(ai5===0?-8:8),10,aEx,14,aEx,aEy);ctx.stroke();
+    ctx.lineWidth=5;ctx.strokeStyle='#1e2e14';
+    ctx.beginPath();ctx.moveTo(asx,asy);ctx.bezierCurveTo(asx+(ai5===0?-8:8),10,aEx,14,aEx,aEy);ctx.stroke();
+    // Elbow spike
+    ctx.fillStyle='#0a1008';
+    ctx.beginPath();ctx.moveTo(asx+(ai5===0?-6:6),10);ctx.lineTo(asx+(ai5===0?-12:12),6);ctx.lineTo(asx+(ai5===0?-4:4),14);ctx.closePath();ctx.fill();
+    // 4 clawed fingers
+    ctx.strokeStyle='#0c1408';ctx.lineWidth=2;
+    for(var fi7=0;fi7<4;fi7++){
+      var fA=(fi7-1.5)*0.22*(ai5===0?1:-1);
+      var fLen=14+fi7%2*3;
+      ctx.beginPath();ctx.moveTo(aEx,aEy);ctx.lineTo(aEx+Math.sin(fA)*fLen*(ai5===0?-1:1),aEy+Math.cos(fA)*fLen);ctx.stroke();
+      // Claw curve
+      var fTipX=aEx+Math.sin(fA)*fLen*(ai5===0?-1:1);
+      var fTipY=aEy+Math.cos(fA)*fLen;
+      ctx.beginPath();ctx.moveTo(fTipX,fTipY);ctx.bezierCurveTo(fTipX+(ai5===0?-3:3),fTipY+3,fTipX+(ai5===0?-2:2),fTipY+6,fTipX+(ai5===0?-1:1),fTipY+4);ctx.stroke();
+    }
+  }
+
+  // ── LEGS — digitigrade — bent backward like Alien ──
+  ctx.strokeStyle='#141e0c';ctx.lineWidth=8;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-10,26);ctx.bezierCurveTo(-14,36,-18,42,-14,52);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(10,26);ctx.bezierCurveTo(14,36,18,42,14,52);ctx.stroke();
+  ctx.lineWidth=5;ctx.strokeStyle='#1e2e14';
+  ctx.beginPath();ctx.moveTo(-10,26);ctx.bezierCurveTo(-14,36,-18,42,-14,52);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(10,26);ctx.bezierCurveTo(14,36,18,42,14,52);ctx.stroke();
+  // Feet — heel claw
+  ctx.strokeStyle='#0c1408';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(-14,52);ctx.lineTo(-18,60);ctx.lineTo(-12,58);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(14,52);ctx.lineTo(18,60);ctx.lineTo(12,58);ctx.stroke();
+
+  // ── NECK — curved forward, elongated ──
+  ctx.save();
+  var nWave=Math.sin(t*0.04)*0.08;ctx.rotate(nWave);
+  var nkG4=ctx.createLinearGradient(0,-10,0,-42);
+  nkG4.addColorStop(0,'#1a2810');nkG4.addColorStop(1,'#222e16');
+  ctx.fillStyle=nkG4;
+  ctx.beginPath();ctx.moveTo(-8,-10);ctx.bezierCurveTo(-10,-20,-12,-34,-8,-44);ctx.bezierCurveTo(-4,-48,2,-46,4,-42);ctx.bezierCurveTo(8,-34,8,-20,6,-10);ctx.closePath();ctx.fill();
+  // Neck tubes
+  ctx.strokeStyle='rgba(15,25,10,0.6)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(-4,-12);ctx.bezierCurveTo(-5,-24,-6,-36,-4,-44);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(2,-12);ctx.bezierCurveTo(3,-24,4,-36,2,-44);ctx.stroke();
+  ctx.restore();
+
+  // ── HEAD — elongated biomechanical dome, no eyes ──
+  ctx.save();ctx.rotate(Math.sin(t*0.04)*0.08+nWave*0.5);
+  ctx.translate(-2,-48);
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(0,4,20,12,0.1,0,Math.PI*2);ctx.fill();
+
+  // Main elongated skull dome — key Alien feature
+  var hdG5=ctx.createRadialGradient(-8,-18,4,0,-10,38);
+  hdG5.addColorStop(0,phase2?'#2e3e1e':'#253318');
+  hdG5.addColorStop(0.4,phase2?'#1e2c12':'#18240e');
+  hdG5.addColorStop(0.8,'#0e1808');hdG5.addColorStop(1,'#060e04');
+  ctx.fillStyle=hdG5;
+  ctx.beginPath();
+  ctx.moveTo(12,4); // base right
+  ctx.bezierCurveTo(18,-4,18,-20,12,-36); // right side of dome
+  ctx.bezierCurveTo(8,-48,2,-54,-2,-54); // crown — extends far back
+  ctx.bezierCurveTo(-8,-54,-16,-48,-18,-36); // left crown
+  ctx.bezierCurveTo(-22,-20,-20,-4,-14,4); // left base
+  ctx.bezierCurveTo(-8,8,8,8,12,4);
+  ctx.closePath();ctx.fill();
+
+  // Biomechanical ridges running length of skull — ribbed dome
+  ctx.strokeStyle='rgba(20,32,12,0.55)';ctx.lineWidth=1.5;
+  for(var hri=0;hri<5;hri++){
+    var hrx=-10+hri*5;
+    ctx.beginPath();ctx.moveTo(hrx,4);ctx.bezierCurveTo(hrx-2,-10,hrx-3,-28,hrx-2,-46);ctx.stroke();
+  }
+
+  // Inner skull translucency — faint brain glow
+  ctx.save();ctx.globalAlpha=0.08+Math.sin(t*0.06)*0.04;
+  var brainG=ctx.createRadialGradient(-2,-28,4,-2,-28,18);
+  brainG.addColorStop(0,phase2?'rgba(0,255,100,0.5)':'rgba(100,200,80,0.3)');brainG.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=brainG;ctx.beginPath();ctx.arc(-2,-28,18,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  // Acid saliva drip from jaw
+  ctx.save();ctx.globalAlpha=0.5+Math.sin(t*0.08)*0.2;
+  ctx.strokeStyle='rgba(80,200,40,0.6)';ctx.lineWidth=1.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-4,6);ctx.bezierCurveTo(-5,12,-4,18,-4,22+Math.sin(t*0.12)*4);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(4,6);ctx.bezierCurveTo(5,10,4,15,5,18+Math.sin(t*0.1+1)*3);ctx.stroke();
+  ctx.fillStyle='rgba(80,200,40,0.5)';
+  ctx.beginPath();ctx.arc(-4,22+Math.sin(t*0.12)*4,2,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Inner jaw — extends forward (iconic Alien feature)
+  ctx.save();
+  var ijExt=4+Math.sin(t*0.1)*3; // extends in/out
+  ctx.fillStyle='#0c1808';
+  ctx.beginPath();ctx.moveTo(-6,4);ctx.bezierCurveTo(-8,8,-10,10+ijExt,-8,14+ijExt);ctx.bezierCurveTo(-4,16+ijExt,4,16+ijExt,8,14+ijExt);ctx.bezierCurveTo(10,10+ijExt,8,8,6,4);ctx.closePath();ctx.fill();
+  // Inner jaw teeth
+  ctx.fillStyle='rgba(150,200,100,0.7)';
+  for(var it=0;it<4;it++){
+    var itx=-5+it*3.5;
+    ctx.beginPath();ctx.moveTo(itx,10+ijExt);ctx.lineTo(itx+0.8,14+ijExt+3);ctx.lineTo(itx+1.8,10+ijExt);ctx.closePath();ctx.fill();
+  }
+  // Outer teeth row
+  ctx.fillStyle='rgba(180,220,120,0.5)';
+  for(var ot2=0;ot2<6;ot2++){
+    var otx=-8+ot2*3.2;
+    ctx.beginPath();ctx.moveTo(otx,4);ctx.lineTo(otx+0.8,8);ctx.lineTo(otx+1.8,4);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+
+  // No eyes — smooth dome
+  // But subtle light reflection streaks on dome
+  ctx.save();ctx.globalAlpha=0.12+Math.sin(t*0.05)*0.04;
+  ctx.strokeStyle='rgba(80,120,50,0.5)';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-12,-28);ctx.bezierCurveTo(-10,-40,-4,-48,-2,-52);ctx.stroke();
+  ctx.restore();
+
+  // Phase 2 — psychic energy corona around head
+  if(phase2){
+    ctx.save();
+    for(var pwi=0;pwi<3;pwi++){
+      ctx.globalAlpha=Math.max(0,(0.2-pwi*0.06)+Math.sin(t*0.12+pwi)*0.08);
+      ctx.strokeStyle='rgba(0,255,100,0.5)';ctx.lineWidth=1.5;
+      ctx.shadowColor='rgba(0,255,80,0.6)';ctx.shadowBlur=8;
+      ctx.beginPath();ctx.ellipse(0,-24,18+pwi*10,26+pwi*10,0,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.shadowBlur=0;ctx.restore();
+  }
+
+  ctx.restore(); // head
+  ctx.restore(); // body bob + translate
+
+  // Hurt number
+  if(b.hurtTimer>0){
+    ctx.save();ctx.globalAlpha=Math.min(1,b.hurtTimer/15);
+    ctx.fillStyle='#00ff88';ctx.shadowColor='#00ff88';ctx.shadowBlur=10;
+    ctx.font='bold 18px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText('-1',b.x,b.y-100);ctx.restore();
+  }
+}
+
 function drawBoss(){
   if(!boss) return;
   if(getBossType()==='dragon'){drawDragonBoss();return;}
+  if(getBossType()==='leviathan'){drawLeviathan();return;}
+  if(getBossType()==='tempest'){drawTempest();return;}
+  if(getBossType()==='jeanjacket'){drawJeanJacket();return;}
+  if(getBossType()==='grey'){drawGrey();return;}
   var b=boss, t=frameN*0.05;
   var hurtFlash=b.hurtTimer>0&&Math.floor(b.hurtTimer/3)%2===0;
 
@@ -1492,17 +2490,191 @@ function updateBoss(){
   if(bossPhase>=2&&frameN%70===0) fireFeathers();
   else if(bossPhase<2&&frameN%110===0) fireFeathers();
 
-  // Update feathers
+  // Update feathers/bubbles — add wobble for leviathan
   var newF=[];
+  var isLev2=getBossType()==='leviathan';
   for(var fi=0;fi<bossFeathers.length;fi++){
     var f=bossFeathers[fi];
+    if(isLev2&&f.wobble) f.vx+=Math.sin(frameN*0.1+fi)*f.wobble;
     f.x+=f.vx; f.y+=f.vy; f.ang+=0.12;
-    f.vy+=0.08; // gravity
-    if(f.x>-20&&f.x<W+20&&f.y<H+20) newF.push(f);
+    if(!isLev2) f.vy+=0.08;
+    if(f.x>-40&&f.x<W+40&&f.y<H+40) newF.push(f);
   }
   bossFeathers=newF;
 
-  // Check dragonfly collision with boss body
+  // Jean Jacket — invisibility cycles + star projectiles
+  if(getBossType()==='jeanjacket'&&boss){
+    boss.phase+=0.04;
+    boss.invisTimer=(boss.invisTimer||0)+1;
+    var invisInterval=bossPhase>=2?180:260;
+    var invisDur=bossPhase>=2?100:70;
+    if(boss.invisTimer%invisInterval===0){
+      boss.invisActive=true;
+      showToast('\uD83D\uDEF8 IT DISAPPEARED!');
+    }
+    if(boss.invisActive){
+      boss.visibility=Math.max(0,(boss.visibility||1)-0.04);
+      if(boss.visibility<=0&&boss.invisTimer%(invisInterval+invisDur)===0){
+        boss.invisActive=false;
+        // Reappear at new position
+        boss.ty=H*(0.2+Math.random()*0.55);
+        if(bossPhase>=2) fireFeathers(); // burst on reappear
+        showToast('\uD83D\uDEF8 IT REAPPEARED!');
+      }
+    } else {
+      boss.visibility=Math.min(1,(boss.visibility||0)+0.05);
+    }
+    // Periodic star volleys
+    if(bossPhase>=2&&frameN%70===0&&boss.visibility>0.5) fireFeathers();
+    else if(bossPhase<2&&frameN%110===0&&boss.visibility>0.5) fireFeathers();
+  }
+
+  // Grey — tractor beam + plasma orbs
+  if(getBossType()==='grey'&&boss){
+    boss.phase+=0.03;
+    boss.beamTimer=(boss.beamTimer||0)+1;
+    var beamInterval=bossPhase>=2?150:220;
+    var beamDur=bossPhase>=2?90:60;
+    if(boss.beamTimer%beamInterval===0){
+      boss.beamActive=true;
+      boss.beamFrames=beamDur;
+      showToast('\uD83D\uDC7D TRACTOR BEAM!');
+    }
+    if(boss.beamActive){
+      boss.beamFrames=(boss.beamFrames||0)-1;
+      boss.tractorPull=Math.min(2.5,(boss.tractorPull||0)+0.08); // cap at 2.5 so it can't insta-kill
+      var tdx=boss.x-fly.x, tdy=boss.y-fly.y;
+      var tlen=Math.sqrt(tdx*tdx+tdy*tdy)||1;
+      fly.x+=tdx/tlen*boss.tractorPull;
+      fly.y+=tdy/tlen*boss.tractorPull;
+      if(boss.beamFrames<=0){
+        boss.beamActive=false;boss.tractorPull=0;
+      }
+    } else {
+      boss.tractorPull=Math.max(0,(boss.tractorPull||0)-0.1);
+    }
+    // Plasma orb volleys
+    if(bossPhase>=2&&frameN%55===0) fireFeathers();
+    else if(bossPhase<2&&frameN%85===0) fireFeathers();
+    // Phase 2 psychic pulse hits player if too close to head
+    if(bossPhase>=2&&frameN%120===0){
+      var pdx=fly.x-boss.x, pdy=fly.y-boss.y;
+      if(Math.sqrt(pdx*pdx+pdy*pdy)<80){loseLife();shakeFrames=12;shakeIntensity=6;}
+    }
+  }
+  if(getBossType()==='tempest'&&boss){
+    boss.phase+=0.04;
+    // Wind gust — phase 2 pushes dragonfly
+    if(bossPhase>=2){
+      boss.windGustTimer=(boss.windGustTimer||0)+1;
+      if(boss.windGustTimer%240===0){
+        boss.windGustActive=true;boss.windGustFrames=60;
+        showToast('\uD83C\uDF2C\uFE0F WIND GUST!');
+      }
+      if(boss.windGustActive&&boss.windGustFrames>0){
+        boss.windGustFrames--;
+        fly.x-=2.5; // push backward
+        if(boss.windGustFrames<=0) boss.windGustActive=false;
+      }
+      // Feather storm — rains from top
+      boss.featherStormTimer=(boss.featherStormTimer||0)+1;
+      if(boss.featherStormTimer%180===0){showToast('\uD83E\uDEB6 FEATHER STORM!');}
+      if(!boss.featherStorm) boss.featherStorm=[];
+      if(boss.featherStormTimer%8===0){
+        boss.featherStorm.push({x:Math.random()*W,y:-10,vy:3+Math.random()*2,vx:(Math.random()-0.5)*1.5,ang:Math.random()*Math.PI*2,angV:0.1+Math.random()*0.1});
+      }
+      // Update feather storm
+      for(var fsi2=boss.featherStorm.length-1;fsi2>=0;fsi2--){
+        var fs3=boss.featherStorm[fsi2];
+        fs3.x+=fs3.vx;fs3.y+=fs3.vy;fs3.ang+=fs3.angV;
+        // Check collision with player
+        if(!infiniteActive&&Math.abs(fly.x-fs3.x)<12&&Math.abs(fly.y-fs3.y)<12){loseLife();boss.featherStorm.splice(fsi2,1);continue;}
+        if(fs3.y>H+20) boss.featherStorm.splice(fsi2,1);
+      }
+    }
+    // Periodic lightning volleys
+    if(bossPhase>=2&&frameN%60===0) fireFeathers();
+    else if(bossPhase<2&&frameN%90===0) fireFeathers();
+  }
+  if(isLev2&&boss){
+    boss.phase+=0.03;
+    // Update segment offsets for body wave
+    if(boss.segOffsets){
+      for(var si=0;si<boss.segOffsets.length;si++){
+        boss.segOffsets[si]=Math.sin(frameN*0.06+si*0.8);
+      }
+    }
+    if(bossPhase>=2){
+      boss.inkTimer=(boss.inkTimer||0)+1;
+      if(boss.inkTimer>0&&boss.inkTimer%280===0){
+        boss.inkActive=true;
+        showToast('\uD83E\uDEB8 INK CLOUD!');
+        setTimeout(function(){if(boss){boss.inkActive=false;}},2500);
+      }
+      if(boss.inkActive){
+        boss.inkAlpha=Math.min(0.8,(boss.inkAlpha||0)+0.02);
+      } else {
+        boss.inkAlpha=Math.max(0,(boss.inkAlpha||0)-0.03);
+      }
+    }
+    // Periodic feather volleys
+    if(bossPhase>=2&&frameN%65===0) fireFeathers();
+    else if(bossPhase<2&&frameN%100===0) fireFeathers();
+  }
+
+  // Jean Jacket — invisibility + star bursts
+  if(getBossType()==='jeanjacket'&&boss){
+    boss.phase=(boss.phase||0)+0.03;
+    boss.invisTimer=(boss.invisTimer||0)+1;
+    var invisInterval=bossPhase>=2?180:280;
+    if(!boss.invisActive&&boss.invisTimer%invisInterval===0){
+      boss.invisActive=true;
+      showToast('\uD83D\uDEF8 IT DISAPPEARED!');
+    }
+    if(boss.invisActive){
+      boss.visibility=Math.max(0,(boss.visibility||1)-0.04);
+      if(boss.visibility<=0){
+        boss.x=W*0.5+Math.random()*W*0.25;
+        boss.y=H*0.2+Math.random()*H*0.5;
+        boss.invisActive=false;
+        if(bossPhase>=2){
+          for(var ri5=0;ri5<8;ri5++){
+            var ra=ri5*(Math.PI*2/8);
+            bossFeathers.push({x:boss.x,y:boss.y,vx:Math.cos(ra)*3.5,vy:Math.sin(ra)*3.5,ang:ra,r:10,wobble:0});
+          }
+        }
+        showToast('\uD83D\uDEF8 THERE IT IS!');
+      }
+    } else {
+      boss.visibility=Math.min(1,(boss.visibility||0)+0.03);
+    }
+    if(bossPhase>=2&&frameN%70===0) fireFeathers();
+    else if(bossPhase<2&&frameN%110===0) fireFeathers();
+  }
+
+  // Grey — tractor beam + plasma orbs
+  if(getBossType()==='grey'&&boss){
+    boss.phase=(boss.phase||0)+0.03;
+    boss.beamTimer=(boss.beamTimer||0)+1;
+    var beamInterval=bossPhase>=2?160:240;
+    if(boss.beamTimer%beamInterval===0){
+      boss.beamActive=true;
+      showToast('\uD83D\uDC7D TRACTOR BEAM!');
+      setTimeout(function(){if(boss) boss.beamActive=false;},2200);
+    }
+    if(boss.beamActive){
+      var pdx=boss.x-fly.x, pdy=(boss.y+30)-fly.y;
+      var pdist=Math.sqrt(pdx*pdx+pdy*pdy)||1;
+      fly.x+=pdx/pdist*1.8; fly.y+=pdy/pdist*1.8;
+    }
+    if(bossPhase>=2&&boss.beamTimer%280===0){
+      boss.beamActive=true;
+      showToast('\uD83D\uDC7D DOUBLE BEAM!');
+      setTimeout(function(){if(boss) boss.beamActive=false;},1800);
+    }
+    if(bossPhase>=2&&frameN%55===0) fireFeathers();
+    else if(bossPhase<2&&frameN%85===0) fireFeathers();
+  }
   var dx=fly.x-b.x, dy=fly.y-b.y;
   if(!infiniteActive&&Math.sqrt(dx*dx+dy*dy)<44){
     loseLife();
@@ -1531,17 +2703,39 @@ function updateBoss(){
 function fireFeathers(){
   if(!boss) return;
   var isDragon=getBossType()==='dragon';
-  var numProj=bossPhase>=2?(2+Math.floor(Math.random()*4)):(2+Math.floor(Math.random()*3));
-  var speed2=isDragon?(bossPhase>=2?4.5+Math.random()*2:3+Math.random()*2):(bossPhase>=2?3.5+Math.random()*2:2+Math.random()*1.5);
+  var isLev=getBossType()==='leviathan';
+  var isTempest=getBossType()==='tempest';
+  var isJJ=getBossType()==='jeanjacket';
+  var isGrey=getBossType()==='grey';
+  var numProj=bossPhase>=2?(3+Math.floor(Math.random()*3)):(2+Math.floor(Math.random()*3));
+  var speed2=isDragon?(bossPhase>=2?4.5+Math.random()*2:3+Math.random()*2):
+             isLev?(bossPhase>=2?3+Math.random()*1.5:1.8+Math.random()*1.2):
+             isTempest?(bossPhase>=2?5+Math.random()*3:3.5+Math.random()*2):
+             isJJ?(bossPhase>=2?3.5+Math.random()*1.5:2.5+Math.random()):
+             isGrey?(bossPhase>=2?3+Math.random()*2:2+Math.random()*1.5):
+             (bossPhase>=2?3.5+Math.random()*2:2+Math.random()*1.5);
+  // Jean Jacket fires ring of stars when reappearing in phase 2
+  if(isJJ&&bossPhase>=2&&numProj>3){
+    for(var ri5=0;ri5<8;ri5++){
+      var rA=ri5*(Math.PI*2/8);
+      bossFeathers.push({x:boss.x,y:boss.y,vx:Math.cos(rA)*speed2,vy:Math.sin(rA)*speed2,ang:rA,r:8,wobble:0});
+    }
+    return;
+  }
   for(var i=0;i<numProj;i++){
     var ang=Math.random()*Math.PI*2;
-    if(bossPhase>=2&&i<3){
+    var proj={x:boss.x,y:boss.y,ang:ang,r:isLev?14:isGrey?10:8,wobble:isLev?Math.random()*0.08:0};
+    var aimCount=isTempest?numProj:(isGrey?numProj:(isLev&&bossPhase>=2?3:(bossPhase>=2?3:1)));
+    if(i<aimCount){
       var dx=fly.x-boss.x, dy2=fly.y-boss.y;
       var len=Math.sqrt(dx*dx+dy2*dy2)||1;
-      bossFeathers.push({x:boss.x,y:boss.y,vx:(dx/len)*speed2+(Math.random()-0.5)*0.8,vy:(dy2/len)*speed2+(Math.random()-0.5)*0.8,ang:0});
+      proj.vx=(dx/len)*speed2+(Math.random()-0.5)*0.6;
+      proj.vy=(dy2/len)*speed2+(Math.random()-0.5)*(isLev?1.5:0.6);
     } else {
-      bossFeathers.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*speed2,vy:Math.sin(ang)*speed2,ang:ang});
+      proj.vx=Math.cos(ang)*speed2;
+      proj.vy=Math.sin(ang)*speed2;
     }
+    bossFeathers.push(proj);
   }
 }
 
@@ -1556,12 +2750,11 @@ function hitBoss(){
   if(fill) fill.style.background=pct>0.5?'linear-gradient(90deg,#ff2200,#ff8800,#ffcc00)':pct>0.25?'linear-gradient(90deg,#ff2200,#ff5500)':'#ff0000';
   if(bossHP<=0){
     bossDefeated=true;
-    bossActive=false; // stop collision
+    bossActive=false;
     bossFeathers=[];
-    showToast('\uD83C\uDF1F THE OWL IS DEFEATED!');
-    shakeFrames=50; shakeIntensity=16;
-    var sf=document.getElementById('screenFlash');
-    if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},500);}
+    var bType=getBossType();
+    var defeatMsg=bType==='dragon'?'\uD83D\uDC09 THE DRAKE FALLS!':bType==='leviathan'?'\uD83D\uDC0D THE LEVIATHAN SINKS!':bType==='tempest'?'\u26A1 THE TEMPEST IS BROKEN!':bType==='jeanjacket'?'\uD83D\uDEF8 JEAN JACKET RETREATS!':bType==='grey'?'\uD83D\uDC7D THE ALIEN IS DEFEATED!':'\uD83C\uDF1F THE OWL IS DEFEATED!';
+    showToast(defeatMsg);
     shakeFrames=50; shakeIntensity=16;
     var sf=document.getElementById('screenFlash');
     if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},500);}
@@ -1622,15 +2815,16 @@ function updatePowerupBar(){
 
 function showBossVictory(){
   state='levelclear';
-  var isDragon=getBossType()==='dragon';
-  var bonus=isDragon?750:500;
+  var bType=getBossType();
+  var isDragon=bType==='dragon',isLev=bType==='leviathan',isTempest=bType==='tempest',isJJ=bType==='jeanjacket',isGrey=bType==='grey';
+  var bonus=isDragon?750:isLev?600:isTempest?800:isJJ?900:isGrey?1200:500;
   mothsTotal+=bonus; lifetimeMoths+=bonus;
   updateMothUI();
   var ov=document.getElementById('bossVictoryOverlay');
   if(ov) ov.classList.add('show');
-  document.querySelector('.bv-icon').textContent=isDragon?'\uD83D\uDC09':'\uD83C\uDFC6';
-  document.querySelector('.bv-title').textContent=isDragon?'DRAKE SLAIN!':'GUARDIAN DEFEATED!';
-  document.getElementById('bvSub').innerHTML=isDragon?'The Inferno Drake falls.<br>The Fire Realm is yours.':'The Great Owl has fallen.<br>The forest is free.';
+  document.querySelector('.bv-icon').textContent=isDragon?'\uD83D\uDC09':isLev?'\uD83D\uDC0D':isTempest?'\u26A1':isJJ?'\uD83D\uDEF8':isGrey?'\uD83D\uDC7D':'\uD83C\uDFC6';
+  document.querySelector('.bv-title').textContent=isDragon?'DRAKE SLAIN!':isLev?'LEVIATHAN SLAIN!':isTempest?'TEMPEST BROKEN!':isJJ?'JEAN JACKET FLED!':isGrey?'THE GREY DEFEATED!':'GUARDIAN DEFEATED!';
+  document.getElementById('bvSub').innerHTML=isDragon?'The Inferno Drake falls.<br>The Fire Realm is yours.':isLev?'The ancient serpent sinks.<br>The Water Realm is yours.':isTempest?'The storm has calmed.<br>The Air Realm is yours.':isJJ?'The creature retreats into space.<br>The upper atmosphere is clear.':isGrey?'The ancient visitor has fallen.<br>The Galaxy Realm is yours.':'The Great Owl has fallen.<br>The forest is free.';
   document.getElementById('bvReward').textContent='+'+bonus+' \uD83E\uDD8B MOTHS EARNED';
   var sf=document.getElementById('screenFlash');
   if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},400);}
@@ -1641,9 +2835,8 @@ function showBossVictory(){
       transParticles.push({
         x:Math.random()*W,y:H,
         vx:(Math.random()-0.5)*4,vy:-(4+Math.random()*6),
-        life:1.0,decay:0.012,
-        r:3+Math.random()*5,
-        col:isDragon?'hsl('+(Math.floor(Math.random()*60))+',100%,65%)':'hsl('+(Math.random()*360)+',100%,65%)'
+        life:1.0,decay:0.012,r:3+Math.random()*5,
+        col:isGrey?'hsl('+(120+Math.floor(Math.random()*60))+',100%,65%)':isJJ?'hsl('+(30+Math.floor(Math.random()*40))+',90%,65%)':isTempest?'hsl('+(200+Math.floor(Math.random()*60))+',80%,80%)':isLev?'hsl('+(160+Math.floor(Math.random()*80))+',100%,65%)':isDragon?'hsl('+(Math.floor(Math.random()*60))+',100%,65%)':'hsl('+(Math.random()*360)+',100%,65%)'
       });
     }
   },120);
@@ -1801,7 +2994,7 @@ function getBossType(){
 }
 function initBoss(){
   var type=getBossType();
-  bossHP=bossMaxHP=(type==='dragon'?80:50);
+  bossHP=bossMaxHP=(type==='dragon'?110:type==='leviathan'?140:type==='tempest'?170:type==='jeanjacket'?220:type==='grey'?250:80);
   bossPhase=1;
   bossActive=true;
   bossDefeated=false;
@@ -1818,14 +3011,37 @@ function initBoss(){
     chargeActive:false, chargeTimer:0, CHARGE_DURATION:45,
     deathTimer:0, deathParticles:[],
     hurtTimer:0,
-    // Dragon specific
     tailAngle:0, neckAngle:0, breathActive:false, breathTimer:0,
-    breathParticles:[]
+    breathParticles:[],
+    inkTimer:0, inkActive:false, inkAlpha:0,
+    segOffsets:[0,0,0,0,0,0,0,0],
+    windGustTimer:0, windGustActive:false, windGustFrames:0,
+    featherStorm:[], featherStormTimer:0,
+    // Jean Jacket specific
+    visibility:1, invisTimer:0, invisActive:false,
+    // Grey specific
+    beamActive:false, beamTimer:0, tractorPull:0
   };
   if(type==='dragon'){
     document.getElementById('bossName').textContent='\uD83D\uDC09 THE INFERNO DRAKE';
     document.getElementById('bossHpText').textContent='TAP NEAR DRAGON TO ATTACK';
     showToast('\uD83D\uDC09 THE INFERNO DRAKE RISES!');
+  } else if(type==='leviathan'){
+    document.getElementById('bossName').textContent='\uD83D\uDC0D THE LEVIATHAN';
+    document.getElementById('bossHpText').textContent='TAP NEAR THE HEAD TO ATTACK';
+    showToast('\uD83D\uDC0D THE LEVIATHAN AWAKENS FROM THE DEEP!');
+  } else if(type==='tempest'){
+    document.getElementById('bossName').textContent='\u26A1 THE TEMPEST';
+    document.getElementById('bossHpText').textContent='TAP NEAR THE TEMPEST TO ATTACK';
+    showToast('\u26A1 THE TEMPEST DESCENDS FROM THE STORM!');
+  } else if(type==='jeanjacket'){
+    document.getElementById('bossName').textContent='\uD83D\uDEF8 JEAN JACKET';
+    document.getElementById('bossHpText').textContent='TAP WHEN VISIBLE TO ATTACK';
+    showToast('\uD83D\uDEF8 SOMETHING IN THE SKY...');
+  } else if(type==='grey'){
+    document.getElementById('bossName').textContent='\uD83D\uDC7D THE ALIEN';
+    document.getElementById('bossHpText').textContent='TAP NEAR IT TO ATTACK';
+    showToast('\uD83D\uDC7D IN SPACE, NO ONE CAN HEAR YOU SCREAM...');
   } else {
     document.getElementById('bossName').textContent='\uD83E\uDD89 THE GREAT OWL';
     document.getElementById('bossHpText').textContent='TAP NEAR OWL TO ATTACK';
@@ -1861,7 +3077,11 @@ var BIOMES=[
  {name:'Saturn',skyTop:'#000010',skyMid:'#080028',skyBot:'#100840',moonCol:'#ffffff',moonShadow:'#000010',hasSun:false,starCol:'255,255,255',auroraCol:'180,100,255',cloudCol:'140,80,200',mtnFar:'#180838',mtnNear0:'#281058',mtnNear1:'#180838',iceCap:'255,200,255',groundTop:'#281058',groundBot:'#180838',glowR:200,glowG:100,glowB:255,ruinCol:'#301068',ruinWin:'220,150,255',treeCol:['#180838','#281058','#100828'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'saturn',obstStyle:'ring',groundStyle:'ringtile',fogCol:'160,80,255'},
  {name:'Ruined Kingdom II',skyTop:'#04001a',skyMid:'#0d0530',skyBot:'#200848',moonCol:'#c8b0ff',moonShadow:'#04001a',hasSun:false,starCol:'200,160,255',auroraCol:'176,110,255',cloudCol:'80,40,140',mtnFar:'#1a0840',mtnNear0:'#280c50',mtnNear1:'#180630',iceCap:'200,160,255',groundTop:'#200840',groundBot:'#100420',glowR:176,glowG:80,glowB:255,ruinCol:'#280c50',ruinWin:'160,100,255',treeCol:['#1a0840','#240c50','#100428'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'default',obstStyle:'default',groundStyle:'cobble',fogCol:'80,40,160'},
  {name:'Mushroom Forest',skyTop:'#004a8a',skyMid:'#0080c0',skyBot:'#40c0e0',moonCol:'#fffce0',moonShadow:'#004a8a',hasSun:true,sunCol:'#ffee60',sunGlowCol:'255,240,80',starCol:'200,240,255',auroraCol:'255,255,200',cloudCol:'255,255,255',mtnFar:'#226600',mtnNear0:'#2a7a10',mtnNear1:'#1a5008',iceCap:'220,255,160',groundTop:'#2a7a10',groundBot:'#1a5008',glowR:120,glowG:255,glowB:60,ruinCol:'#226600',ruinWin:'180,255,80',treeCol:['#1a5000','#226600','#143800'],hasMoving:true,hasFrogs:true,hasForest:true,bgStyle:'mushroom',obstStyle:'mushroom',groundStyle:'sporemoss',fogCol:'140,240,60'},
- {name:'Dragon Lair',skyTop:'#080000',skyMid:'#0f0100',skyBot:'#1a0200',moonCol:'#ff4400',moonShadow:'#080000',hasSun:false,starCol:'255,80,20',auroraCol:'255,40,0',cloudCol:'80,10,0',mtnFar:'#200400',mtnNear0:'#300600',mtnNear1:'#1a0300',iceCap:'255,80,20',groundTop:'#1a0300',groundBot:'#0a0100',glowR:255,glowG:50,glowB:0,ruinCol:'#280400',ruinWin:'255,60,10',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'dragonlair',obstStyle:'dragonlair',groundStyle:'lava',fogCol:'200,40,0'}
+ {name:'Dragon Lair',skyTop:'#080000',skyMid:'#0f0100',skyBot:'#1a0200',moonCol:'#ff4400',moonShadow:'#080000',hasSun:false,starCol:'255,80,20',auroraCol:'255,40,0',cloudCol:'80,10,0',mtnFar:'#200400',mtnNear0:'#300600',mtnNear1:'#1a0300',iceCap:'255,80,20',groundTop:'#1a0300',groundBot:'#0a0100',glowR:255,glowG:50,glowB:0,ruinCol:'#280400',ruinWin:'255,60,10',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'dragonlair',obstStyle:'dragonlair',groundStyle:'lava',fogCol:'200,40,0'},
+ {name:'Deep Abyss',skyTop:'#000008',skyMid:'#000510',skyBot:'#000a18',moonCol:'#00ffee',moonShadow:'#000008',hasSun:false,starCol:'0,255,220',auroraCol:'0,200,255',cloudCol:'0,60,80',mtnFar:'#000a18',mtnNear0:'#000d20',mtnNear1:'#000810',iceCap:'0,255,220',groundTop:'#000d20',groundBot:'#000508',glowR:0,glowG:180,glowB:255,ruinCol:'#000d20',ruinWin:'0,200,255',treeCol:['#000810','#000d20','#000508'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'deepabyss',obstStyle:'deepabyss',groundStyle:'abyss',fogCol:'0,150,200'},
+ {name:'Storm Eye',skyTop:'#050510',skyMid:'#08081a',skyBot:'#0a0a20',moonCol:'#e0e8ff',moonShadow:'#050510',hasSun:false,starCol:'200,210,255',auroraCol:'150,160,255',cloudCol:'60,70,120',mtnFar:'#0a0a25',mtnNear0:'#12122e',mtnNear1:'#0a0a22',iceCap:'200,210,255',groundTop:'#0a0a20',groundBot:'#050510',glowR:150,glowG:160,glowB:255,ruinCol:'#12122e',ruinWin:'180,190,255',treeCol:['#0a0a22','#12122e','#080818'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'stormeye',obstStyle:'stormeye',groundStyle:'storm',fogCol:'120,130,255'},
+ {name:'Upper Atmosphere',skyTop:'#000000',skyMid:'#000008',skyBot:'#000510',moonCol:'#ffffff',moonShadow:'#000000',hasSun:false,starCol:'255,255,255',auroraCol:'200,220,255',cloudCol:'20,20,40',mtnFar:'#000508',mtnNear0:'#000810',mtnNear1:'#000508',iceCap:'255,255,255',groundTop:'#000508',groundBot:'#000000',glowR:220,glowG:220,glowB:255,ruinCol:'#000810',ruinWin:'200,210,255',treeCol:['#000508','#000810','#000304'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'upperatmo',obstStyle:'space',groundStyle:'void',fogCol:'180,190,255'},
+ {name:'Alien World',skyTop:'#080018',skyMid:'#100028',skyBot:'#180038',moonCol:'#00ffaa',moonShadow:'#080018',hasSun:false,starCol:'180,100,255',auroraCol:'100,255,180',cloudCol:'60,20,100',mtnFar:'#100028',mtnNear0:'#180038',mtnNear1:'#100025',iceCap:'180,100,255',groundTop:'#0a0020',groundBot:'#050010',glowR:100,glowG:255,glowB:180,ruinCol:'#180038',ruinWin:'100,255,180',treeCol:['#100028','#180038','#080018'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'alienworld',obstStyle:'alien',groundStyle:'void',fogCol:'80,255,160'}
 ];
 
 function getBiome(level){
@@ -2003,6 +3223,8 @@ function resetGame(){
   bossEntryTimer=0; bossPhase=0;
   var bh=document.getElementById('bossHud');if(bh)bh.classList.remove('show');
   var bvo=document.getElementById('bossVictoryOverlay');if(bvo)bvo.classList.remove('show');
+  // Clear tempest feather storm if active
+  if(boss&&boss.featherStorm) boss.featherStorm=[];
   state='playing';
 }
 
@@ -2445,9 +3667,278 @@ function drawFarLayer(mfC,gameH){
 
     ctx.globalAlpha=1;
 
+  } else if(style==='upperatmo'){
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#000000';ctx.fillRect(0,0,W,gameH);
+    for(var sti2=0;sti2<80;sti2++){
+      var sx2=((sti2*W/7+sti2*37)%W+W)%W;
+      var sy2=((sti2*gameH/11+sti2*19)%gameH+gameH)%gameH;
+      ctx.globalAlpha=0.4+Math.sin(frameN*0.02+sti2)*0.3;
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();ctx.arc(sx2,sy2,0.5+Math.random()*0.8,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=0.15+Math.sin(frameN*0.01)*0.05;
+    var egG=ctx.createLinearGradient(0,gameH*0.7,0,gameH);
+    egG.addColorStop(0,'rgba(0,80,180,0)');egG.addColorStop(1,'rgba(0,60,160,0.5)');
+    ctx.fillStyle=egG;ctx.fillRect(0,gameH*0.7,W,gameH*0.3);
+    ctx.globalAlpha=0.12;
+    var ahG=ctx.createLinearGradient(0,gameH*0.6,0,gameH*0.75);
+    ahG.addColorStop(0,'rgba(0,0,0,0)');ahG.addColorStop(0.5,'rgba(20,60,120,0.8)');ahG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ahG;ctx.fillRect(0,gameH*0.6,W,gameH*0.15);
+    ctx.globalAlpha=1;
+
+  } else if(style==='alienworld'){
+    // ── DEEP SPACE — pitch black void, stars, shooting stars, meteors ──
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#000000';
+    ctx.fillRect(0,0,W,gameH);
+
+    // 1. Dense star field — three layers of depth
+    for(var si2=0;si2<120;si2++){
+      var sx3=((si2*W/11+si2*41)%W+W)%W;
+      var sy3=((si2*gameH/13+si2*19)%gameH+gameH)%gameH;
+      var sBright=0.3+Math.sin(frameN*0.02+si2*0.7)*0.25;
+      var sSize=si2%12===0?1.8:si2%5===0?1.2:0.5;
+      // Color tint — most white, some blue/yellow giants
+      ctx.fillStyle=si2%15===0?'rgba(180,200,255,1)':si2%9===0?'rgba(255,240,180,1)':'rgba(255,255,255,1)';
+      ctx.beginPath();ctx.arc(sx3,sy3,sSize,0,Math.PI*2);ctx.fill();
+    }
+
+    // 2. Nebula clouds in background — faint colour patches
+    ctx.save();
+    for(var ni=0;ni<3;ni++){
+      var nx=W*(0.2+ni*0.3), ny=gameH*(0.15+ni*0.25);
+      ctx.globalAlpha=0.06+Math.sin(frameN*0.008+ni)*0.02;
+      var nebG=ctx.createRadialGradient(nx,ny,10,nx,ny,W*0.22);
+      var nebCols=[['rgba(80,0,160,0.6)','rgba(40,0,100,0)'],['rgba(0,60,180,0.5)','rgba(0,20,80,0)'],['rgba(120,0,80,0.4)','rgba(60,0,40,0)']];
+      nebG.addColorStop(0,nebCols[ni][0]);nebG.addColorStop(1,nebCols[ni][1]);
+      ctx.fillStyle=nebG;ctx.beginPath();ctx.arc(nx,ny,W*0.22,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+
+    // 3. Shooting stars — streak across screen periodically
+    if(!window._shootingStars) window._shootingStars=[];
+    var ss=window._shootingStars;
+    // Spawn new shooting stars
+    if(frameN%45===0&&Math.random()<0.7){
+      ss.push({
+        x:Math.random()*W,y:Math.random()*gameH*0.5,
+        vx:4+Math.random()*6, vy:2+Math.random()*4,
+        len:60+Math.random()*80, life:1.0, decay:0.04+Math.random()*0.03
+      });
+    }
+    // Draw and update shooting stars
+    ctx.save();
+    for(var ssi=ss.length-1;ssi>=0;ssi--){
+      var s=ss[ssi];
+      s.x+=s.vx; s.y+=s.vy; s.life-=s.decay;
+      if(s.life<=0||s.x>W+100||s.y>gameH+50){ss.splice(ssi,1);continue;}
+      var sLen=s.len*s.life;
+      var ssG=ctx.createLinearGradient(s.x,s.y,s.x-s.vx/6*sLen,s.y-s.vy/6*sLen);
+      ssG.addColorStop(0,'rgba(255,255,255,'+(s.life*0.9)+')');
+      ssG.addColorStop(0.3,'rgba(200,220,255,'+(s.life*0.5)+')');
+      ssG.addColorStop(1,'rgba(150,180,255,0)');
+      ctx.strokeStyle=ssG;ctx.lineWidth=1.5+s.life;ctx.lineCap='round';
+      ctx.globalAlpha=s.life;
+      ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-(s.vx/6)*sLen,s.y-(s.vy/6)*sLen);ctx.stroke();
+      // Bright head
+      ctx.fillStyle='rgba(255,255,255,'+(s.life)+')';
+      ctx.beginPath();ctx.arc(s.x,s.y,1.5*s.life,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+
+    // 4. Meteors — larger, slower, glowing rock chunks
+    if(!window._meteors) window._meteors=[];
+    var mt=window._meteors;
+    if(frameN%120===0&&Math.random()<0.6){
+      mt.push({
+        x:-30, y:Math.random()*gameH*0.6,
+        vx:1.5+Math.random()*2, vy:0.8+Math.random()*1.5,
+        r:6+Math.random()*10, rot:Math.random()*Math.PI*2,
+        rotV:(Math.random()-0.5)*0.04,
+        col:Math.random()<0.5?'#ff6600':'#cc4400',
+        life:1.0
+      });
+    }
+    ctx.save();
+    for(var mti=mt.length-1;mti>=0;mti--){
+      var m=mt[mti];
+      m.x+=m.vx; m.y+=m.vy; m.rot+=m.rotV;
+      if(m.x>W+50) {mt.splice(mti,1);continue;}
+      // Meteor trail
+      var mtLen=m.r*8;
+      var mtG=ctx.createLinearGradient(m.x,m.y,m.x-m.vx*mtLen*0.8,m.y-m.vy*mtLen*0.8);
+      mtG.addColorStop(0,'rgba(255,120,30,0.7)');
+      mtG.addColorStop(0.4,'rgba(255,60,0,0.3)');
+      mtG.addColorStop(1,'rgba(200,40,0,0)');
+      ctx.strokeStyle=mtG;ctx.lineWidth=m.r*0.8;ctx.lineCap='round';
+      ctx.globalAlpha=0.7;
+      ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x-m.vx*mtLen*0.8,m.y-m.vy*mtLen*0.8);ctx.stroke();
+      // Rock body
+      ctx.save();ctx.translate(m.x,m.y);ctx.rotate(m.rot);
+      ctx.globalAlpha=0.9;
+      var mrG=ctx.createRadialGradient(-m.r*0.3,-m.r*0.3,1,0,0,m.r);
+      mrG.addColorStop(0,'#886644');mrG.addColorStop(0.5,m.col);mrG.addColorStop(1,'#332211');
+      ctx.fillStyle=mrG;
+      // Jagged rock shape
+      ctx.beginPath();
+      for(var mpi=0;mpi<7;mpi++){
+        var mpa=mpi*(Math.PI*2/7);
+        var mpr=m.r*(0.7+Math.sin(mpi*2.3)*0.3);
+        if(mpi===0) ctx.moveTo(Math.cos(mpa)*mpr,Math.sin(mpa)*mpr);
+        else ctx.lineTo(Math.cos(mpa)*mpr,Math.sin(mpa)*mpr);
+      }
+      ctx.closePath();ctx.fill();
+      // Glow
+      ctx.globalAlpha=0.4;
+      var mgG3=ctx.createRadialGradient(0,0,0,0,0,m.r*1.5);
+      mgG3.addColorStop(0,'rgba(255,120,30,0.5)');mgG3.addColorStop(1,'rgba(255,60,0,0)');
+      ctx.fillStyle=mgG3;ctx.beginPath();ctx.arc(0,0,m.r*1.5,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.globalAlpha=1;
+
+  } else if(style==='stormeye'){
+    // ── EYE OF THE STORM — swirling hurricane interior ──
+    // 1. Dark turbulent sky gradient
+    ctx.globalAlpha=1;
+    var stG2=ctx.createRadialGradient(W*0.5,gameH*0.4,gameH*0.08,W*0.5,gameH*0.4,gameH*0.9);
+    stG2.addColorStop(0,'#0a0a25');stG2.addColorStop(0.4,'#060618');stG2.addColorStop(0.8,'#030310');stG2.addColorStop(1,'#000005');
+    ctx.fillStyle=stG2;ctx.fillRect(0,0,W,gameH);
+
+    // 2. Swirling storm wall clouds on both sides
+    for(var cwi=0;cwi<6;cwi++){
+      var cwx=cwi<3?cwi*(W*0.18):W-cwi*(W*0.14);
+      var cwAlpha=0.25+Math.sin(frameN*0.02+cwi)*0.1;
+      ctx.save();ctx.globalAlpha=cwAlpha;
+      var cwG=ctx.createLinearGradient(cwi<3?0:W,gameH*0.3,cwi<3?W*0.5:W*0.5,gameH*0.3);
+      cwG.addColorStop(0,'rgba(20,20,60,0.9)');cwG.addColorStop(0.5,'rgba(10,10,40,0.4)');cwG.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=cwG;ctx.fillRect(cwi<3?0:W*0.5,0,W*0.5,gameH);
+      ctx.restore();
+    }
+
+    // 3. Background lightning flashes
+    if(Math.sin(frameN*0.07+1.2)>0.92||Math.sin(frameN*0.11+2.4)>0.94){
+      ctx.save();ctx.globalAlpha=0.12+Math.random()*0.1;
+      ctx.fillStyle='rgba(180,190,255,0.5)';ctx.fillRect(0,0,W,gameH);
+      ctx.restore();
+    }
+
+    // 4. Distant lightning bolts in storm walls
+    if(frameN%8===0&&Math.random()<0.35){
+      ctx.save();ctx.globalAlpha=0.4+Math.random()*0.3;
+      ctx.strokeStyle='rgba(200,210,255,0.9)';ctx.lineWidth=1+Math.random();
+      ctx.shadowColor='rgba(180,190,255,0.9)';ctx.shadowBlur=12;
+      var lsx=Math.random()<0.5?Math.random()*W*0.25:W*0.75+Math.random()*W*0.25;
+      var lsy=Math.random()*gameH*0.4;
+      ctx.beginPath();ctx.moveTo(lsx,lsy);
+      ctx.lineTo(lsx+(Math.random()-0.5)*30,lsy+gameH*0.2+Math.random()*gameH*0.2);
+      ctx.lineTo(lsx+(Math.random()-0.5)*20,lsy+gameH*0.4+Math.random()*gameH*0.2);
+      ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+    }
+
+    // 5. Rain streaks
+    ctx.save();ctx.globalAlpha=0.18;ctx.strokeStyle='rgba(160,170,255,0.6)';ctx.lineWidth=0.8;
+    for(var ri2=0;ri2<20;ri2++){
+      var rx4=((ri2*W/18+frameN*2.5)%(W+20))-10;
+      ctx.beginPath();ctx.moveTo(rx4,0);ctx.lineTo(rx4-10,gameH);ctx.stroke();
+    }
+    ctx.restore();
+
+    // 6. Swirling debris particles
+    if(frameN%3===0){
+      transParticles.push({
+        x:Math.random()<0.5?-10:W+10,y:Math.random()*gameH,
+        vx:Math.random()<0.5?(1+Math.random()*3):-(1+Math.random()*3),
+        vy:(Math.random()-0.5)*2,
+        life:0.6,decay:0.012,r:1+Math.random()*2,
+        col:'hsl('+(220+Math.floor(Math.random()*40))+','+(20+Math.floor(Math.random()*30))+'%,'+(50+Math.floor(Math.random()*30))+'%)'
+      });
+    }
+
+    // 7. Eye wall glow — calm centre surrounded by chaos
+    ctx.save();ctx.globalAlpha=0.08+Math.sin(frameN*0.02)*0.03;
+    var ewG=ctx.createRadialGradient(W*0.5,gameH*0.4,gameH*0.05,W*0.5,gameH*0.4,gameH*0.55);
+    ewG.addColorStop(0,'rgba(180,190,255,0.3)');ewG.addColorStop(0.5,'rgba(80,90,200,0.1)');ewG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ewG;ctx.fillRect(0,0,W,gameH);ctx.restore();
+
+    ctx.globalAlpha=1;
+
+  } else if(style==='deepabyss'){
+    // 1. Black void background with faint blue-green depth gradient
+    ctx.globalAlpha=1;
+    var abG=ctx.createLinearGradient(0,0,0,gameH);
+    abG.addColorStop(0,'#000008');abG.addColorStop(0.4,'#000510');abG.addColorStop(1,'#000d1a');
+    ctx.fillStyle=abG;ctx.fillRect(0,0,W,gameH);
+
+    // 2. Bioluminescent particles drifting upward — deep sea snow
+    if(frameN%2===0){
+      transParticles.push({
+        x:Math.random()*W, y:gameH,
+        vx:(Math.random()-0.5)*0.4, vy:-(0.3+Math.random()*0.8),
+        life:0.6+Math.random()*0.4, decay:0.003,
+        r:1+Math.random()*2.5,
+        col:'hsla('+(160+Math.floor(Math.random()*60))+',100%,'+(60+Math.floor(Math.random()*30))+'%,0.7)'
+      });
+    }
+
+    // 3. Ancient underwater ruins silhouettes — massive dark columns
+    ctx.globalAlpha=0.55;
+    for(var ri=0;ri<5;ri++){
+      var rx3=((ri*W/3.5+farOff*0.06)%W+W)%W;
+      var rh=gameH*(0.3+Math.sin(ri*1.4)*0.15);
+      var rw=28+Math.sin(ri*2.1)*14;
+      var rcG=ctx.createLinearGradient(rx3,gameH-rh,rx3,gameH);
+      rcG.addColorStop(0,'#000d18');rcG.addColorStop(1,'#000508');
+      ctx.fillStyle=rcG;
+      ctx.fillRect(rx3,gameH-rh,rw,rh);
+      // Column top cap
+      ctx.fillStyle='#000c16';
+      ctx.fillRect(rx3-6,gameH-rh,rw+12,12);
+      // Bioluminescent algae glow on columns
+      ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.03+ri)*0.1;
+      var cg2=ctx.createLinearGradient(rx3,gameH-rh,rx3+rw,gameH-rh);
+      cg2.addColorStop(0,'rgba(0,255,180,0.4)');cg2.addColorStop(0.5,'rgba(0,200,255,0.2)');cg2.addColorStop(1,'rgba(0,255,180,0)');
+      ctx.fillStyle=cg2;ctx.fillRect(rx3,gameH-rh,rw,rh);ctx.restore();
+    }
+
+    // 4. Distant massive creature silhouette in the deep — adds dread
+    ctx.save();ctx.globalAlpha=0.06+Math.sin(frameN*0.008)*0.03;
+    ctx.fillStyle='#001520';
+    ctx.beginPath();
+    ctx.ellipse(W*0.65,gameH*0.55,W*0.38,gameH*0.12,0.15,0,Math.PI*2);
+    ctx.fill();ctx.restore();
+
+    // 5. Floating jellyfish silhouettes
+    for(var ji=0;ji<4;ji++){
+      var jx=((ji*W/3+farOff*0.04+ji*40)%W+W)%W;
+      var jy=gameH*(0.2+Math.sin(frameN*0.02+ji*1.5)*0.08+ji*0.12);
+      var jr=18+ji*6;
+      ctx.save();ctx.globalAlpha=0.15+Math.sin(frameN*0.03+ji)*0.08;
+      var jg=ctx.createRadialGradient(jx,jy,0,jx,jy,jr);
+      jg.addColorStop(0,'rgba(0,255,200,0.6)');jg.addColorStop(0.5,'rgba(0,180,255,0.3)');jg.addColorStop(1,'rgba(0,100,200,0)');
+      ctx.fillStyle=jg;ctx.beginPath();ctx.ellipse(jx,jy,jr,jr*0.65,0,Math.PI,Math.PI*2);ctx.fill();
+      // Tentacles
+      ctx.strokeStyle='rgba(0,200,255,0.2)';ctx.lineWidth=1;
+      for(var ti5=0;ti5<5;ti5++){
+        var tx4=jx-jr*0.6+ti5*jr*0.3;
+        ctx.beginPath();ctx.moveTo(tx4,jy);
+        ctx.bezierCurveTo(tx4+Math.sin(frameN*0.05+ti5)*8,jy+jr,tx4+Math.sin(frameN*0.04+ti5)*6,jy+jr*2,tx4,jy+jr*2.5);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 6. Floor glow — phosphorescent sea floor
+    ctx.globalAlpha=0.35+Math.sin(frameN*0.025)*0.1;
+    var flG2=ctx.createLinearGradient(0,gameH*0.8,0,gameH);
+    flG2.addColorStop(0,'rgba(0,200,255,0)');flG2.addColorStop(1,'rgba(0,150,200,0.5)');
+    ctx.fillStyle=flG2;ctx.fillRect(0,gameH*0.8,W,gameH*0.2);
+
+    ctx.globalAlpha=1;
+
   } else if(style==='volcano'||style==='burningcity'){
-    ctx.globalAlpha=0.5;
-    // Volcano silhouette
     ctx.fillStyle='#200400';
     ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(W*0.3,gameH);
     ctx.lineTo(W*0.5,gameH*0.22);ctx.lineTo(W*0.7,gameH);ctx.lineTo(W,gameH);
@@ -2610,12 +4101,75 @@ function drawFarLayer(mfC,gameH){
     ctx.fillStyle=mg2;ctx.fillRect(0,gameH*0.3,W,gameH*0.3);
 
   } else if(style==='venus'){
-    ctx.globalAlpha=0.45;
-    ctx.fillStyle='#504010';
-    ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(0,gameH*0.58);
-    ctx.bezierCurveTo(W*0.2,gameH*0.4,W*0.4,gameH*0.5,W*0.6,gameH*0.4);
-    ctx.bezierCurveTo(W*0.75,gameH*0.32,W*0.88,gameH*0.44,W,gameH*0.46);
+    // ── VENUS — thick orange/yellow toxic atmosphere, volcanic terrain ──
+    // 1. Dense atmospheric haze — Venus has 90x Earth's pressure, sky is deep orange
+    ctx.globalAlpha=0.9;
+    var vAtmo=ctx.createLinearGradient(0,0,0,gameH);
+    vAtmo.addColorStop(0,'rgba(120,50,10,0.8)');
+    vAtmo.addColorStop(0.25,'rgba(180,80,15,0.6)');
+    vAtmo.addColorStop(0.5,'rgba(220,120,20,0.4)');
+    vAtmo.addColorStop(0.75,'rgba(200,100,15,0.5)');
+    vAtmo.addColorStop(1,'rgba(140,60,10,0.7)');
+    ctx.fillStyle=vAtmo;ctx.fillRect(0,0,W,gameH);
+
+    // 2. Thick cloud bands rolling across — sulphuric acid clouds
+    for(var ci3=0;ci3<5;ci3++){
+      var cy=gameH*(0.08+ci3*0.14);
+      var cOff=((farOff*0.12+ci3*W*0.22)%W+W)%W;
+      ctx.globalAlpha=0.18+Math.sin(frameN*0.015+ci3)*0.08;
+      var cbG=ctx.createLinearGradient(0,cy-20,0,cy+20);
+      cbG.addColorStop(0,'rgba(255,160,30,0)');
+      cbG.addColorStop(0.4,'rgba(240,140,20,0.7)');
+      cbG.addColorStop(0.6,'rgba(220,120,15,0.6)');
+      cbG.addColorStop(1,'rgba(200,100,10,0)');
+      ctx.fillStyle=cbG;
+      // Wavy cloud band
+      ctx.beginPath();ctx.moveTo(0,cy+10);
+      for(var cx2=0;cx2<W+40;cx2+=20){
+        ctx.lineTo(cx2,cy+Math.sin((cx2+cOff)*0.02+frameN*0.01)*12+Math.sin((cx2+cOff)*0.05)*6);
+      }
+      ctx.lineTo(W,cy-10);
+      for(var cx3=W;cx3>=0;cx3-=20){
+        ctx.lineTo(cx3,cy-6+Math.sin((cx3+cOff)*0.02+frameN*0.008)*8);
+      }
+      ctx.closePath();ctx.fill();
+    }
+
+    // 3. Volcanic mountains silhouetted — sharp, jagged, dark
+    ctx.globalAlpha=0.75;
+    var vmFar=ctx.createLinearGradient(0,gameH*0.4,0,gameH*0.65);
+    vmFar.addColorStop(0,'rgba(60,20,5,0.9)');vmFar.addColorStop(1,'rgba(80,30,8,0.5)');
+    ctx.fillStyle=vmFar;
+    ctx.beginPath();ctx.moveTo(0,gameH);
+    var vPeaks=[0.1,0.22,0.35,0.5,0.62,0.75,0.88,1.0];
+    var vHeights=[0.52,0.42,0.58,0.38,0.50,0.44,0.56,0.48];
+    for(var vi=0;vi<vPeaks.length;vi++){
+      var vx2=((vPeaks[vi]*W+farOff*0.08)%W+W)%W;
+      ctx.lineTo(vx2,gameH*vHeights[vi]);
+      if(vi<vPeaks.length-1){
+        ctx.lineTo(((vPeaks[vi]+0.06)*W+farOff*0.08)%W,gameH*(vHeights[vi]+0.08));
+      }
+    }
     ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
+
+    // 4. Lava glow at mountain bases — volcanic activity
+    for(var li3=0;li3<4;li3++){
+      var lx2=((li3*W/3+farOff*0.06)%W+W)%W;
+      var ly2=gameH*(0.52+Math.sin(li3*1.4)*0.08);
+      ctx.save();ctx.globalAlpha=0.25+Math.sin(frameN*0.04+li3)*0.12;
+      var lvG=ctx.createRadialGradient(lx2,ly2,0,lx2,ly2,60);
+      lvG.addColorStop(0,'rgba(255,120,0,0.8)');lvG.addColorStop(0.4,'rgba(255,60,0,0.4)');lvG.addColorStop(1,'rgba(200,30,0,0)');
+      ctx.fillStyle=lvG;ctx.beginPath();ctx.arc(lx2,ly2,60,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+
+    // 5. Atmospheric glow — golden haze permeating everything
+    ctx.globalAlpha=0.12+Math.sin(frameN*0.015)*0.04;
+    var vHaze=ctx.createRadialGradient(W*0.5,gameH*0.3,0,W*0.5,gameH*0.3,W*0.8);
+    vHaze.addColorStop(0,'rgba(255,180,40,0.5)');vHaze.addColorStop(0.5,'rgba(220,120,20,0.2)');vHaze.addColorStop(1,'rgba(180,80,10,0)');
+    ctx.fillStyle=vHaze;ctx.fillRect(0,0,W,gameH);
+
+    ctx.globalAlpha=1;
 
   } else if(style==='saturn'){
     ctx.globalAlpha=0.4;
@@ -2719,8 +4273,50 @@ function drawNearLayer(mn0,gameH){
     ctx.beginPath();ctx.arc(alx+18,gameH-17,2,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
 
-  } else if(style==='dragonlair'){
-    // Thick foreground cave rock ledges
+  } else if(style==='stormeye'){
+    // Storm ground — dark turbulent clouds at horizon
+    ctx.globalAlpha=0.7;
+    for(var sci2=0;sci2<6;sci2++){
+      var scx=((sci2*W/4+nearOff*0.4)%W+W)%W;
+      var sch=gameH*0.12+Math.sin(sci2*1.8)*gameH*0.06;
+      var scG=ctx.createRadialGradient(scx,gameH-sch*0.5,8,scx,gameH-sch*0.5,sch*1.2);
+      scG.addColorStop(0,'#14143a');scG.addColorStop(0.6,'#0a0a25');scG.addColorStop(1,'rgba(5,5,15,0)');
+      ctx.fillStyle=scG;ctx.beginPath();ctx.ellipse(scx,gameH,sch*1.8,sch,0,0,Math.PI*2);ctx.fill();
+    }
+    // Lightning ground flash
+    ctx.globalAlpha=0.15+Math.sin(frameN*0.08)*0.08;
+    var lgG=ctx.createLinearGradient(0,gameH*0.85,0,gameH);
+    lgG.addColorStop(0,'rgba(150,160,255,0)');lgG.addColorStop(1,'rgba(100,110,255,0.4)');
+    ctx.fillStyle=lgG;ctx.fillRect(0,gameH*0.85,W,gameH*0.15);
+    ctx.globalAlpha=1;
+
+  } else if(style==='deepabyss'){
+    ctx.globalAlpha=0.85;
+    for(var sfi=0;sfi<8;sfi++){
+      var sfx=((sfi*W/6+nearOff*0.3)%W+W)%W;
+      var sfh=gameH*0.08+Math.sin(sfi*2.3)*gameH*0.05;
+      var sfG=ctx.createLinearGradient(sfx,gameH-sfh,sfx,gameH);
+      sfG.addColorStop(0,'#001520');sfG.addColorStop(1,'#000810');
+      ctx.fillStyle=sfG;
+      ctx.beginPath();ctx.moveTo(sfx-15,gameH);
+      ctx.bezierCurveTo(sfx-18,gameH-sfh*0.4,sfx-6,gameH-sfh*0.9,sfx,gameH-sfh);
+      ctx.bezierCurveTo(sfx+6,gameH-sfh*0.9,sfx+18,gameH-sfh*0.4,sfx+15,gameH);
+      ctx.closePath();ctx.fill();
+      // Bioluminescent tip glow
+      ctx.save();ctx.globalAlpha=0.3+Math.sin(frameN*0.04+sfi*0.9)*0.2;
+      var sfgG=ctx.createRadialGradient(sfx,gameH-sfh,0,sfx,gameH-sfh,16);
+      sfgG.addColorStop(0,'rgba(0,255,200,0.9)');sfgG.addColorStop(1,'rgba(0,150,255,0)');
+      ctx.fillStyle=sfgG;ctx.beginPath();ctx.arc(sfx,gameH-sfh,16,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // Sea floor phosphorescence
+    ctx.globalAlpha=0.5;
+    var sfbG=ctx.createLinearGradient(0,gameH-10,0,gameH);
+    sfbG.addColorStop(0,'rgba(0,180,255,0.6)');sfbG.addColorStop(1,'rgba(0,100,180,0.3)');
+    ctx.fillStyle=sfbG;ctx.fillRect(0,gameH-10,W,10);
+    ctx.globalAlpha=1;
+
+  } else if(style==='volcano'||style==='burningcity'){
     ctx.globalAlpha=0.95;
     for(var smi=0;smi<9;smi++){
       var smx=((smi*W/7+nearOff*0.55)%W+W)%W;
@@ -3829,8 +5425,8 @@ function spawnObstacle(){
     // f1 - Volcanic Hellscape: lava boulders, narrow gaps, always intense
     if(lid==='f1'){
       var w=38+Math.random()*18;
-      if(Math.random()<0.55){ if(spawnPair(0.22+progress*0.04, 0.28, w, 'mountain')) return; }
-      spawnSingle(0.60+progress*0.16, 0.82+progress*0.08, w, 'mountain');
+      if(progress>0.35&&Math.random()<0.50){ if(spawnPair(0.28+progress*0.02, 0.34, w, 'mountain')) return; }
+      spawnSingle(0.55+progress*0.14, 0.78+progress*0.08, w, 'mountain');
       return;
     }
     // f2 - Desert Sands: sandstone pillars mostly from bottom, occasional top
@@ -3844,29 +5440,29 @@ function spawnObstacle(){
     // f3 - Burning City: building rubble, jagged pairs, very punishing late
     if(lid==='f3'){
       var w=42+Math.random()*22;
-      if(progress>0.35&&Math.random()<0.60){ if(spawnPair(0.20+progress*0.04, 0.26, w, 'mountain')) return; }
-      spawnSingle(0.62+progress*0.16, 0.84+progress*0.08, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.50){ if(spawnPair(0.26+progress*0.03, 0.32, w, 'mountain')) return; }
+      spawnSingle(0.56+progress*0.14, 0.78+progress*0.08, w, 'mountain');
       return;
     }
     // f4 - Lava Cavern: stalactites from top AND stalagmites from bottom, paired always
     if(lid==='f4'){
       var w=36+Math.random()*16;
-      if(progress>0.20&&Math.random()<0.70){ if(spawnPair(0.20+progress*0.06, 0.26, w, 'mountain')) return; }
-      spawnSingle(0.64+progress*0.16, 0.84+progress*0.08, w, 'mountain');
+      if(progress>0.45&&Math.random()<0.55){ if(spawnPair(0.26+progress*0.04, 0.32, w, 'mountain')) return; }
+      spawnSingle(0.56+progress*0.14, 0.78+progress*0.08, w, 'mountain');
       return;
     }
     // f5 - Firestorm: maximum difficulty, tight pairs from start, fastest speed
     if(lid==='f5'){
       var w=38+Math.random()*14;
-      if(Math.random()<0.75){ if(spawnPair(0.18+progress*0.04, 0.24, w, 'mountain')) return; }
-      spawnSingle(0.66+progress*0.14, 0.86+progress*0.08, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.65){ if(spawnPair(0.24+progress*0.03, 0.30, w, 'mountain')) return; }
+      spawnSingle(0.58+progress*0.12, 0.80+progress*0.08, w, 'mountain');
       return;
     }
     // f6 - Dragon Lair boss: cave stalactites from top + stalagmites from bottom, brutal
     if(lid==='f6'){
       var w=34+Math.random()*18;
       var r=Math.random();
-      if(r<0.55){ if(spawnPair(0.20+progress*0.06, 0.26+progress*0.04, w, 'dragonlair')) return; }
+      if(progress>0.35&&r<0.50){ if(spawnPair(0.26+progress*0.04, 0.32+progress*0.02, w, 'dragonlair')) return; }
       // Stalactites from ceiling heavy
       side=Math.random()<0.65?'top':'bottom';
       _spawnSide=side;
@@ -3900,15 +5496,24 @@ function spawnObstacle(){
     // w4 - Storm Front: lightning debris, chaotic mixed pairs, very fast
     if(lid==='w4'){
       var w=36+Math.random()*18;
-      if(progress>0.25&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.04, 0.28, w, 'mountain')) return; }
-      spawnSingle(0.60+progress*0.18, 0.82+progress*0.08, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.55){ if(spawnPair(0.26+progress*0.03, 0.32, w, 'mountain')) return; }
+      spawnSingle(0.54+progress*0.16, 0.76+progress*0.08, w, 'mountain');
       return;
     }
     // w5 - Celestial Ruins: ancient pillars, very tall paired obstacles
     if(lid==='w5'){
       var w=38+Math.random()*16;
-      if(progress>0.30&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.04, 0.26, w, 'mountain')) return; }
-      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.26+progress*0.03, 0.32, w, 'mountain')) return; }
+      spawnSingle(0.56+progress*0.16, 0.78+progress*0.08, w, 'mountain');
+      return;
+    }
+    // w6 - The Leviathan: deep sea columns, heavy paired obstacles
+    if(lid==='w6'){
+      var w=34+Math.random()*16;
+      if(progress>0.30&&Math.random()<0.52){ if(spawnPair(0.26+progress*0.04, 0.32, w, 'deepabyss')) return; }
+      side=Math.random()<0.5?'bottom':'top';
+      _spawnSide=side;
+      spawnSingle(0.54+progress*0.16, 0.76+progress*0.10, w, 'deepabyss');
       return;
     }
 
@@ -3940,15 +5545,24 @@ function spawnObstacle(){
     // i4 - Crystal Void: crystals from all sides, disorienting paired gaps
     if(lid==='i4'){
       var w=34+Math.random()*18;
-      if(progress>0.20&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.06,0.28,w,'mountain')) return; }
-      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.55){ if(spawnPair(0.26+progress*0.04,0.32,w,'mountain')) return; }
+      spawnSingle(0.56+progress*0.14, 0.78+progress*0.08, w, 'mountain');
       return;
     }
     // i5 - The Blizzard: maximum ice difficulty, relentless tight pairs
     if(lid==='i5'){
       var w=36+Math.random()*14;
-      if(Math.random()<0.78){ if(spawnPair(0.18+progress*0.04,0.24,w,'mountain')) return; }
-      spawnSingle(0.66+progress*0.14, 0.88+progress*0.06, w, 'mountain');
+      if(progress>0.35&&Math.random()<0.65){ if(spawnPair(0.24+progress*0.03,0.30,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.12, 0.80+progress*0.08, w, 'mountain');
+      return;
+    }
+    // i6 - The Tempest boss: storm cloud pillars from both sides, alternating
+    if(lid==='i6'){
+      var w=32+Math.random()*14;
+      if(progress>0.30&&Math.random()<0.50){ if(spawnPair(0.26+progress*0.04,0.32,w,'stormeye')) return; }
+      side=Math.random()<0.5?'top':'bottom';
+      _spawnSide=side;
+      spawnSingle(0.54+progress*0.18, 0.78+progress*0.10, w, 'stormeye');
       return;
     }
 
@@ -3970,22 +5584,40 @@ function spawnObstacle(){
     // g3 - Mars: red rock formations, dusty storms mid-level, tight gaps
     if(lid==='g3'){
       var w=38+Math.random()*18;
-      if(progress>0.25&&Math.random()<0.65){ if(spawnPair(0.22+progress*0.06,0.26,w,'mountain')) return; }
-      spawnSingle(0.62+progress*0.18, 0.84+progress*0.08, w, 'mountain');
+      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.26+progress*0.04,0.32,w,'mountain')) return; }
+      spawnSingle(0.54+progress*0.16, 0.76+progress*0.08, w, 'mountain');
       return;
     }
     // g4 - Venus: volcanic paired obstacles, always tight, lava clouds
     if(lid==='g4'){
       var w=38+Math.random()*16;
-      if(Math.random()<0.72){ if(spawnPair(0.20+progress*0.04,0.26,w,'mountain')) return; }
-      spawnSingle(0.64+progress*0.16, 0.86+progress*0.08, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.60){ if(spawnPair(0.24+progress*0.04,0.30,w,'mountain')) return; }
+      spawnSingle(0.56+progress*0.14, 0.78+progress*0.08, w, 'mountain');
       return;
     }
     // g5 - Saturn: ring obstacles from both sides, hardest level in game
     if(lid==='g5'){
       var w=40+Math.random()*16;
-      if(Math.random()<0.82){ if(spawnPair(0.16+progress*0.04,0.22,w,'mountain')) return; }
-      spawnSingle(0.68+progress*0.14, 0.90+progress*0.06, w, 'mountain');
+      if(progress>0.40&&Math.random()<0.68){ if(spawnPair(0.22+progress*0.04,0.28,w,'mountain')) return; }
+      spawnSingle(0.58+progress*0.12, 0.80+progress*0.08, w, 'mountain');
+      return;
+    }
+    // g6 - Jean Jacket: sparse floating asteroids from both sides
+    if(lid==='g6'){
+      var w=28+Math.random()*14;
+      if(Math.random()<0.45){ if(spawnPair(0.26+progress*0.04,0.30,w,'space')) return; }
+      side=Math.random()<0.5?'top':'bottom';
+      _spawnSide=side;
+      spawnSingle(0.55+progress*0.20,0.80+progress*0.10,w,'space');
+      return;
+    }
+    // g7 - The Grey: alien monolith columns, heavier pairs
+    if(lid==='g7'){
+      var w=30+Math.random()*14;
+      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.24+progress*0.04,0.30,w,'alien')) return; }
+      side=Math.random()<0.5?'top':'bottom';
+      _spawnSide=side;
+      spawnSingle(0.56+progress*0.18,0.78+progress*0.10,w,'alien');
       return;
     }
     return;
@@ -4126,7 +5758,13 @@ function getObstacleColors(os){
     'marsrock':  {main:'#aa3311',dark:'#551508',accent:'#ff6633'},
     'venuslava': {main:'#aa7711',dark:'#553308',accent:'#ffcc33'},
     'ring':      {main:'#6622cc',dark:'#2a0a66',accent:'#cc66ff'},
-    'dragonlair':{main:'#2a0800',dark:'#180300',accent:'#ff4400'}
+    'dragonlair':{main:'#2a0800',dark:'#180300',accent:'#ff4400'},
+    'deepabyss': {main:'#001525',dark:'#000810',accent:'#00ffcc'},
+    'stormeye':  {main:'#0a0a22',dark:'#050510',accent:'#c8d8ff'},
+    'space':     {main:'#080820',dark:'#040410',accent:'#aabbff'},
+    'alien':     {main:'#0a0020',dark:'#050010',accent:'#00ff88'},
+    'space':     {main:'#050510',dark:'#020208',accent:'#aabbff'},
+    'alien':     {main:'#0a0020',dark:'#050010',accent:'#00ff88'}
   };
   return map[os]||map['default'];
 }
@@ -4237,6 +5875,144 @@ function drawThemedObstacle(o, gameH, os){
   var x=o.x, w=o.w, h=o.h, side=o.side;
   var cx=x+w*0.5;
   ctx.save();
+
+  // ---- SPACE: floating asteroid rocks ----
+  if(os==='space'){
+    var asG=ctx.createRadialGradient(cx-w*0.2,o.y+h*0.4,4,cx,o.y+h*0.5,w*0.7);
+    asG.addColorStop(0,'#18182a');asG.addColorStop(0.5,'#0e0e1e');asG.addColorStop(1,'#050510');
+    ctx.fillStyle=asG;
+    ctx.beginPath();
+    // Jagged asteroid shape
+    var apts=8;
+    for(var ai4=0;ai4<apts;ai4++){
+      var aA=ai4*(Math.PI*2/apts);
+      var aR=(side==='bottom'?h*0.5:h*0.5)*(0.7+Math.sin(ai4*2.3+o.x)*0.25);
+      var ax2=cx+Math.cos(aA)*w*0.45*aR/h,ay2=(side==='bottom'?o.y+h*0.5:o.y+h*0.5)+Math.sin(aA)*aR;
+      if(side==='bottom') ay2=Math.max(ay2,o.y);
+      else ay2=Math.min(ay2,o.y+h);
+      if(ai4===0) ctx.moveTo(ax2,ay2); else ctx.lineTo(ax2,ay2);
+    }
+    ctx.closePath();ctx.fill();
+    // Crater details
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    for(var ci2=0;ci2<3;ci2++){
+      ctx.beginPath();ctx.arc(cx-w*0.1+ci2*w*0.15,(side==='bottom'?o.y+h*0.4:o.y+h*0.6)+ci2*4,3+ci2*1.5,0,Math.PI*2);ctx.fill();
+    }
+    // Star glow edge
+    ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.04+o.x)*0.1;
+    ctx.shadowColor='rgba(180,190,255,0.6)';ctx.shadowBlur=8;
+    ctx.strokeStyle='rgba(150,160,220,0.4)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(cx,side==='bottom'?o.y+h*0.35:o.y+h*0.65,w*0.38,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;ctx.restore();
+    ctx.restore();return;
+  }
+
+  // ---- ALIEN: glowing purple monolith columns ----
+  if(os==='alien'){
+    var alG=ctx.createLinearGradient(cx,side==='bottom'?gameH:0,cx,side==='bottom'?o.y:o.y+h);
+    alG.addColorStop(0,'#0a0020');alG.addColorStop(0.5,'#120030');alG.addColorStop(1,'#080018');
+    ctx.fillStyle=alG;
+    ctx.beginPath();
+    if(side==='bottom'){
+      ctx.moveTo(x,gameH);ctx.lineTo(x,o.y+h*0.4);
+      ctx.bezierCurveTo(x+w*0.1,o.y+h*0.1,x+w*0.3,o.y,x+w*0.5,o.y);
+      ctx.bezierCurveTo(x+w*0.7,o.y,x+w*0.9,o.y+h*0.1,x+w,o.y+h*0.4);
+      ctx.lineTo(x+w,gameH);
+    } else {
+      ctx.moveTo(x,0);ctx.lineTo(x,o.y+h*0.6);
+      ctx.bezierCurveTo(x+w*0.1,o.y+h*0.9,x+w*0.3,o.y+h,x+w*0.5,o.y+h);
+      ctx.bezierCurveTo(x+w*0.7,o.y+h,x+w*0.9,o.y+h*0.9,x+w,o.y+h*0.6);
+      ctx.lineTo(x+w,0);
+    }
+    ctx.closePath();ctx.fill();
+    // Green bioluminescent glow lines
+    ctx.save();ctx.globalAlpha=0.4+Math.sin(frameN*0.06+o.x*0.01)*0.2;
+    ctx.shadowColor='rgba(0,255,140,0.8)';ctx.shadowBlur=10;
+    ctx.strokeStyle='rgba(0,255,120,0.6)';ctx.lineWidth=1.5;
+    var glowY=side==='bottom'?o.y:o.y+h;
+    ctx.beginPath();ctx.moveTo(cx-w*0.2,glowY);ctx.lineTo(cx+w*0.2,glowY);ctx.stroke();
+    // Rune-like marks
+    for(var rui=0;rui<2;rui++){
+      var ruy=side==='bottom'?o.y+h*(0.25+rui*0.3):o.y+h*(0.45+rui*0.3);
+      ctx.globalAlpha=0.25+Math.sin(frameN*0.05+rui)*0.15;
+      ctx.beginPath();ctx.moveTo(cx-5,ruy);ctx.lineTo(cx+5,ruy);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx,ruy-4);ctx.lineTo(cx,ruy+4);ctx.stroke();
+    }
+    ctx.shadowBlur=0;ctx.restore();
+    ctx.restore();return;
+  }
+
+  // ---- STORMEYE: dark storm cloud pillars with lightning edges ----
+  if(os==='stormeye'){
+    var seG=ctx.createLinearGradient(cx,side==='bottom'?gameH:0,cx,side==='bottom'?o.y:o.y+h);
+    seG.addColorStop(0,'#080818');seG.addColorStop(0.5,'#0e0e28');seG.addColorStop(1,'#060614');
+    ctx.fillStyle=seG;
+    ctx.beginPath();
+    if(side==='bottom'){
+      ctx.moveTo(x,gameH);
+      ctx.bezierCurveTo(x+w*0.05,gameH-h*0.4,x+w*0.15,gameH-h*0.75,x+w*0.28,gameH-h);
+      ctx.bezierCurveTo(x+w*0.5,gameH-h*1.04,x+w*0.72,gameH-h,x+w*0.82,gameH-h*0.85);
+      ctx.bezierCurveTo(x+w*0.9,gameH-h*0.55,x+w,gameH-h*0.35,x+w,gameH);
+    } else {
+      ctx.moveTo(x,0);
+      ctx.bezierCurveTo(x+w*0.05,h*0.4,x+w*0.15,h*0.75,x+w*0.3,h);
+      ctx.bezierCurveTo(x+w*0.52,h*1.04,x+w*0.74,h,x+w*0.84,h*0.82);
+      ctx.bezierCurveTo(x+w*0.92,h*0.55,x+w,h*0.35,x+w,0);
+    }
+    ctx.closePath();ctx.fill();
+    // Lightning edge glow
+    ctx.save();
+    ctx.globalAlpha=0.4+Math.sin(frameN*0.07+o.x*0.01)*0.25;
+    ctx.strokeStyle='rgba(180,200,255,0.8)';ctx.lineWidth=1.8;ctx.lineCap='round';
+    ctx.shadowColor='rgba(160,180,255,0.9)';ctx.shadowBlur=10;
+    if(side==='bottom'){
+      ctx.beginPath();ctx.moveTo(x+w*0.28,gameH-h);ctx.bezierCurveTo(x+w*0.5,gameH-h*1.04,x+w*0.72,gameH-h,x+w*0.82,gameH-h*0.85);ctx.stroke();
+    } else {
+      ctx.beginPath();ctx.moveTo(x+w*0.3,h);ctx.bezierCurveTo(x+w*0.52,h*1.04,x+w*0.74,h,x+w*0.84,h*0.82);ctx.stroke();
+    }
+    // Mini lightning crack
+    ctx.strokeStyle='rgba(220,230,255,0.5)';ctx.lineWidth=1;
+    ctx.beginPath();
+    var lcy=side==='bottom'?gameH-h*0.5:h*0.5;
+    ctx.moveTo(cx,lcy);ctx.lineTo(cx+8,lcy-12);ctx.lineTo(cx-4,lcy-8);ctx.lineTo(cx+6,lcy-22);ctx.stroke();
+    ctx.shadowBlur=0;ctx.restore();
+    ctx.restore();return;
+  }
+
+  // ---- DEEPABYSS: dark underwater columns with bioluminescent glow ----
+  if(os==='deepabyss'){
+    var abG2=ctx.createLinearGradient(cx,side==='bottom'?gameH:0,cx,side==='bottom'?o.y:o.y+h);
+    abG2.addColorStop(0,'#000d1a');abG2.addColorStop(0.5,'#001525');abG2.addColorStop(1,'#000810');
+    ctx.fillStyle=abG2;
+    ctx.beginPath();
+    if(side==='bottom'){
+      ctx.moveTo(x,gameH);ctx.lineTo(x,o.y+h*0.5);
+      ctx.bezierCurveTo(x+w*0.1,o.y+h*0.2,x+w*0.2,o.y+h*0.05,x+w*0.35,o.y);
+      ctx.bezierCurveTo(x+w*0.55,o.y+h*0.05,x+w*0.75,o.y+h*0.1,x+w,o.y+h*0.5);
+      ctx.lineTo(x+w,gameH);
+    } else {
+      ctx.moveTo(x,0);ctx.lineTo(x,o.y+h*0.5);
+      ctx.bezierCurveTo(x+w*0.1,o.y+h*0.8,x+w*0.25,o.y+h*0.95,x+w*0.4,o.y+h);
+      ctx.bezierCurveTo(x+w*0.6,o.y+h*0.92,x+w*0.78,o.y+h*0.75,x+w,o.y+h*0.5);
+      ctx.lineTo(x+w,0);
+    }
+    ctx.closePath();ctx.fill();
+    ctx.save();
+    ctx.globalAlpha=0.45+Math.sin(frameN*0.05+o.x*0.01)*0.2;
+    ctx.strokeStyle='rgba(0,255,200,0.7)';ctx.lineWidth=2;ctx.lineCap='round';
+    ctx.shadowColor='rgba(0,200,255,0.8)';ctx.shadowBlur=8;
+    if(side==='bottom'){ctx.beginPath();ctx.moveTo(x+w*0.35,o.y);ctx.bezierCurveTo(x+w*0.55,o.y+h*0.05,x+w*0.75,o.y+h*0.1,x+w*0.9,o.y+h*0.3);ctx.stroke();}
+    else{ctx.beginPath();ctx.moveTo(x+w*0.4,o.y+h);ctx.bezierCurveTo(x+w*0.6,o.y+h*0.92,x+w*0.78,o.y+h*0.75,x+w*0.9,o.y+h*0.5);ctx.stroke();}
+    ctx.shadowBlur=0;ctx.restore();
+    ctx.save();ctx.fillStyle='rgba(0,255,180,0.5)';ctx.shadowColor='rgba(0,255,180,0.8)';ctx.shadowBlur=6;
+    for(var ai2=0;ai2<3;ai2++){
+      var aix=x+w*(0.2+ai2*0.25),aiy=side==='bottom'?o.y+h*(0.3+ai2*0.2):o.y+h*(0.7-ai2*0.2);
+      ctx.globalAlpha=0.3+Math.sin(frameN*0.04+ai2+o.x)*0.2;
+      ctx.beginPath();ctx.arc(aix,aiy,3,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;ctx.restore();
+    ctx.restore();return;
+  }
 
   // ---- DRAGONLAIR: jagged volcanic cave rock with lava glow ----
   if(os==='dragonlair'){
@@ -4859,6 +6635,12 @@ function drawObstacles(){
     else if(lid3==='w2'||lid3==='i3') os='icicle';
     else if(lid3==='w4') os='storm';
     else if(lid3==='w5') os='pillar';
+    else if(lid3==='w6') os='deepabyss';
+    else if(lid3==='i6') os='stormeye';
+    else if(lid3==='g6') os='space';
+    else if(lid3==='g7') os='alien';
+    else if(lid3==='g6') os='space';
+    else if(lid3==='g7') os='alien';
     else if(lid3==='i1'||lid3==='i2'||lid3==='i5') os='ice';
     else if(lid3==='g1') os='crater';
     else if(lid3==='g2') os='asteroid';
@@ -5217,7 +6999,29 @@ function drawMoth(m){
 function updateInfinite(){
   if(infiniteOwned && !infiniteActive && !infiniteMothSpawned && !infMoth){
     infMothSpawnTimer++;
-    if(infMothSpawnTimer>=600){infMoth=spawnInfMoth();infiniteMothSpawned=true;}
+
+    // Mercy spawn — died 12+ times on same level: spawn at start (after 120 frames)
+    var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
+    var mercySpawn=curLid&&curLid===lastDeathLevelId&&deathStreakOnLevel>=12;
+    if(mercySpawn&&infMothSpawnTimer>=120){
+      infMoth=spawnInfMoth();infiniteMothSpawned=true;return;
+    }
+
+    // Normal spawn — rarity increases with level progress
+    // currentLevel ~1-40 across all worlds. Spawn interval scales from 600 (early) to never (late)
+    // World 1 (lvl 1-7): spawn fairly often. World 5 (lvl 30+): almost never.
+    var lvl=currentLevel||1;
+    // Base interval: starts at 600 frames (~10s), grows by 180 per level, caps at never spawning past lvl 20
+    if(lvl>=20&&!mercySpawn) return; // never spawns naturally in worlds 4-5
+    var baseInterval=600+lvl*180; // lvl1=780, lvl5=1500, lvl10=2400, lvl19=4020
+    // Add randomness — only attempt spawn 30% of the time when timer hits
+    if(infMothSpawnTimer>=baseInterval){
+      if(Math.random()<0.30){
+        infMoth=spawnInfMoth();infiniteMothSpawned=true;
+      } else {
+        infMothSpawnTimer=Math.floor(baseInterval*0.6); // reset partially, try again later
+      }
+    }
   }
   if(!infiniteActive) return;
   infiniteTimer--;
@@ -5494,9 +7298,11 @@ function doTap(){
   // Boss mechanic: tap near the boss to damage it
   if(isBossLevel()&&boss&&bossActive&&!bossDefeated){
     var dx=fly.x-boss.x, dy=fly.y-boss.y;
-    if(Math.sqrt(dx*dx+dy*dy)<130){
+    var attackRange=getBossType()==='leviathan'?140:130;
+    // Jean Jacket can only be hit when visible
+    if(getBossType()==='jeanjacket'&&boss.visibility<0.3) return;
+    if(Math.sqrt(dx*dx+dy*dy)<attackRange){
       hitBoss();
-      // Visual feedback — brief white flash on hit
       var sf2=document.getElementById('screenFlash');
       if(sf2){sf2.classList.add('flash');setTimeout(function(){sf2.classList.remove('flash');},120);}
     }
@@ -5558,6 +7364,7 @@ function triggerLevelClear(){
   showStarOverlay(overlayStars);
 
   currentRunNoDamage=true; currentRunMoths=0;
+  deathStreakOnLevel=0; lastDeathLevelId=null;
   checkAchievements();
   saveGame();
   // Show what's coming next
@@ -5620,6 +7427,16 @@ function triggerLevelClear(){
 function die(){
   try{sfxGameOver(); stopMusic();}catch(e){}
   state='dead';
+  // Track death streak on same level for mercy infinite spawn
+  var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
+  if(curLid){
+    if(curLid===lastDeathLevelId){
+      deathStreakOnLevel++;
+    } else {
+      deathStreakOnLevel=1;
+      lastDeathLevelId=curLid;
+    }
+  }
   var sc=Math.floor(score/10);
   if(gameMode==='story' && sc>highScoreStory) highScoreStory=sc;
   if(gameMode==='infinite'){
@@ -6187,7 +8004,8 @@ var WORLDS = [
       { id:'w2', name:'Ice Cavern',      icon:'\ud83e\udde0', biomeIdx:14, desc:'Ancient ice deep underground',      duration:83 },
       { id:'w3', name:'Mountain Lake',   icon:'\ud83d\udca7', biomeIdx:16, desc:'Leaping fish in crystal waters',    duration:86 },
       { id:'w4', name:'Storm Front',     icon:'\u26c8\ufe0f', biomeIdx:9,  desc:'Thunder and lightning rage above',  duration:89 },
-      { id:'w5', name:'Celestial Ruins', icon:'\ud83c\udf0c', biomeIdx:10, desc:'Ancient temple beneath the stars',  duration:92 }
+      { id:'w5', name:'Celestial Ruins', icon:'\ud83c\udf0c', biomeIdx:10, desc:'Ancient temple beneath the stars',  duration:92 },
+      { id:'w6', name:'The Leviathan',   icon:'\ud83d\udc0d', biomeIdx:28, desc:'The ancient serpent of the deep awakens', duration:120, isBoss:true, bossType:'leviathan' }
     ]
   },
   {
@@ -6206,7 +8024,8 @@ var WORLDS = [
       { id:'i2', name:'Arctic Tundra',  icon:'\ud83d\udc27', biomeIdx:18, desc:'Penguins and ice slides',            duration:83 },
       { id:'i3', name:'Ice Cavern',     icon:'\ud83e\udde0', biomeIdx:14, desc:'Glittering stalactites of ice',      duration:86 },
       { id:'i4', name:'Crystal Void',   icon:'\ud83d\udc8e', biomeIdx:5,  desc:'Crystalline darkness and silence',  duration:89 },
-      { id:'i5', name:'The Blizzard',   icon:'\ud83c\udf28', biomeIdx:3,  desc:'A storm with no end in sight',      duration:92 }
+      { id:'i5', name:'The Blizzard',   icon:'\ud83c\udf28', biomeIdx:3,  desc:'A storm with no end in sight',      duration:92 },
+      { id:'i6', name:'The Tempest',    icon:'\u26a1',       biomeIdx:29, desc:'Face the lord of lightning and storms', duration:120, isBoss:true, bossType:'tempest' }
     ]
   },
   {
@@ -6221,11 +8040,13 @@ var WORLDS = [
     skinReqName: 'Legendary or Galaxy skin required',
     unlocked: false,
     levels: [
-      { id:'g1', name:'The Moon',  icon:'\ud83c\udf14', biomeIdx:20, desc:'Craters and silence above the Earth',  duration:80 },
-      { id:'g2', name:'Deep Space',icon:'\u2b50',        biomeIdx:21, desc:'Infinite darkness and starlight',      duration:86 },
-      { id:'g3', name:'Mars',      icon:'\ud83d\udd34', biomeIdx:22, desc:'Red deserts and ancient dust storms',  duration:92 },
-      { id:'g4', name:'Venus',     icon:'\u2600\ufe0f', biomeIdx:23, desc:'Toxic clouds and volcanic lightning',  duration:98 },
-      { id:'g5', name:'Saturn',    icon:'\ud83d\udcab', biomeIdx:24, desc:'Rainbow rings in the cosmic void',    duration:104 }
+      { id:'g1', name:'The Moon',       icon:'\ud83c\udf14', biomeIdx:20, desc:'Craters and silence above the Earth',  duration:80 },
+      { id:'g2', name:'Deep Space',     icon:'\u2b50',       biomeIdx:21, desc:'Infinite darkness and starlight',      duration:86 },
+      { id:'g3', name:'Mars',           icon:'\ud83d\udd34', biomeIdx:22, desc:'Red deserts and ancient dust storms',  duration:92 },
+      { id:'g4', name:'Venus',          icon:'\u2600\ufe0f', biomeIdx:23, desc:'Toxic clouds and volcanic lightning',  duration:98 },
+      { id:'g5', name:'Saturn',         icon:'\ud83d\udcab', biomeIdx:24, desc:'Rainbow rings in the cosmic void',    duration:104 },
+      { id:'g6', name:'Jean Jacket',    icon:'\ud83d\udef8', biomeIdx:30, desc:'Something in the sky that should not be', duration:120, isBoss:true, bossType:'jeanjacket' },
+      { id:'g7', name:'The Grey',       icon:'\uD83D\uDC7D', biomeIdx:31, desc:'The ancient visitor from beyond the stars', duration:120, isBoss:true, bossType:'grey' }
     ]
   }
 ];
