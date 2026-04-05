@@ -728,6 +728,7 @@ var comboCount=0, comboTimer=0, COMBO_WINDOW=120, comboMult=1;
 
 // --- SKIN AURA & TRANSFORM ---
 var skinTransformTimer=0, SKIN_TRANSFORM_DURATION=90;
+var bossTransformTimer=0, BOSS_TRANSFORM_DURATION=300;
 var starlightParticles=[];
 var infiniteTransformTimer=0;
 var windItems=[], windTimer=0, windInterval=1800, windActive=false, windActiveTimer=0;
@@ -746,6 +747,7 @@ var debris=[], steamParticles=[], lightningBolts=[];
 var lightningTimer=0, lightningBurstActive=false, lightningBurstFrames=0, lightningBurstCooldown=0;
 
 var ownedSkins=['default'], activeSkin='default', noAds=false;
+var defeatedBosses=[], ngPlusUnlocked=false;
 
 // ── OWL BOSS ──
 var boss=null, bossActive=false, bossPhase=0, bossHP=0, bossMaxHP=0;
@@ -758,47 +760,157 @@ var ghostActive=false, ghostCharges=0;
 
 // ── ACHIEVEMENTS ──
 var achievements=[
-  {id:'first_flight',  icon:'\uD83E\uDEB2', name:'First Flight',      desc:'Complete your first level',             reqKey:'levelsCleared1',  reward:50},
-  {id:'moth_100',      icon:'\uD83E\uDD8B', name:'Moth Hunter',        desc:'Collect 100 moths total',               reqKey:'moths100',         reward:100},
-  {id:'moth_1000',     icon:'\uD83E\uDD8B', name:'Moth Master',        desc:'Collect 1,000 moths total',             reqKey:'moths1000',        reward:300},
-  {id:'moth_10000',    icon:'\uD83E\uDD8B', name:'Moth Legend',        desc:'Collect 10,000 moths total',            reqKey:'moths10000',       reward:1000},
-  {id:'no_hit',        icon:'\u2B50',       name:'Untouchable',        desc:'Complete a level without losing a life',reqKey:'noDamage1',        reward:150},
-  {id:'skins_5',       icon:'\uD83C\uDFA8', name:'Collector',          desc:'Unlock 5 skins',                        reqKey:'skins5',           reward:200},
-  {id:'skins_10',      icon:'\uD83C\uDFA8', name:'Wardrobe',           desc:'Unlock 10 skins',                       reqKey:'skins10',          reward:500},
-  {id:'infinite',      icon:'\u26A1',       name:'Infinite Power',     desc:'Activate Infinite Dragonfly',           reqKey:'infinite1',        reward:100},
-  {id:'score_100',     icon:'\uD83C\uDFC5', name:'Century',            desc:'Score 100 points in one run',           reqKey:'score100',         reward:75},
-  {id:'score_500',     icon:'\uD83C\uDFC5', name:'High Flyer',         desc:'Score 500 points in one run',           reqKey:'score500',         reward:200},
-  {id:'score_1000',    icon:'\uD83E\uDD47', name:'Legendary Run',      desc:'Score 1,000 points in one run',         reqKey:'score1000',        reward:500},
-  {id:'worlds_2',      icon:'\uD83C\uDF0D', name:'Explorer',           desc:'Complete a level in 2 worlds',          reqKey:'worlds2',          reward:150},
-  {id:'worlds_5',      icon:'\uD83C\uDF0D', name:'World Traveller',    desc:'Complete a level in all 5 worlds',      reqKey:'worlds5',          reward:500},
-  {id:'close_call',    icon:'\uD83D\uDE05', name:'Close Call',         desc:'Trigger 10 near misses',                reqKey:'nearMiss10',       reward:100},
-  {id:'golden',        icon:'\uD83E\uDE99', name:'Golden Hour',        desc:'Spend 60s in Infinite mode',            reqKey:'infSecs60',        reward:200},
-  {id:'boss_slayer',   icon:'\uD83E\uDD89', name:'Owl Slayer',         desc:'Defeat The Great Owl',                  reqKey:'bossDefeated1',    reward:500}
+  {id:'first_flight',    icon:'\uD83E\uDEB2', name:'First Flight',        desc:'Complete your first level',                   reqKey:'levelsCleared1',   reward:50},
+  {id:'moth_100',        icon:'\uD83E\uDD8B', name:'Moth Hunter',          desc:'Collect 100 moths total',                     reqKey:'moths100',         reward:100},
+  {id:'moth_1000',       icon:'\uD83E\uDD8B', name:'Moth Master',          desc:'Collect 1,000 moths total',                   reqKey:'moths1000',        reward:300},
+  {id:'moth_10000',      icon:'\uD83E\uDD8B', name:'Moth Legend',          desc:'Collect 10,000 moths total',                  reqKey:'moths10000',       reward:1000},
+  {id:'moth_50000',      icon:'\uD83E\uDD8B', name:'Moth God',             desc:'Collect 50,000 moths total',                  reqKey:'moths50000',       reward:3000},
+  {id:'no_hit',          icon:'\u2B50',       name:'Untouchable',          desc:'Complete a level without losing a life',      reqKey:'noDamage1',        reward:150},
+  {id:'no_hit_5',        icon:'\u2B50',       name:'Flawless Run',         desc:'Complete 5 levels without taking damage',     reqKey:'noDamage5',        reward:400},
+  {id:'no_hit_streak',   icon:'\uD83D\uDD25', name:'On Fire',              desc:'Complete 3 levels in a row with no damage',   reqKey:'noDamageStreak3',  reward:350},
+  {id:'no_hit_streak5',  icon:'\uD83D\uDD25', name:'Untouchable Streak',   desc:'Complete 5 levels in a row with no damage',   reqKey:'noDamageStreak5',  reward:750},
+  {id:'skins_5',         icon:'\uD83C\uDFA8', name:'Collector',            desc:'Unlock 5 skins',                              reqKey:'skins5',           reward:200},
+  {id:'skins_10',        icon:'\uD83C\uDFA8', name:'Wardrobe',             desc:'Unlock 10 skins',                             reqKey:'skins10',          reward:500},
+  {id:'skins_all',       icon:'\uD83C\uDFA8', name:'Fashion Icon',         desc:'Unlock every skin',                           reqKey:'skinsAll',         reward:2000},
+  {id:'infinite',        icon:'\u26A1',       name:'Infinite Power',       desc:'Activate Infinite Dragonfly',                 reqKey:'infinite1',        reward:100},
+  {id:'infinite_10',     icon:'\u26A1',       name:'Power Surge',          desc:'Activate Infinite Dragonfly 10 times',        reqKey:'infinite10',       reward:400},
+  {id:'score_100',       icon:'\uD83C\uDFC5', name:'Century',              desc:'Score 100 points in one run',                 reqKey:'score100',         reward:75},
+  {id:'score_500',       icon:'\uD83C\uDFC5', name:'High Flyer',           desc:'Score 500 points in one run',                 reqKey:'score500',         reward:200},
+  {id:'score_1000',      icon:'\uD83E\uDD47', name:'Legendary Run',        desc:'Score 1,000 points in one run',               reqKey:'score1000',        reward:500},
+  {id:'score_5000',      icon:'\uD83E\uDD47', name:'Ascendant',            desc:'Score 5,000 points in one run',               reqKey:'score5000',        reward:1500},
+  {id:'worlds_2',        icon:'\uD83C\uDF0D', name:'Explorer',             desc:'Complete a level in 2 worlds',                reqKey:'worlds2',          reward:150},
+  {id:'worlds_5',        icon:'\uD83C\uDF0D', name:'World Traveller',      desc:'Complete a level in all 5 worlds',            reqKey:'worlds5',          reward:500},
+  {id:'close_call',      icon:'\uD83D\uDE05', name:'Close Call',           desc:'Trigger 10 near misses',                      reqKey:'nearMiss10',       reward:100},
+  {id:'close_call_50',   icon:'\uD83D\uDE05', name:'Living Dangerously',   desc:'Trigger 50 near misses',                      reqKey:'nearMiss50',       reward:300},
+  {id:'close_call_100',  icon:'\uD83D\uDE05', name:'Adrenaline Junkie',    desc:'Trigger 100 near misses',                     reqKey:'nearMiss100',      reward:600},
+  {id:'golden',          icon:'\uD83E\uDE99', name:'Golden Hour',          desc:'Spend 60s in Infinite mode',                  reqKey:'infSecs60',        reward:200},
+  {id:'golden_300',      icon:'\uD83E\uDE99', name:'Eternal Flame',        desc:'Spend 5 minutes in Infinite mode total',      reqKey:'infSecs300',       reward:600},
+  {id:'boss_slayer',     icon:'\uD83E\uDD89', name:'Owl Slayer',           desc:'Defeat The Great Owl',                        reqKey:'bossDefeated1',    reward:500},
+  {id:'boss_3',          icon:'\uD83D\uDC09', name:'Boss Hunter',          desc:'Defeat 3 bosses',                             reqKey:'bossDefeated3',    reward:800},
+  {id:'boss_all',        icon:'\uD83D\uDC7D', name:'Apex Predator',        desc:'Defeat all 6 bosses',                         reqKey:'bossDefeated6',    reward:2500},
+  {id:'levels_10',       icon:'\uD83C\uDFAE', name:'Getting Serious',      desc:'Complete 10 levels',                          reqKey:'levelsCleared10',  reward:200},
+  {id:'levels_25',       icon:'\uD83C\uDFAE', name:'Veteran',              desc:'Complete 25 levels',                          reqKey:'levelsCleared25',  reward:500},
+  {id:'levels_all',      icon:'\uD83C\uDFAE', name:'Completionist',        desc:'Complete all 40 levels',                      reqKey:'levelsCleared40',  reward:3000},
+  {id:'stars_10',        icon:'\u2B50',       name:'Star Chaser',          desc:'Earn 10 stars across all levels',             reqKey:'stars10',          reward:200},
+  {id:'stars_50',        icon:'\u2B50',       name:'Star Collector',       desc:'Earn 50 stars across all levels',             reqKey:'stars50',          reward:600},
+  {id:'stars_100',       icon:'\u2B50',       name:'Star Lord',            desc:'Earn 100 stars across all levels',            reqKey:'stars100',         reward:2000},
+  {id:'ghost_5',         icon:'\uD83D\uDC7B', name:'Ghost Rider',          desc:'Use Ghost mode 5 times',                      reqKey:'ghost5',           reward:200},
+  {id:'slowmo_5',        icon:'\u23F1\uFE0F', name:'Time Bender',          desc:'Use Slow-Mo 5 times',                         reqKey:'slowmo5',          reward:200},
+  {id:'powerup_20',      icon:'\u26A1',       name:'Power Player',         desc:'Use 20 powerups total',                       reqKey:'powerups20',       reward:400},
+  {id:'moths_level_20',  icon:'\uD83E\uDD8B', name:'Moth Storm',           desc:'Collect 20 moths in a single level',          reqKey:'mothsLevel20',     reward:300},
+  {id:'moths_level_50',  icon:'\uD83E\uDD8B', name:'Moth Frenzy',          desc:'Collect 50 moths in a single level',          reqKey:'mothsLevel50',     reward:800},
+  {id:'survivor',        icon:'\uD83E\uDDDF', name:'Survivor',             desc:'Die 50 times and keep going',                 reqKey:'deaths50',         reward:300},
+  {id:'galaxy_reach',    icon:'\uD83C\uDF0C', name:'Galaxy Brain',         desc:'Reach the Galaxy Realm',                      reqKey:'worlds5',          reward:750},
+  {id:'three_stars',     icon:'\uD83C\uDF1F', name:'Perfect',              desc:'Get 3 stars on any level',                    reqKey:'threeStars1',      reward:250},
+  {id:'three_stars_10',  icon:'\uD83C\uDF1F', name:'Perfectionist',        desc:'Get 3 stars on 10 levels',                    reqKey:'threeStars10',     reward:1000},
+  {id:'speedrun_e1',     icon:'\uD83D\uDCA8', name:'Speed Demon',          desc:'Complete level 1 without dying',              reqKey:'noDamage1',        reward:100},
+  {id:'moth_100_level',  icon:'\uD83E\uDD8B', name:'Moth Hoarder',         desc:'Have 100 moths at once',                      reqKey:'moths100atOnce',   reward:200},
+  {id:'near_miss_5',     icon:'\uD83D\uDE05', name:'Brushing Death',       desc:'Trigger 5 near misses in one level',          reqKey:'nearMiss5run',     reward:150},
+  {id:'world3_boss',     icon:'\uD83D\uDC0D', name:'Serpent Slayer',       desc:'Defeat The Leviathan',                        reqKey:'bossDefeated2',    reward:800},
+  {id:'world4_boss',     icon:'\u26A1',       name:'Storm Breaker',        desc:'Defeat The Tempest',                          reqKey:'bossDefeated4',    reward:1200},
+  {id:'jj_boss',         icon:'\uD83D\uDEF8', name:'Nope.',                desc:'Defeat Jean Jacket',                          reqKey:'bossDefeated5',    reward:1500},
+  {id:'final_boss',        icon:'\uD83D\uDC7D', name:'Alien Slayer',           desc:'Defeat The Alien — final boss',               reqKey:'bossDefeated6',      reward:5000},
+  // ── BOSS SKIN ACHIEVEMENTS ──
+  {id:'bskin_owl',         icon:'\uD83E\uDD89', name:'The Owl Rises',          desc:'Unlock The Great Owl boss skin',               reqKey:'skin_boss_owl',      reward:500},
+  {id:'bskin_dragon',      icon:'\uD83D\uDC09', name:'Drake Reborn',           desc:'Unlock the Inferno Drake boss skin',           reqKey:'skin_boss_dragon',   reward:800},
+  {id:'bskin_leviathan',   icon:'\uD83D\uDC0D', name:'Serpent\'s Form',        desc:'Unlock The Leviathan boss skin',               reqKey:'skin_boss_leviathan',reward:1000},
+  {id:'bskin_tempest',     icon:'\u26A1',       name:'Born of Storm',          desc:'Unlock The Tempest boss skin',                 reqKey:'skin_boss_tempest',  reward:1200},
+  {id:'bskin_jeanjacket',  icon:'\uD83D\uDEF8', name:'Nope. Nope. Nope.',      desc:'Unlock Jean Jacket boss skin',                 reqKey:'skin_boss_jeanjacket',reward:1500},
+  {id:'bskin_alien',       icon:'\uD83D\uDC7D', name:'Xenomorph',              desc:'Unlock The Alien boss skin',                   reqKey:'skin_boss_alien',    reward:2000},
+  // ── PER-SKIN ACHIEVEMENTS ──
+  {id:'skin_jade',       icon:'\uD83D\uDC9A', name:'Going Green',          desc:'Unlock the Jade skin',                        reqKey:'skin_jade',        reward:50},
+  {id:'skin_crimson',    icon:'\u2764\uFE0F', name:'Seeing Red',           desc:'Unlock the Crimson skin',                     reqKey:'skin_crimson',     reward:50},
+  {id:'skin_cobalt',     icon:'\uD83D\uDC99', name:'True Blue',            desc:'Unlock the Cobalt skin',                      reqKey:'skin_cobalt',      reward:75},
+  {id:'skin_gilded',     icon:'\uD83D\uDCB0', name:'All That Glitters',    desc:'Unlock the Gilded skin',                      reqKey:'skin_gilded',      reward:75},
+  {id:'skin_specter',    icon:'\uD83D\uDC7B', name:'Who You Gonna Call',   desc:'Unlock the Specter skin',                     reqKey:'skin_specter',     reward:100},
+  {id:'skin_obsidian',   icon:'\uD83D\uDC8E', name:'Dark Matter',          desc:'Unlock the Obsidian skin',                    reqKey:'skin_obsidian',    reward:150},
+  {id:'skin_aurora',     icon:'\uD83C\uDF0C', name:'Northern Lights',      desc:'Unlock the Aurora skin',                      reqKey:'skin_aurora',      reward:200},
+  {id:'skin_ruby',       icon:'\uD83D\uDD34', name:'Ruby Red',             desc:'Unlock the Ruby skin',                        reqKey:'skin_ruby',        reward:200},
+  {id:'skin_sapphire',   icon:'\uD83D\uDFE6', name:'Something Blue',       desc:'Unlock the Sapphire skin',                    reqKey:'skin_sapphire',    reward:250},
+  {id:'skin_ember',      icon:'\uD83D\uDD25', name:'Play With Fire',       desc:'Unlock the Ember skin',                       reqKey:'skin_ember',       reward:300},
+  {id:'skin_venom',      icon:'\u2620\uFE0F', name:'Toxic',                desc:'Unlock the Venom skin',                       reqKey:'skin_venom',       reward:300},
+  {id:'skin_void',       icon:'\u2B1B',       name:'Into The Void',        desc:'Unlock the Void Walker skin',                 reqKey:'skin_void',        reward:350},
+  {id:'skin_prism',      icon:'\uD83C\uDF08', name:'Rainbow Road',         desc:'Unlock the Prism skin',                       reqKey:'skin_prism',       reward:400},
+  {id:'skin_copper',     icon:'\uD83E\uDEAC', name:'Old Copper',           desc:'Unlock the Copper skin',                      reqKey:'skin_copper',      reward:500},
+  {id:'skin_silver',     icon:'\uD83E\uDD08', name:'Silver Lining',        desc:'Unlock the Silver skin',                      reqKey:'skin_silver',      reward:600},
+  {id:'skin_neon',       icon:'\uD83D\uDCA1', name:'Neon Lights',          desc:'Unlock the Neon skin',                        reqKey:'skin_neon',        reward:800},
+  {id:'skin_arctic',     icon:'\uD83E\uDDCA', name:'Ice Cold',             desc:'Unlock the Arctic skin',                      reqKey:'skin_arctic',      reward:1000},
+  {id:'skin_volcanic',   icon:'\uD83C\uDF0B', name:'Born From Fire',       desc:'Unlock the Volcanic skin',                    reqKey:'skin_volcanic',    reward:1200},
+  {id:'skin_nebula',     icon:'\uD83C\uDF0C', name:'Stardust',             desc:'Unlock the Nebula skin',                      reqKey:'skin_nebula',      reward:1400},
+  {id:'skin_toxic',      icon:'\uD83E\uDDA0', name:'Hazmat',               desc:'Unlock the Toxic skin',                       reqKey:'skin_toxic',       reward:1600},
+  {id:'skin_storm',      icon:'\u26A1',       name:'Stormborn',            desc:'Unlock the Storm skin',                       reqKey:'skin_storm',       reward:1800},
+  {id:'skin_celestial',  icon:'\uD83D\uDCAB', name:'Celestial Being',      desc:'Unlock the Celestial skin',                   reqKey:'skin_celestial',   reward:2000},
+  {id:'skin_phoenix',    icon:'\uD83D\uDD25', name:'Rise From Ashes',      desc:'Unlock the Phoenix skin',                     reqKey:'skin_phoenix',     reward:3000},
+  {id:'skin_ocean',      icon:'\uD83C\uDF0A', name:'Deep Blue',            desc:'Unlock the Ocean Deep skin',                  reqKey:'skin_ocean',       reward:4000},
+  {id:'skin_galaxy',     icon:'\uD83C\uDF0C', name:'Galactic',             desc:'Unlock the Galaxy skin',                      reqKey:'skin_galaxy',      reward:5000},
+  {id:'skin_legendary',  icon:'\uD83D\uDC51', name:'Legendary',            desc:'Unlock the Legendary skin',                   reqKey:'skin_legendary',   reward:10000},
+  {id:'skin_blossom',    icon:'\uD83C\uDF38', name:'In Bloom',             desc:'Unlock the Blossom skin',                     reqKey:'skin_blossom',     reward:50},
+  {id:'skin_midnight',   icon:'\uD83C\uDF19', name:'Midnight Hour',        desc:'Unlock the Midnight skin',                    reqKey:'skin_midnight',    reward:75},
+  {id:'skin_sunset',     icon:'\uD83C\uDF05', name:'Golden Hour',          desc:'Unlock the Sunset skin',                      reqKey:'skin_sunset',      reward:150},
+  {id:'skin_glacial',    icon:'\uD83C\uDFF4', name:'Permafrost',           desc:'Unlock the Glacial skin',                     reqKey:'skin_glacial',     reward:400},
+  {id:'skin_shadow',     icon:'\uD83D\uDDA4', name:'Shadow Play',          desc:'Unlock the Shadow skin',                      reqKey:'skin_shadow',      reward:750}
 ];
 
 function checkAchReq(reqKey){
   if(reqKey==='levelsCleared1') return totalLevelsCleared>=1;
+  if(reqKey==='levelsCleared10') return totalLevelsCleared>=10;
+  if(reqKey==='levelsCleared25') return totalLevelsCleared>=25;
+  if(reqKey==='levelsCleared40') return totalLevelsCleared>=40;
   if(reqKey==='moths100') return lifetimeMoths>=100;
   if(reqKey==='moths1000') return lifetimeMoths>=1000;
   if(reqKey==='moths10000') return lifetimeMoths>=10000;
+  if(reqKey==='moths50000') return lifetimeMoths>=50000;
+  if(reqKey==='moths100atOnce') return mothsTotal>=100;
   if(reqKey==='noDamage1') return bestNoDamageLevels>=1;
+  if(reqKey==='noDamage5') return bestNoDamageLevels>=5;
+  if(reqKey==='noDamageStreak3') return bestNoDamageStreak>=3;
+  if(reqKey==='noDamageStreak5') return bestNoDamageStreak>=5;
   if(reqKey==='skins5') return ownedSkins.length>=5;
   if(reqKey==='skins10') return ownedSkins.length>=10;
+  if(reqKey==='skinsAll') return ownedSkins.length>=28;
   if(reqKey==='infinite1') return totalInfiniteUses>=1;
+  if(reqKey==='infinite10') return totalInfiniteUses>=10;
   if(reqKey==='score100') return bestScore>=100;
   if(reqKey==='score500') return bestScore>=500;
   if(reqKey==='score1000') return bestScore>=1000;
+  if(reqKey==='score5000') return bestScore>=5000;
   if(reqKey==='worlds2') return worldsVisited>=2;
   if(reqKey==='worlds5') return worldsVisited>=5;
   if(reqKey==='nearMiss10') return totalNearMisses>=10;
+  if(reqKey==='nearMiss50') return totalNearMisses>=50;
+  if(reqKey==='nearMiss100') return totalNearMisses>=100;
+  if(reqKey==='nearMiss5run') return totalNearMisses>=5;
   if(reqKey==='infSecs60') return totalInfiniteSeconds>=60;
+  if(reqKey==='infSecs300') return totalInfiniteSeconds>=300;
   if(reqKey==='bossDefeated1') return totalBossDefeats>=1;
+  if(reqKey==='bossDefeated2') return totalBossDefeats>=2;
+  if(reqKey==='bossDefeated3') return totalBossDefeats>=3;
+  if(reqKey==='bossDefeated4') return totalBossDefeats>=4;
+  if(reqKey==='bossDefeated5') return totalBossDefeats>=5;
+  if(reqKey==='bossDefeated6') return totalBossDefeats>=6;
+  if(reqKey==='stars10') return totalStars>=10;
+  if(reqKey==='stars50') return totalStars>=50;
+  if(reqKey==='stars100') return totalStars>=100;
+  if(reqKey==='threeStars1') return totalStars>=3;
+  if(reqKey==='threeStars10') return bestNoDamageLevels>=10;
+  if(reqKey==='ghost5') return totalGhostUses>=5;
+  if(reqKey==='slowmo5') return totalSlowMoUses>=5;
+  if(reqKey==='powerups20') return totalPowerupsUsed>=20;
+  if(reqKey==='mothsLevel20') return mothsInOneLevelBest>=20;
+  if(reqKey==='mothsLevel50') return mothsInOneLevelBest>=50;
+  if(reqKey==='deaths50') return totalDeaths>=50;
+  // Per-skin checks
+  if(reqKey.indexOf('skin_')===0){var sid=reqKey.slice(5);return ownedSkins.indexOf(sid)>=0;}
   return false;
 }
 var unlockedAchievements={};
 var lifetimeMoths=0, totalLevelsCleared=0, bestNoDamageLevels=0;
 var totalInfiniteUses=0, bestScore=0, worldsVisited=0;
 var totalNearMisses=0, totalInfiniteSeconds=0, totalBossDefeats=0;
+var totalDeaths=0, totalPowerupsUsed=0, totalStars=0;
+var noDamageLevelsStreak=0, bestNoDamageStreak=0;
+var mothsInOneLevelBest=0, currentRunMoths=0;
+var totalGhostUses=0, totalSlowMoUses=0;
 var currentRunNoDamage=true;
 var currentRunMoths=0; // moths collected this level segment
 
@@ -2842,6 +2954,23 @@ function showBossVictory(){
   },120);
   setTimeout(function(){clearInterval(victoryInterval);},3000);
   totalBossDefeats++;
+  // Track which boss was defeated and unlock its skin
+  var skinId='boss_'+bType;
+  if(defeatedBosses.indexOf(bType)<0) defeatedBosses.push(bType);
+  if(ownedSkins.indexOf(skinId)<0){
+    ownedSkins.push(skinId);
+    setTimeout(function(){
+      showToast('\uD83D\uDC51 BOSS SKIN UNLOCKED: '+
+        (bType==='owl'?'The Great Owl':bType==='dragon'?'Inferno Drake':
+         bType==='leviathan'?'The Leviathan':bType==='tempest'?'The Tempest':
+         bType==='jeanjacket'?'Jean Jacket':'The Alien')+'!');
+    },3500);
+  }
+  // Check if all 6 bosses defeated — unlock NG+
+  if(defeatedBosses.length>=6&&!ngPlusUnlocked){
+    ngPlusUnlocked=true;
+    setTimeout(function(){showToast('\uD83C\uDF1F NEW GAME+ UNLOCKED! Play as any boss!');},5000);
+  }
   checkAchievements();
   saveGame();
 }
@@ -2980,7 +3109,26 @@ var SKINS=[
    eye:'#ffffff', leg:'#44aacc', thorax:['#bbeeFF','#66bbdd','#082030']},
   {id:'shadow',   name:'Shadow',     moths:2500,
    body:['#110011','#050008','#000000'], wing:['#550055','#330033','#0a000a'],
-   eye:'#ff00aa', leg:'#330033', thorax:['#1a001a','#0d000d','#000000'], fx:'void'}
+   eye:'#ff00aa', leg:'#330033', thorax:['#1a001a','#0d000d','#000000'], fx:'void'},
+  // ── BOSS SKINS — unlocked by defeating each boss ──
+  {id:'boss_owl',       name:'The Great Owl',  moths:0, bossReward:true, bossId:'owl',
+   body:['#8B5E2A','#5C3A10','#1a0a00'], wing:['#D4A855','#8B6020','#3a1a00'],
+   eye:'#FFD700', leg:'#5C3A10', thorax:['#C4882A','#7a4a18','#1a0a00'], fx:'feathers'},
+  {id:'boss_dragon',    name:'Inferno Drake',  moths:0, bossReward:true, bossId:'dragon',
+   body:['#8B0000','#440000','#0a0000'], wing:['#FF4400','#CC1100','#440000'],
+   eye:'#FF8800', leg:'#440000', thorax:['#CC2200','#660000','#0a0000'], fx:'fire'},
+  {id:'boss_leviathan', name:'The Leviathan', moths:0, bossReward:true, bossId:'leviathan',
+   body:['#003344','#001a22','#000810'], wing:['#00FFCC','#00AAAA','#003333'],
+   eye:'#00FFCC', leg:'#001a22', thorax:['#005566','#002233','#000810'], fx:'abyss'},
+  {id:'boss_tempest',   name:'The Tempest',   moths:0, bossReward:true, bossId:'tempest',
+   body:['#202040','#101020','#050510'], wing:['#C0D0FF','#8090CC','#101030'],
+   eye:'#FFFFFF', leg:'#101020', thorax:['#303060','#181838','#050510'], fx:'lightning'},
+  {id:'boss_jeanjacket',name:'Jean Jacket',   moths:0, bossReward:true, bossId:'jeanjacket',
+   body:['#3D2E1A','#221A0E','#0A0804'], wing:['#FFD080','#CC9940','#664820'],
+   eye:'#FFD080', leg:'#221A0E', thorax:['#5C4422','#3A2A14','#0A0804'], fx:'shimmer'},
+  {id:'boss_alien',     name:'The Alien',     moths:0, bossReward:true, bossId:'grey',
+   body:['#0A1A08','#050E04','#000200'], wing:['#00FF60','#00AA40','#003310'],
+   eye:'#00FF80', leg:'#050E04', thorax:['#0E2208','#081408','#000200'], fx:'toxic'}
 ];
 
 function getSkin(){ for(var i=0;i<SKINS.length;i++) if(SKINS[i].id===activeSkin) return SKINS[i]; return SKINS[0]; }
@@ -3060,7 +3208,7 @@ var BIOMES=[
  {name:'Enchanted Forest',skyTop:'#000a04',skyMid:'#001a08',skyBot:'#003010',moonCol:'#80ffb0',moonShadow:'#000a04',hasSun:false,starCol:'120,255,160',auroraCol:'40,255,100',cloudCol:'20,120,50',mtnFar:'#002010',mtnNear0:'#0a3018',mtnNear1:'#062010',iceCap:'140,255,180',groundTop:'#0a3010',groundBot:'#041a08',glowR:40,glowG:255,glowB:100,ruinCol:'#0a2810',ruinWin:'80,255,120',treeCol:['#0a1c00','#123000','#081400'],hasMoving:true,hasFrogs:false,hasForest:true,bgStyle:'enchanted',obstStyle:'branch',groundStyle:'magic',fogCol:'40,200,80'},
  {name:'Frog Swamp',skyTop:'#010a00',skyMid:'#021200',skyBot:'#041800',moonCol:'#90ff60',moonShadow:'#010a00',hasSun:false,starCol:'140,255,80',auroraCol:'60,200,20',cloudCol:'30,80,10',mtnFar:'#031200',mtnNear0:'#162200',mtnNear1:'#0e1800',iceCap:'160,255,100',groundTop:'#162200',groundBot:'#0a1600',glowR:60,glowG:180,glowB:20,ruinCol:'#102000',ruinWin:'100,200,40',treeCol:['#162200','#1e3000','#101800'],hasMoving:true,hasFrogs:true,hasForest:false,bgStyle:'swamp',obstStyle:'swamp',groundStyle:'mud',fogCol:'50,140,10'},
  {name:'Storm Front',skyTop:'#060610',skyMid:'#0c0c1a',skyBot:'#101028',moonCol:'#c0c8ff',moonShadow:'#060610',hasSun:false,starCol:'160,170,255',auroraCol:'100,120,255',cloudCol:'50,55,100',mtnFar:'#0c0c20',mtnNear0:'#181828',mtnNear1:'#101018',iceCap:'200,210,255',groundTop:'#141420',groundBot:'#0a0a14',glowR:100,glowG:110,glowB:255,ruinCol:'#181828',ruinWin:'160,180,255',treeCol:['#101018','#181828','#0c0c18'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'storm',obstStyle:'storm',groundStyle:'rain',fogCol:'80,90,200'},
- {name:'Celestial Ruins',skyTop:'#000005',skyMid:'#080018',skyBot:'#200830',moonCol:'#ffd0e0',moonShadow:'#080010',hasSun:false,starCol:'255,210,230',auroraCol:'220,120,200',cloudCol:'160,80,140',mtnFar:'#1a0828',mtnNear0:'#2a0838',mtnNear1:'#180620',iceCap:'255,180,220',groundTop:'#200828',groundBot:'#100418',glowR:220,glowG:80,glowB:180,ruinCol:'#280830',ruinWin:'220,100,200',treeCol:['#1a0628','#240830','#100420'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'celestial',obstStyle:'pillar',groundStyle:'starfield',fogCol:'180,60,160'},
+ {name:'Firestorm',skyTop:'#050000',skyMid:'#120200',skyBot:'#280400',moonCol:'#ff6622',moonShadow:'#050000',hasSun:false,starCol:'255,120,40',auroraCol:'255,80,0',cloudCol:'120,20,0',mtnFar:'#1a0200',mtnNear0:'#280400',mtnNear1:'#180200',iceCap:'255,100,20',groundTop:'#200400',groundBot:'#100100',glowR:255,glowG:60,glowB:0,ruinCol:'#1a0200',ruinWin:'255,80,10',treeCol:['#1a0200','#220300','#100100'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'firestorm',obstStyle:'lava',groundStyle:'lava',fogCol:'220,40,0'},
  {name:'City Skyline',skyTop:'#000814',skyMid:'#001428',skyBot:'#002040',moonCol:'#ddeeff',moonShadow:'#000814',hasSun:false,starCol:'200,220,255',auroraCol:'60,120,200',cloudCol:'30,50,80',mtnFar:'#001028',mtnNear0:'#001a38',mtnNear1:'#000c20',iceCap:'180,220,255',groundTop:'#0a0c14',groundBot:'#050608',glowR:60,glowG:120,glowB:255,ruinCol:'#0c1428',ruinWin:'80,180,255',treeCol:['#0a1020','#081828','#060e18'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'city',obstStyle:'building',groundStyle:'asphalt',fogCol:'40,80,160'},
  {name:'Burning City',skyTop:'#100200',skyMid:'#280800',skyBot:'#501400',moonCol:'#ff8844',moonShadow:'#100200',hasSun:false,starCol:'255,150,80',auroraCol:'220,60,10',cloudCol:'100,30,10',mtnFar:'#200400',mtnNear0:'#380800',mtnNear1:'#200400',iceCap:'255,120,40',groundTop:'#1a0400',groundBot:'#0c0200',glowR:255,glowG:80,glowB:10,ruinCol:'#280600',ruinWin:'255,100,20',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'burningcity',obstStyle:'rubble',groundStyle:'ash',fogCol:'200,50,10'},
  {name:'Desert Sands',skyTop:'#1a0a00',skyMid:'#4a2000',skyBot:'#c05010',moonCol:'#fff4c0',moonShadow:'#1a0a00',hasSun:true,sunCol:'#ffee80',sunGlowCol:'255,230,100',starCol:'255,220,150',auroraCol:'255,160,60',cloudCol:'200,150,80',mtnFar:'#8a4820',mtnNear0:'#c06820',mtnNear1:'#8a4810',iceCap:'255,240,180',groundTop:'#d89040',groundBot:'#a06020',glowR:255,glowG:160,glowB:40,ruinCol:'#b07030',ruinWin:'255,200,80',treeCol:['#4a2a08','#603810','#382008'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'desert',obstStyle:'sandstone',groundStyle:'sand',fogCol:'200,140,40'},
@@ -3145,7 +3293,12 @@ function saveGame(){
       bestNoDamageLevels:bestNoDamageLevels, totalInfiniteUses:totalInfiniteUses,
       bestScore:bestScore, worldsVisited:worldsVisited,
       totalNearMisses:totalNearMisses, totalInfiniteSeconds:totalInfiniteSeconds,
-      totalBossDefeats:totalBossDefeats, tutorialShown:tutorialShown
+      totalBossDefeats:totalBossDefeats, tutorialShown:tutorialShown,
+      totalDeaths:totalDeaths, totalPowerupsUsed:totalPowerupsUsed,
+      totalStars:totalStars, bestNoDamageStreak:bestNoDamageStreak,
+      mothsInOneLevelBest:mothsInOneLevelBest, totalGhostUses:totalGhostUses,
+      totalSlowMoUses:totalSlowMoUses, defeatedBosses:defeatedBosses,
+      ngPlusUnlocked:ngPlusUnlocked
     };
     localStorage.setItem('dragonflySave',JSON.stringify(data));
   }catch(e){}
@@ -3177,6 +3330,15 @@ function loadGame(){
     if(data.totalInfiniteSeconds) totalInfiniteSeconds=data.totalInfiniteSeconds;
     if(data.totalBossDefeats) totalBossDefeats=data.totalBossDefeats;
     if(data.tutorialShown) tutorialShown=data.tutorialShown;
+    if(data.totalDeaths) totalDeaths=data.totalDeaths;
+    if(data.totalPowerupsUsed) totalPowerupsUsed=data.totalPowerupsUsed;
+    if(data.totalStars) totalStars=data.totalStars;
+    if(data.bestNoDamageStreak) bestNoDamageStreak=data.bestNoDamageStreak;
+    if(data.mothsInOneLevelBest) mothsInOneLevelBest=data.mothsInOneLevelBest;
+    if(data.totalGhostUses) totalGhostUses=data.totalGhostUses;
+    if(data.totalSlowMoUses) totalSlowMoUses=data.totalSlowMoUses;
+    if(data.defeatedBosses) defeatedBosses=data.defeatedBosses;
+    if(data.ngPlusUnlocked) ngPlusUnlocked=data.ngPlusUnlocked;
   }catch(e){}
 }
 
@@ -3216,9 +3378,8 @@ function resetGame(){
   TAP_COOLDOWN=0;
   updateLivesUI(); updateLevelUI(); initBg();
   farOff=0; nearOff=0; ruinOff=0;
-  skinTransformTimer=SKIN_TRANSFORM_DURATION;
-  starlightParticles=[];
-  currentRunNoDamage=true; currentRunMoths=0;
+  skinTransformTimer=getSkin().bossReward?300:SKIN_TRANSFORM_DURATION;
+  if(getSkin().bossReward) bossTransformTimer=BOSS_TRANSFORM_DURATION;
   boss=null; bossActive=false; bossDefeated=false; bossFeathers=[];
   bossEntryTimer=0; bossPhase=0;
   var bh=document.getElementById('bossHud');if(bh)bh.classList.remove('show');
@@ -3244,10 +3405,7 @@ function startNextLevel(){
   debris=[]; steamParticles=[]; lightningBolts=[]; transParticles=[];
   document.getElementById('infiniteHud').classList.remove('show');
   initBg();
-  skinTransformTimer=SKIN_TRANSFORM_DURATION;
-  starlightParticles=[];
-  state='playing';
-  updateLevelUI();
+  skinTransformTimer=getSkin().bossReward?300:SKIN_TRANSFORM_DURATION;
 }
 
 function updateLivesUI(){
@@ -3939,34 +4097,89 @@ function drawFarLayer(mfC,gameH){
     ctx.globalAlpha=1;
 
   } else if(style==='volcano'||style==='burningcity'){
-    ctx.fillStyle='#200400';
-    ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(W*0.3,gameH);
-    ctx.lineTo(W*0.5,gameH*0.22);ctx.lineTo(W*0.7,gameH);ctx.lineTo(W,gameH);
-    ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
-    // Lava glow at crater
-    var vg=ctx.createRadialGradient(W*0.5,gameH*0.22,4,W*0.5,gameH*0.22,W*0.15);
-    vg.addColorStop(0,'rgba(255,100,10,0.6)'); vg.addColorStop(1,'rgba(255,50,0,0)');
-    ctx.fillStyle=vg;ctx.beginPath();ctx.arc(W*0.5,gameH*0.22,W*0.15,0,Math.PI*2);ctx.fill();
-    // Lava rivers down slopes
-    ctx.globalAlpha=0.35;
-    ctx.strokeStyle='#ff4400';ctx.lineWidth=3;
-    ctx.beginPath();ctx.moveTo(W*0.5,gameH*0.22);ctx.bezierCurveTo(W*0.45,gameH*0.4,W*0.38,gameH*0.6,W*0.35,gameH);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W*0.5,gameH*0.22);ctx.bezierCurveTo(W*0.55,gameH*0.4,W*0.62,gameH*0.6,W*0.65,gameH);ctx.stroke();
+    // ── SCENIC VOLCANIC LANDSCAPE — no sharp triangles ──
+    // 1. Distant lava-lit horizon glow
+    ctx.globalAlpha=0.5;
+    var horizG=ctx.createLinearGradient(0,gameH*0.4,0,gameH*0.7);
+    horizG.addColorStop(0,'rgba(255,60,0,0)');
+    horizG.addColorStop(0.5,'rgba(200,30,0,0.3)');
+    horizG.addColorStop(1,'rgba(255,80,0,0)');
+    ctx.fillStyle=horizG;ctx.fillRect(0,gameH*0.4,W,gameH*0.3);
+
+    // 2. Rounded volcanic mountains — broad smooth hills, not triangles
+    ctx.globalAlpha=0.7;
+    var vm1=ctx.createLinearGradient(0,gameH*0.25,0,gameH);
+    vm1.addColorStop(0,'#2a0600');vm1.addColorStop(1,'#180300');
+    ctx.fillStyle=vm1;
+    // Far left volcano — wide rounded dome
+    ctx.beginPath();
+    ctx.moveTo(0,gameH);
+    ctx.bezierCurveTo(W*0.05,gameH,W*0.1,gameH*0.65,W*0.18,gameH*0.42);
+    ctx.bezierCurveTo(W*0.22,gameH*0.32,W*0.28,gameH*0.28,W*0.34,gameH*0.32);
+    ctx.bezierCurveTo(W*0.42,gameH*0.38,W*0.46,gameH*0.55,W*0.5,gameH);
+    ctx.closePath();ctx.fill();
+    // Right volcano — another rounded dome
+    ctx.fillStyle='#220500';
+    ctx.beginPath();
+    ctx.moveTo(W*0.42,gameH);
+    ctx.bezierCurveTo(W*0.5,gameH,W*0.55,gameH*0.6,W*0.62,gameH*0.38);
+    ctx.bezierCurveTo(W*0.66,gameH*0.28,W*0.74,gameH*0.26,W*0.8,gameH*0.32);
+    ctx.bezierCurveTo(W*0.88,gameH*0.4,W*0.94,gameH*0.6,W,gameH*0.65);
+    ctx.lineTo(W,gameH);
+    ctx.closePath();ctx.fill();
+
+    // 3. Glowing calderas at volcano tops — rounded craters not tips
+    var calderas=[{x:W*0.28,y:gameH*0.30},{x:W*0.72,y:gameH*0.29}];
+    calderas.forEach(function(c){
+      ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.04)*0.15;
+      var cg=ctx.createRadialGradient(c.x,c.y,4,c.x,c.y,W*0.1);
+      cg.addColorStop(0,'rgba(255,120,10,0.8)');
+      cg.addColorStop(0.4,'rgba(255,50,0,0.4)');
+      cg.addColorStop(1,'rgba(200,20,0,0)');
+      ctx.fillStyle=cg;ctx.beginPath();ctx.arc(c.x,c.y,W*0.1,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+      // Lava rivers — curved organic flows
+      ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle='#ff5500';ctx.lineWidth=4;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(c.x,c.y);
+      ctx.bezierCurveTo(c.x-W*0.04,c.y+gameH*0.12,c.x-W*0.06,c.y+gameH*0.25,c.x-W*0.03,gameH);
+      ctx.stroke();
+      ctx.beginPath();ctx.moveTo(c.x,c.y);
+      ctx.bezierCurveTo(c.x+W*0.04,c.y+gameH*0.1,c.x+W*0.07,c.y+gameH*0.22,c.x+W*0.04,gameH);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // 4. Ash cloud puffs — rolling dark billows
+    ctx.globalAlpha=0.25;
+    var ashCols=['#1a0400','#280800','#200500'];
+    for(var ai=0;ai<5;ai++){
+      var ax=((ai*W/4+farOff*0.05)%W+W)%W;
+      var ay=gameH*(0.15+Math.sin(ai*1.3)*0.08);
+      ctx.fillStyle=ashCols[ai%3];
+      ctx.beginPath();ctx.ellipse(ax,ay,W*0.12+ai*8,gameH*0.06+ai*3,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(ax+W*0.06,ay-gameH*0.03,W*0.08,gameH*0.04,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
 
   } else if(style==='desert'){
     ctx.globalAlpha=0.5;
-    // Sand dunes
+    // Rolling sand dunes
     ctx.fillStyle='#6a3010';
     ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(0,gameH*0.65);
     ctx.bezierCurveTo(W*0.2,gameH*0.45,W*0.4,gameH*0.58,W*0.6,gameH*0.48);
     ctx.bezierCurveTo(W*0.75,gameH*0.4,W*0.88,gameH*0.52,W,gameH*0.5);
     ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
-    // Pyramid
-    ctx.globalAlpha=0.4;
-    ctx.fillStyle='#8a5020';
-    ctx.beginPath();ctx.moveTo(W*0.72,gameH);ctx.lineTo(W*0.83,gameH*0.35);ctx.lineTo(W*0.94,gameH);ctx.closePath();ctx.fill();
+    // Rounded desert mesas — flat-topped, no triangles
+    ctx.globalAlpha=0.4;ctx.fillStyle='#8a5020';
+    ctx.beginPath();ctx.moveTo(W*0.65,gameH);ctx.lineTo(W*0.65,gameH*0.55);
+    ctx.bezierCurveTo(W*0.66,gameH*0.42,W*0.7,gameH*0.36,W*0.75,gameH*0.36);
+    ctx.bezierCurveTo(W*0.82,gameH*0.36,W*0.86,gameH*0.42,W*0.87,gameH*0.55);
+    ctx.lineTo(W*0.87,gameH);ctx.closePath();ctx.fill();
     ctx.fillStyle='#6a3808';
-    ctx.beginPath();ctx.moveTo(W*0.83,gameH*0.35);ctx.lineTo(W*0.89,gameH);ctx.lineTo(W*0.94,gameH);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(W*0.1,gameH);ctx.lineTo(W*0.1,gameH*0.6);
+    ctx.bezierCurveTo(W*0.11,gameH*0.5,W*0.14,gameH*0.44,W*0.18,gameH*0.44);
+    ctx.bezierCurveTo(W*0.22,gameH*0.44,W*0.25,gameH*0.5,W*0.26,gameH*0.6);
+    ctx.lineTo(W*0.26,gameH);ctx.closePath();ctx.fill();
 
   } else if(style==='beach'){
     ctx.globalAlpha=0.45;
@@ -4010,11 +4223,41 @@ function drawFarLayer(mfC,gameH){
 
   } else if(style==='city'||style==='burningcity'){
     ctx.globalAlpha=0.4;
+    // Burning city — ruined building silhouettes with fire glow
+    var bcols=style==='burningcity'?'#1a0200':'#0a1428';
     for(var bi=0;bi<bgMtnFar.length;bi++){
       var m=bgMtnFar[bi]; var rx=((m.x-farOff*0.3)%W+W*2)%W;
       var bh2=m.h*0.8; var bw2=m.w*0.7;
-      drawBgBuilding(rx,gameH,bh2,bw2,'#0a1428','rgba(80,180,255,0.3)');
+      drawBgBuilding(rx,gameH,bh2,bw2,bcols,style==='burningcity'?'rgba(255,80,10,0.35)':'rgba(80,180,255,0.3)');
     }
+    if(style==='burningcity'){
+      // Fire glow from behind buildings
+      for(var fi2=0;fi2<3;fi2++){
+        var fx2=W*(0.2+fi2*0.3);
+        ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.06+fi2)*0.1;
+        var fg=ctx.createRadialGradient(fx2,gameH*0.5,10,fx2,gameH*0.5,W*0.15);
+        fg.addColorStop(0,'rgba(255,120,0,0.8)');fg.addColorStop(1,'rgba(255,40,0,0)');
+        ctx.fillStyle=fg;ctx.beginPath();ctx.arc(fx2,gameH*0.5,W*0.15,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+      }
+    }
+  } else if(style==='firestorm'){
+    // Firestorm — massive swirling fire wall in distance, no solid shapes
+    ctx.globalAlpha=0.5;
+    for(var fsi=0;fsi<5;fsi++){
+      var fsx=W*(0.1+fsi*0.2);
+      ctx.save();ctx.globalAlpha=0.15+Math.sin(frameN*0.03+fsi*1.2)*0.08;
+      var fsG=ctx.createRadialGradient(fsx,gameH*0.6,20,fsx,gameH*0.4,W*0.25);
+      fsG.addColorStop(0,'rgba(255,140,0,0.9)');fsG.addColorStop(0.4,'rgba(255,40,0,0.5)');fsG.addColorStop(1,'rgba(180,10,0,0)');
+      ctx.fillStyle=fsG;ctx.beginPath();ctx.ellipse(fsx,gameH*0.5,W*0.18,gameH*0.35,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // Distant fire horizon line
+    ctx.save();ctx.globalAlpha=0.4;
+    var fhG=ctx.createLinearGradient(0,gameH*0.55,0,gameH*0.75);
+    fhG.addColorStop(0,'rgba(255,80,0,0.8)');fhG.addColorStop(1,'rgba(180,20,0,0)');
+    ctx.fillStyle=fhG;ctx.fillRect(0,gameH*0.55,W,gameH*0.2);
+    ctx.restore();
 
   } else if(style==='storm'){
     ctx.globalAlpha=0.4;
@@ -4320,21 +4563,23 @@ function drawNearLayer(mn0,gameH){
     ctx.globalAlpha=0.95;
     for(var smi=0;smi<9;smi++){
       var smx=((smi*W/7+nearOff*0.55)%W+W)%W;
-      var smh=gameH*0.14+Math.sin(smi*2.1)*gameH*0.07;
-      var smw=30+Math.sin(smi*1.4)*14;
+      var smh=gameH*0.22+Math.sin(smi*2.1)*gameH*0.08;
+      var smw=50+Math.sin(smi*1.4)*18;
       var smG=ctx.createLinearGradient(smx,gameH-smh,smx,gameH);
-      smG.addColorStop(0,'#220200');smG.addColorStop(0.6,'#180100');smG.addColorStop(1,'#0a0000');
+      smG.addColorStop(0,'#2a0400');smG.addColorStop(0.6,'#180100');smG.addColorStop(1,'#0a0000');
       ctx.fillStyle=smG;
+      // Rounded rocky pillar — flat or slightly domed top, no sharp tip
       ctx.beginPath();
       ctx.moveTo(smx-smw*0.5,gameH);
-      ctx.bezierCurveTo(smx-smw*0.55,gameH-smh*0.4,smx-smw*0.2,gameH-smh*0.9,smx,gameH-smh);
-      ctx.bezierCurveTo(smx+smw*0.2,gameH-smh*0.9,smx+smw*0.55,gameH-smh*0.4,smx+smw*0.5,gameH);
+      ctx.bezierCurveTo(smx-smw*0.5,gameH-smh*0.5,smx-smw*0.35,gameH-smh*0.85,smx-smw*0.2,gameH-smh*0.95);
+      ctx.bezierCurveTo(smx-smw*0.08,gameH-smh,smx+smw*0.08,gameH-smh,smx+smw*0.2,gameH-smh*0.95);
+      ctx.bezierCurveTo(smx+smw*0.35,gameH-smh*0.85,smx+smw*0.5,gameH-smh*0.5,smx+smw*0.5,gameH);
       ctx.closePath();ctx.fill();
-      // Orange lava glow at tip
-      ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.05+smi*1.1)*0.25;
-      var stg2=ctx.createRadialGradient(smx,gameH-smh,0,smx,gameH-smh,18);
-      stg2.addColorStop(0,'rgba(255,180,20,1)');stg2.addColorStop(0.4,'rgba(255,70,0,0.6)');stg2.addColorStop(1,'rgba(200,20,0,0)');
-      ctx.fillStyle=stg2;ctx.beginPath();ctx.arc(smx,gameH-smh,18,0,Math.PI*2);ctx.fill();
+      // Lava glow pooling at base — not at tip
+      ctx.save();ctx.globalAlpha=0.35+Math.sin(frameN*0.05+smi*1.1)*0.15;
+      var stg2=ctx.createRadialGradient(smx,gameH,0,smx,gameH,smw*0.6);
+      stg2.addColorStop(0,'rgba(255,100,10,0.7)');stg2.addColorStop(0.5,'rgba(200,40,0,0.3)');stg2.addColorStop(1,'rgba(180,20,0,0)');
+      ctx.fillStyle=stg2;ctx.beginPath();ctx.ellipse(smx,gameH,smw*0.5,smw*0.25,0,0,Math.PI*2);ctx.fill();
       ctx.restore();
     }
     // Lava river flowing along ground
@@ -4358,23 +4603,32 @@ function drawNearLayer(mn0,gameH){
     ctx.globalAlpha=1;
 
   } else if(style==='volcano'||style==='burningcity'){
+    // Rounded rocky outcroppings — no sharp mountains
+    ctx.globalAlpha=0.7;
     for(var i=0;i<bgMtnNear.length;i++){
       var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
-      drawBgMountain(rx,gameH,m.h,m.w,'#380800');
-    }
-    // Lava flows near ground
-    ctx.globalAlpha=0.4;
-    ctx.strokeStyle='#ff4400';ctx.lineWidth=4;
-    for(var lvi=0;lvi<3;lvi++){
-      var lvx=(lvi*W/2.5+nearOff*0.5)%W;
-      ctx.beginPath();ctx.moveTo(lvx,gameH*0.5);ctx.bezierCurveTo(lvx-10,gameH*0.65,lvx+8,gameH*0.8,lvx,gameH);ctx.stroke();
+      var rh=m.h*0.7, rw=m.w*1.2;
+      var rmG=ctx.createLinearGradient(rx,gameH-rh,rx,gameH);
+      rmG.addColorStop(0,'#300600');rmG.addColorStop(1,'#180200');
+      ctx.fillStyle=rmG;
+      ctx.beginPath();
+      ctx.moveTo(rx-rw*0.5,gameH);
+      ctx.bezierCurveTo(rx-rw*0.5,gameH-rh*0.4,rx-rw*0.3,gameH-rh*0.85,rx-rw*0.1,gameH-rh);
+      ctx.bezierCurveTo(rx+rw*0.1,gameH-rh,rx+rw*0.3,gameH-rh*0.85,rx+rw*0.5,gameH-rh*0.4);
+      ctx.lineTo(rx+rw*0.5,gameH);ctx.closePath();ctx.fill();
     }
     ctx.globalAlpha=1;
 
   } else if(style==='desert'){
+    // Rounded rock formations — no sharp mountain triangles
     for(var i=0;i<bgMtnNear.length;i++){
       var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
-      drawBgMountain(rx,gameH,m.h*0.6,m.w,'#8a4818');
+      var rh2=m.h*0.55, rw2=m.w*1.1;
+      ctx.globalAlpha=0.6;ctx.fillStyle='#8a4818';
+      ctx.beginPath();ctx.moveTo(rx-rw2*0.5,gameH);ctx.lineTo(rx-rw2*0.5,gameH-rh2*0.5);
+      ctx.bezierCurveTo(rx-rw2*0.4,gameH-rh2*0.9,rx-rw2*0.1,gameH-rh2,rx+rw2*0.1,gameH-rh2);
+      ctx.bezierCurveTo(rx+rw2*0.4,gameH-rh2*0.9,rx+rw2*0.5,gameH-rh2*0.5,rx+rw2*0.5,gameH);
+      ctx.closePath();ctx.fill();
     }
     // Cactus silhouettes
     for(var ci3=0;ci3<4;ci3++){
@@ -4387,6 +4641,24 @@ function drawNearLayer(mn0,gameH){
       ctx.fillRect(cax-18,gameH-cah*0.65,8,cah*0.25);
       ctx.fillRect(cax+6,gameH-cah*0.55,8,cah*0.2);
     }
+    ctx.globalAlpha=1;
+
+  } else if(style==='firestorm'){
+    // Firestorm near — rolling fire walls, ember clouds, no solid shapes
+    ctx.globalAlpha=0.8;
+    for(var fni=0;fni<6;fni++){
+      var fnx=((fni*W/5+nearOff*0.5)%W+W)%W;
+      ctx.save();ctx.globalAlpha=0.3+Math.sin(frameN*0.08+fni*0.9)*0.15;
+      var fnG=ctx.createRadialGradient(fnx,gameH,10,fnx,gameH*0.6,80);
+      fnG.addColorStop(0,'rgba(255,100,0,0.9)');fnG.addColorStop(0.5,'rgba(200,40,0,0.5)');fnG.addColorStop(1,'rgba(160,10,0,0)');
+      ctx.fillStyle=fnG;ctx.beginPath();ctx.ellipse(fnx,gameH*0.8,50,gameH*0.25,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // Lava ground glow
+    ctx.globalAlpha=0.6;
+    var flG=ctx.createLinearGradient(0,gameH-20,0,gameH);
+    flG.addColorStop(0,'rgba(255,120,0,0.8)');flG.addColorStop(1,'rgba(200,40,0,0.4)');
+    ctx.fillStyle=flG;ctx.fillRect(0,gameH-20,W,20);
     ctx.globalAlpha=1;
 
   } else if(style==='beach'){
@@ -4833,9 +5105,14 @@ function drawAtmosphere(style,icC,gameH){
     }
     ctx.restore();
   }
-  if(style==='volcano'||style==='burningcity'){
+  if(style==='volcano'||style==='burningcity'||style==='firestorm'){
     ctx.save();ctx.globalAlpha=0.35;
     for(var ai=0;ai<5;ai++){var ax=(ai*W/4+frameN*0.4)%W,ay=H*0.12+Math.sin(frameN*0.018+ai)*H*0.06;var ag=ctx.createRadialGradient(ax,ay,5,ax,ay,40+ai*8);ag.addColorStop(0,'rgba(60,30,10,0.5)');ag.addColorStop(1,'rgba(40,20,5,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.ellipse(ax,ay,50+ai*10,14+ai*4,Math.sin(ai*0.8)*0.2,0,Math.PI*2);ctx.fill();}
+    if(style==='firestorm'){
+      // Extra intense ember rain for firestorm
+      ctx.globalAlpha=0.5;
+      for(var ei6=0;ei6<8;ei6++){var ex6=(ei6*W/7+frameN*1.2+ei6*30)%W,ey6=(frameN*0.8+ei6*120)%H;ctx.fillStyle='rgba(255,120,0,0.7)';ctx.beginPath();ctx.arc(ex6,ey6,2+Math.sin(frameN*0.1+ei6)*1,0,Math.PI*2);ctx.fill();}
+    }
     ctx.restore();
   } else if(style==='storm'){
     if(Math.sin(frameN*0.018+3.7)>0.97){ctx.fillStyle='rgba(200,210,255,0.18)';ctx.fillRect(0,0,W,gameH);}
@@ -4853,6 +5130,199 @@ function lerpHex(a,b,t){
   var br=parseInt(b.slice(1,3),16),bg=parseInt(b.slice(3,5),16),bb2=parseInt(b.slice(5,7),16);
   var rr=Math.round(ar+(br-ar)*t),rg=Math.round(ag+(bg-ag)*t),rb=Math.round(ab2+(bb2-ab2)*t);
   return '#'+('0'+rr.toString(16)).slice(-2)+('0'+rg.toString(16)).slice(-2)+('0'+rb.toString(16)).slice(-2);
+}
+
+function drawBossSkin(sk){
+  // Called from INSIDE drawFly after ctx.save()+translate+rotate already done
+  // and after the transform animation has already played.
+  // Just draw the boss body here — no save/translate/transform needed.
+  var t=frameN*0.10;
+  var bid=sk.bossId;
+  var bob=Math.sin(t*2.5)*1.5;
+  var legX=[-6,0,6];
+
+  if(bid==='owl'){
+    ctx.save();ctx.translate(0,bob);
+    var owlFlap=Math.sin(t*5)*0.4;
+    for(var wi=0;wi<2;wi++){
+      var yd=wi===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(owlFlap*yd*0.5);
+      var wmG=ctx.createLinearGradient(-44,0,0,0);
+      wmG.addColorStop(0,'#3A1A08');wmG.addColorStop(0.5,'#8B6020');wmG.addColorStop(1,'#C49040');
+      ctx.fillStyle=wmG;ctx.globalAlpha=0.85;
+      ctx.beginPath();ctx.moveTo(-2,yd*3);ctx.bezierCurveTo(-12,yd*14,-32,yd*16,-44,yd*8);ctx.bezierCurveTo(-38,yd*2,-18,yd*0,-2,yd*3);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#5C3A10';ctx.lineWidth=1;ctx.globalAlpha=0.9;
+      for(var fi=0;fi<5;fi++){var fx3=-10-fi*5.5,fy3=yd*(8+fi*0.5);ctx.beginPath();ctx.moveTo(fx3,fy3);ctx.lineTo(fx3-2,fy3+yd*8);ctx.stroke();}
+      ctx.fillStyle='#8B6020';ctx.globalAlpha=0.7;
+      ctx.beginPath();ctx.moveTo(-2,yd*2);ctx.bezierCurveTo(-10,yd*8,-26,yd*8,-32,yd*4);ctx.bezierCurveTo(-26,0,-10,yd*0,-2,yd*2);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=1;ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(owlFlap*yd*0.4);
+      ctx.fillStyle='#8B6020';ctx.globalAlpha=0.75;
+      ctx.beginPath();ctx.moveTo(-2,yd*2);ctx.bezierCurveTo(-8,yd*10,-22,yd*10,-28,yd*5);ctx.bezierCurveTo(-22,yd*1,-8,0,-2,yd*2);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=1;ctx.restore();
+    }
+    for(var si=0;si<7;si++){var bx=-18-si*11,by=Math.sin(si*0.55+t*0.4)*(si*0.7),bw=7-si/6*5.5,bh=5-si/6*3.8;var owlBG=ctx.createRadialGradient(bx,by,0,bx,by,bw);owlBG.addColorStop(0,'#C49040');owlBG.addColorStop(0.6,'#8B5E2A');owlBG.addColorStop(1,'#3A1A08');ctx.fillStyle=owlBG;ctx.beginPath();ctx.ellipse(bx,by,bw,bh,0,0,Math.PI*2);ctx.fill();}
+    ctx.beginPath();ctx.moveTo(-95,Math.sin(7*0.55+t*0.4)*4.9);ctx.lineTo(-102,0);ctx.strokeStyle='#8B6020';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+    var owlTG=ctx.createRadialGradient(-3,-3,1,0,0,15);owlTG.addColorStop(0,'#D4A855');owlTG.addColorStop(0.4,'#C49040');owlTG.addColorStop(1,'#3A1A08');ctx.fillStyle=owlTG;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#5C3A10';ctx.lineWidth=1.2;ctx.lineCap='round';
+    for(var li=0;li<3;li++){var lx=legX[li];ctx.beginPath();ctx.moveTo(lx,7);ctx.lineTo(lx-3,14);ctx.lineTo(lx-1,19);ctx.stroke();ctx.beginPath();ctx.moveTo(lx,7);ctx.lineTo(lx+4,14);ctx.lineTo(lx+2,19);ctx.stroke();}
+    ctx.save();ctx.translate(17,-1);
+    var owlFG=ctx.createRadialGradient(-2,0,2,0,0,10);owlFG.addColorStop(0,'#E8C878');owlFG.addColorStop(0.5,'#C49040');owlFG.addColorStop(1,'#5C3A10');ctx.fillStyle=owlFG;ctx.beginPath();ctx.arc(-3,0,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(240,210,140,0.45)';ctx.beginPath();ctx.arc(-3,0,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5C3A10';ctx.beginPath();ctx.moveTo(-6,-8);ctx.bezierCurveTo(-7,-13,-4,-16,-2,-13);ctx.bezierCurveTo(-1,-10,-2,-7,-3,-7);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-8);ctx.bezierCurveTo(1,-13,4,-16,2,-13);ctx.bezierCurveTo(1,-10,0,-7,-1,-7);ctx.closePath();ctx.fill();
+    ctx.shadowColor='#FFD700';ctx.shadowBlur=8;
+    ctx.fillStyle='#FFD700';ctx.beginPath();ctx.ellipse(-4,-5,7,6,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-4,5,7,6,0.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FF8800';ctx.beginPath();ctx.ellipse(-4,-5,5,4,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-4,5,5,4,0.3,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-4,-5,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-4,5,2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,200,0.6)';ctx.beginPath();ctx.arc(-6,-6,0.9,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-6,4,0.9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#CC9900';ctx.beginPath();ctx.moveTo(2,-2);ctx.bezierCurveTo(6,-4,10,-2,10,1);ctx.bezierCurveTo(8,4,4,4,2,2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#AA7700';ctx.beginPath();ctx.moveTo(2,1);ctx.bezierCurveTo(6,0,9,2,10,2);ctx.bezierCurveTo(9,4,6,4,2,3);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#8B6020';ctx.lineWidth=0.8;ctx.globalAlpha=0.6;ctx.beginPath();ctx.moveTo(4,-7);ctx.lineTo(9,-11);ctx.stroke();ctx.beginPath();ctx.moveTo(4,7);ctx.lineTo(9,11);ctx.stroke();ctx.globalAlpha=1;
+    ctx.restore();ctx.restore();
+
+  } else if(bid==='dragon'){
+    ctx.save();ctx.translate(0,bob);
+    var dFlap=Math.sin(t*5)*0.45+0.15;
+    for(var wi2=0;wi2<2;wi2++){
+      var yd2=wi2===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(dFlap*yd2*0.5);
+      var dmG=ctx.createLinearGradient(-44,0,0,0);dmG.addColorStop(0,'rgba(80,0,0,0.88)');dmG.addColorStop(0.5,'rgba(140,8,0,0.78)');dmG.addColorStop(1,'rgba(160,16,0,0.3)');ctx.fillStyle=dmG;
+      ctx.beginPath();ctx.moveTo(-2,yd2*3);ctx.bezierCurveTo(-12,yd2*14,-32,yd2*17,-44,yd2*9);ctx.bezierCurveTo(-38,yd2*2,-18,yd2*0,-2,yd2*3);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(30,0,0,0.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-2,yd2*3);ctx.bezierCurveTo(-16,yd2*12,-34,yd2*14,-44,yd2*9);ctx.stroke();
+      ctx.lineWidth=1;for(var bi3=0;bi3<3;bi3++){ctx.beginPath();ctx.moveTo(-8-bi3*8,yd2*3);ctx.lineTo(-10-bi3*9,yd2*17);ctx.stroke();}
+      ctx.globalAlpha=1;ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(dFlap*yd2*0.35);ctx.fillStyle='rgba(100,0,0,0.6)';ctx.beginPath();ctx.moveTo(-2,yd2*2);ctx.bezierCurveTo(-8,yd2*10,-22,yd2*10,-28,yd2*5);ctx.bezierCurveTo(-22,yd2*1,-8,0,-2,yd2*2);ctx.closePath();ctx.fill();ctx.restore();
+    }
+    for(var si2=0;si2<7;si2++){var bx2=-18-si2*11,by2=Math.sin(si2*0.55+t*0.4)*(si2*0.7),bw2=7-si2/6*5.5,bh2=5-si2/6*3.8;var dBG=ctx.createRadialGradient(bx2,by2,0,bx2,by2,bw2);dBG.addColorStop(0,'#CC2200');dBG.addColorStop(0.6,'#880800');dBG.addColorStop(1,'#220000');ctx.fillStyle=dBG;ctx.beginPath();ctx.ellipse(bx2,by2,bw2,bh2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=0.5;ctx.beginPath();ctx.ellipse(bx2,by2,bw2,bh2,0,0,Math.PI);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(-95,Math.sin(7*0.55+t*0.4)*4.9);ctx.lineTo(-102,0);ctx.strokeStyle='#440000';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+    var dTG=ctx.createRadialGradient(-3,-3,1,0,0,15);dTG.addColorStop(0,'#CC2200');dTG.addColorStop(0.4,'#881000');dTG.addColorStop(1,'#220000');ctx.fillStyle=dTG;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FF4400';ctx.shadowColor='#FF2200';ctx.shadowBlur=4;for(var ds=0;ds<4;ds++){ctx.save();ctx.translate(-4+ds*3,-9);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-2,-(5-ds));ctx.lineTo(2,0);ctx.closePath();ctx.fill();ctx.restore();}ctx.shadowBlur=0;
+    ctx.strokeStyle='#440000';ctx.lineWidth=1.2;ctx.lineCap='round';for(var li2=0;li2<3;li2++){var lx2=legX[li2];ctx.beginPath();ctx.moveTo(lx2,7);ctx.lineTo(lx2-3,14);ctx.lineTo(lx2-1,19);ctx.stroke();ctx.beginPath();ctx.moveTo(lx2,7);ctx.lineTo(lx2+4,14);ctx.lineTo(lx2+2,19);ctx.stroke();}
+    ctx.save();ctx.translate(17,-1);ctx.rotate(Math.sin(t*0.04)*0.08);
+    var dHG=ctx.createRadialGradient(-3,0,2,0,0,12);dHG.addColorStop(0,'#AA1800');dHG.addColorStop(0.5,'#660800');dHG.addColorStop(1,'#220000');ctx.fillStyle=dHG;ctx.beginPath();ctx.ellipse(-2,0,11,8,0.1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#550600';ctx.beginPath();ctx.moveTo(4,-2);ctx.bezierCurveTo(10,-4,13,-2,12,1);ctx.bezierCurveTo(10,4,6,4,4,2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,200,150,0.85)';for(var ti=0;ti<3;ti++){ctx.beginPath();ctx.moveTo(5+ti*2.5,-1);ctx.lineTo(5.5+ti*2.5,3);ctx.lineTo(7+ti*2.5,-1);ctx.closePath();ctx.fill();}
+    ctx.fillStyle='#2a0000';ctx.beginPath();ctx.moveTo(-2,-8);ctx.bezierCurveTo(0,-13,3,-15,2,-17);ctx.bezierCurveTo(0,-13,-3,-10,-4,-8);ctx.closePath();ctx.fill();
+    ctx.shadowColor='#FF6600';ctx.shadowBlur=10;ctx.fillStyle='#FF8800';ctx.beginPath();ctx.ellipse(-3,-5,6,5,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-3,5,6,5,0.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FF4400';ctx.beginPath();ctx.ellipse(-3,-5,4,3,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-3,5,4,3,0.3,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(-3,-5,1.5,4,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-3,5,1.5,4,0.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,150,50,0.5)';ctx.beginPath();ctx.arc(-5,-6,0.9,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-5,4,0.9,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.globalAlpha=0.5+Math.sin(t*4)*0.2;ctx.strokeStyle='rgba(255,100,0,0.6)';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(9,-4);ctx.bezierCurveTo(12,-7,14,-5,13,-3);ctx.stroke();ctx.beginPath();ctx.moveTo(9,4);ctx.bezierCurveTo(12,7,14,5,13,3);ctx.stroke();ctx.restore();
+    ctx.restore();ctx.restore();
+
+  } else if(bid==='leviathan'){
+    ctx.save();ctx.translate(0,bob);
+    var wave3=Math.sin(t*3)*2;
+    for(var wi3=0;wi3<2;wi3++){
+      var yd3=wi3===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(Math.sin(t*4+wi3)*0.2*yd3);
+      var levWG=ctx.createLinearGradient(-44,0,0,0);levWG.addColorStop(0,'rgba(0,150,130,0.6)');levWG.addColorStop(0.5,'rgba(0,100,90,0.5)');levWG.addColorStop(1,'rgba(0,60,55,0.2)');ctx.fillStyle=levWG;ctx.globalAlpha=0.75;
+      ctx.beginPath();ctx.moveTo(-2,yd3*3);ctx.bezierCurveTo(-12,yd3*13,-30,yd3*15,-44,yd3*8);ctx.bezierCurveTo(-38,yd3*2,-18,yd3*0,-2,yd3*3);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=0.5+Math.sin(t*0.06+wi3)*0.25;ctx.shadowColor='#00FFCC';ctx.shadowBlur=5;ctx.strokeStyle='rgba(0,255,200,0.8)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-4,yd3*5);ctx.bezierCurveTo(-18,yd3*10,-34,yd3*10,-42,yd3*6);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(Math.sin(t*4+wi3)*0.15*yd3);ctx.fillStyle='rgba(0,120,100,0.45)';ctx.beginPath();ctx.moveTo(-2,yd3*2);ctx.bezierCurveTo(-8,yd3*9,-22,yd3*9,-28,yd3*5);ctx.bezierCurveTo(-22,yd3*1,-8,0,-2,yd3*2);ctx.closePath();ctx.fill();ctx.restore();
+    }
+    for(var si3=0;si3<7;si3++){var bx3=-18-si3*11,by3=Math.sin(si3*0.7+t*0.05)*si3*0.9+wave3*si3*0.06,bw3=7-si3/6*5.5,bh3=5-si3/6*3.8;var levBG=ctx.createRadialGradient(bx3,by3,0,bx3,by3,bw3);levBG.addColorStop(0,'#005566');levBG.addColorStop(0.5,'#003344');levBG.addColorStop(1,'#001122');ctx.fillStyle=levBG;ctx.beginPath();ctx.ellipse(bx3,by3,bw3,bh3,0,0,Math.PI*2);ctx.fill();ctx.save();ctx.globalAlpha=0.5+Math.sin(t*0.06+si3*0.5)*0.25;ctx.fillStyle='rgba(0,255,200,0.7)';ctx.shadowColor='rgba(0,255,200,0.8)';ctx.shadowBlur=4;ctx.beginPath();ctx.ellipse(bx3,by3-bh3*0.6,bw3*0.35,bh3*0.25,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.restore();}
+    ctx.beginPath();ctx.moveTo(-95,Math.sin(7*0.55+t*0.4)*4.9);ctx.lineTo(-102,0);ctx.strokeStyle='#003344';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+    var levTG=ctx.createRadialGradient(-3,-3,1,0,0,15);levTG.addColorStop(0,'#006688');levTG.addColorStop(0.4,'#004455');levTG.addColorStop(1,'#001122');ctx.fillStyle=levTG;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+    for(var li3=0;li3<3;li3++){var lx3=legX[li3];ctx.strokeStyle='#003344';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(lx3,7);ctx.lineTo(lx3-3,14);ctx.lineTo(lx3-1,19);ctx.stroke();ctx.beginPath();ctx.moveTo(lx3,7);ctx.lineTo(lx3+4,14);ctx.lineTo(lx3+2,19);ctx.stroke();}
+    ctx.save();ctx.translate(17,-1);ctx.rotate(Math.sin(t*0.04)*0.1+wave3*0.015);
+    var levHG=ctx.createRadialGradient(-2,0,2,0,0,11);levHG.addColorStop(0,'#006688');levHG.addColorStop(0.5,'#003344');levHG.addColorStop(1,'#001122');ctx.fillStyle=levHG;ctx.beginPath();ctx.ellipse(-1,0,11,8,0.1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#002233';ctx.beginPath();ctx.moveTo(5,-2);ctx.bezierCurveTo(12,-3,14,-1,13,2);ctx.bezierCurveTo(11,4,6,4,5,2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(0,200,180,0.55)';ctx.beginPath();ctx.moveTo(-4,-7);ctx.bezierCurveTo(-2,-12,4,-14,5,-10);ctx.bezierCurveTo(4,-7,0,-6,-2,-7);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-4,7);ctx.bezierCurveTo(-2,12,4,14,5,10);ctx.bezierCurveTo(4,7,0,6,-2,7);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(200,255,255,0.85)';for(var fi2=0;fi2<3;fi2++){ctx.beginPath();ctx.moveTo(6+fi2*2.5,-1);ctx.lineTo(6.5+fi2*2.5,3);ctx.lineTo(8+fi2*2.5,-1);ctx.closePath();ctx.fill();}
+    ctx.shadowColor='#00FFCC';ctx.shadowBlur=10;ctx.fillStyle='#00FFCC';ctx.beginPath();ctx.ellipse(-2,-5,6,5,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-2,5,6,5,0.3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(-2,-5,1.5,4,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-2,5,1.5,4,0.3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(200,255,255,0.5)';ctx.beginPath();ctx.arc(-4,-6,0.9,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-4,4,0.9,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.globalAlpha=0.4+Math.sin(t*3)*0.2;ctx.strokeStyle='rgba(0,200,255,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(14,-5,3,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(14,5,3,0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.restore();ctx.restore();
+
+  } else if(bid==='tempest'){
+    ctx.save();ctx.translate(0,bob);
+    var tFlap2=Math.sin(t*5)*0.45+0.15;
+    for(var wi4=0;wi4<2;wi4++){
+      var yd4=wi4===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(tFlap2*yd4*0.5);
+      var tmpWG=ctx.createLinearGradient(-44,0,0,0);tmpWG.addColorStop(0,'rgba(10,10,24,0.9)');tmpWG.addColorStop(0.5,'rgba(22,24,48,0.8)');tmpWG.addColorStop(1,'rgba(34,38,70,0.3)');ctx.fillStyle=tmpWG;
+      ctx.beginPath();ctx.moveTo(-2,yd4*3);ctx.bezierCurveTo(-12,yd4*14,-32,yd4*16,-44,yd4*8);ctx.bezierCurveTo(-38,yd4*2,-18,yd4*0,-2,yd4*3);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(18,20,46,0.7)';ctx.lineWidth=1;for(var pi=0;pi<6;pi++){ctx.beginPath();ctx.moveTo(-8-pi*5,yd4*4);ctx.lineTo(-10-pi*5.5,yd4*16);ctx.stroke();}
+      if(Math.sin(t*0.14+wi4*3)>0.4){ctx.strokeStyle='rgba(200,220,255,0.7)';ctx.lineWidth=1;ctx.shadowColor='rgba(180,200,255,0.8)';ctx.shadowBlur=6;ctx.beginPath();ctx.moveTo(-14,yd4*6);ctx.lineTo(-18,yd4*10);ctx.lineTo(-16,yd4*13);ctx.stroke();ctx.shadowBlur=0;}
+      ctx.globalAlpha=1;ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(tFlap2*yd4*0.35);ctx.fillStyle='rgba(16,18,40,0.75)';ctx.beginPath();ctx.moveTo(-2,yd4*2);ctx.bezierCurveTo(-8,yd4*10,-22,yd4*10,-28,yd4*5);ctx.bezierCurveTo(-22,yd4*1,-8,0,-2,yd4*2);ctx.closePath();ctx.fill();ctx.restore();
+    }
+    for(var si5=0;si5<7;si5++){var bx5=-18-si5*11,by5=Math.sin(si5*0.55+t*0.4)*(si5*0.7),bw5=7-si5/6*5.5,bh5=5-si5/6*3.8;var tmpBG=ctx.createRadialGradient(bx5,by5,0,bx5,by5,bw5);tmpBG.addColorStop(0,'#303060');tmpBG.addColorStop(0.6,'#181838');tmpBG.addColorStop(1,'#050510');ctx.fillStyle=tmpBG;ctx.beginPath();ctx.ellipse(bx5,by5,bw5,bh5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(60,70,140,0.22)';ctx.lineWidth=0.5;ctx.beginPath();ctx.ellipse(bx5,by5,bw5,bh5,0,0,Math.PI);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(-95,Math.sin(7*0.55+t*0.4)*4.9);ctx.lineTo(-102,0);ctx.strokeStyle='#181838';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+    var tmpTG=ctx.createRadialGradient(-3,-3,1,0,0,15);tmpTG.addColorStop(0,'#383868');tmpTG.addColorStop(0.4,'#202048');tmpTG.addColorStop(1,'#050510');ctx.fillStyle=tmpTG;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.globalAlpha=0.5+Math.sin(t*0.12)*0.25;ctx.strokeStyle='rgba(200,210,255,0.9)';ctx.lineWidth=1.2;ctx.shadowColor='rgba(180,200,255,0.9)';ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(-4,0);ctx.lineTo(0,-5);ctx.lineTo(4,0);ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+    for(var li4=0;li4<3;li4++){var lx4=legX[li4];ctx.strokeStyle='#181838';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(lx4,7);ctx.lineTo(lx4-3,14);ctx.lineTo(lx4-1,19);ctx.stroke();ctx.beginPath();ctx.moveTo(lx4,7);ctx.lineTo(lx4+4,14);ctx.lineTo(lx4+2,19);ctx.stroke();}
+    ctx.save();ctx.translate(17,-1);ctx.rotate(Math.sin(t*0.04)*0.08);
+    var tmpHG=ctx.createRadialGradient(-2,0,2,0,0,11);tmpHG.addColorStop(0,'#404078');tmpHG.addColorStop(0.5,'#282858');tmpHG.addColorStop(1,'#0e0e22');ctx.fillStyle=tmpHG;ctx.beginPath();ctx.ellipse(-1,0,10,8,0.1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a3a';ctx.beginPath();ctx.moveTo(-6,-5);ctx.bezierCurveTo(-2,-9,4,-9,6,-7);ctx.bezierCurveTo(6,-5,2,-4,-2,-4);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#18182e';ctx.beginPath();ctx.moveTo(1,-2);ctx.bezierCurveTo(5,-4,10,-3,11,0);ctx.bezierCurveTo(11,3,9,4,8,3);ctx.bezierCurveTo(6,2,4,1,2,1);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#0e0e1e';ctx.beginPath();ctx.moveTo(2,1);ctx.bezierCurveTo(6,0,9,2,10,2);ctx.bezierCurveTo(9,4,7,4,2,3);ctx.closePath();ctx.fill();
+    ctx.shadowColor='#c8d8ff';ctx.shadowBlur=10;ctx.fillStyle='#c8d8ff';ctx.beginPath();ctx.ellipse(-2,-5,6,5,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(-2,5,6,5,0.3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#020210';ctx.beginPath();ctx.moveTo(-2,-8);ctx.lineTo(-1,-5);ctx.lineTo(-3,-5);ctx.lineTo(-2,-2);ctx.lineTo(-1,-5);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-2,2);ctx.lineTo(-1,5);ctx.lineTo(-3,5);ctx.lineTo(-2,8);ctx.lineTo(-1,5);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(-4,-6,0.9,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-4,4,0.9,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.globalAlpha=0.5+Math.sin(t*5)*0.25;ctx.strokeStyle='rgba(180,200,255,0.7)';ctx.lineWidth=1;ctx.shadowColor='rgba(180,200,255,0.7)';ctx.shadowBlur=6;ctx.beginPath();ctx.moveTo(5,-7);ctx.lineTo(8,-11);ctx.lineTo(7,-8);ctx.lineTo(10,-12);ctx.stroke();ctx.beginPath();ctx.moveTo(5,7);ctx.lineTo(8,11);ctx.lineTo(7,8);ctx.lineTo(10,12);ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+    ctx.restore();ctx.restore();
+
+  } else if(bid==='jeanjacket'){
+    ctx.save();ctx.translate(0,bob*0.3);
+    var jjFlap=Math.sin(t*3)*0.3;
+    for(var wi5=0;wi5<2;wi5++){
+      var yd5=wi5===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(jjFlap*yd5);
+      ctx.save();ctx.scale(1.0,0.45);
+      var jjWG=ctx.createLinearGradient(-44,0,0,0);jjWG.addColorStop(0,'rgba(40,28,10,0.6)');jjWG.addColorStop(0.5,'rgba(65,47,18,0.5)');jjWG.addColorStop(1,'rgba(85,60,22,0.2)');ctx.fillStyle=jjWG;
+      ctx.beginPath();for(var a=0;a<Math.PI;a+=0.15){var rr=44+Math.sin(a*4+t*3)*4;if(a<0.01)ctx.moveTo(-rr*Math.cos(a),rr*Math.sin(a)*yd5);else ctx.lineTo(-rr*Math.cos(a),rr*Math.sin(a)*yd5);}
+      ctx.lineTo(-2,yd5*3);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=0.4+Math.sin(t*0.06)*0.2;ctx.strokeStyle='rgba(255,200,60,0.7)';ctx.lineWidth=1;ctx.shadowColor='rgba(255,200,60,0.5)';ctx.shadowBlur=4;
+      for(var rs=0;rs<5;rs++){var ra2=-rs*0.55;ctx.beginPath();ctx.arc(-rr*Math.cos(ra2)*0.85,rr*Math.sin(ra2)*Math.abs(yd5)*0.85,2,0,Math.PI*2);ctx.fill();}
+      ctx.shadowBlur=0;ctx.restore();ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(jjFlap*yd5*0.7);ctx.save();ctx.scale(1.0,0.45);ctx.fillStyle='rgba(55,40,15,0.45)';
+      ctx.beginPath();for(var a2=0;a2<Math.PI;a2+=0.2){var rr2=28+Math.sin(a2*3+t*2)*3;if(a2<0.01)ctx.moveTo(-rr2*Math.cos(a2),rr2*Math.sin(a2)*yd5);else ctx.lineTo(-rr2*Math.cos(a2),rr2*Math.sin(a2)*yd5);}
+      ctx.lineTo(-2,yd5*2);ctx.closePath();ctx.fill();ctx.restore();ctx.restore();
+    }
+    ctx.save();ctx.scale(1.05,0.5);
+    var jjBG=ctx.createRadialGradient(-4,-3,3,0,0,20);jjBG.addColorStop(0,'rgba(90,65,28,0.95)');jjBG.addColorStop(0.5,'rgba(58,42,16,0.88)');jjBG.addColorStop(1,'rgba(22,16,6,0.6)');ctx.fillStyle=jjBG;
+    ctx.beginPath();for(var a3=0;a3<Math.PI*2;a3+=0.15){var r3=16+Math.sin(a3*5+t*3)*2;if(a3<0.01)ctx.moveTo(Math.cos(a3)*r3,Math.sin(a3)*r3);else ctx.lineTo(Math.cos(a3)*r3,Math.sin(a3)*r3);}
+    ctx.closePath();ctx.fill();
+    for(var spi=0;spi<8;spi++){var spA=spi*(Math.PI*2/8)+t*0.01;ctx.globalAlpha=0.55+Math.sin(t*0.1+spi)*0.35;ctx.fillStyle='rgba(255,200,60,0.9)';ctx.shadowColor='rgba(255,180,40,0.8)';ctx.shadowBlur=4;ctx.beginPath();ctx.arc(Math.cos(spA)*10,Math.sin(spA)*10,2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    ctx.globalAlpha=1;ctx.restore();
+    for(var ti=0;ti<3;ti++){var tA=Math.PI+ti*0.35-0.35,tLen=20+ti*8;ctx.save();ctx.globalAlpha=0.4+Math.sin(t*0.06+ti)*0.15;ctx.strokeStyle='rgba(180,130,50,0.65)';ctx.lineWidth=1.5+ti*0.3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(Math.cos(tA)*14,Math.sin(tA)*7);ctx.bezierCurveTo(Math.cos(tA)*(14+tLen*0.3)+Math.sin(t*0.08+ti)*5,Math.sin(tA)*(7+tLen*0.2),Math.cos(tA)*(14+tLen*0.6),Math.sin(tA)*(7+tLen*0.3),Math.cos(tA)*(14+tLen),Math.sin(tA)*(7+tLen*0.4));ctx.stroke();ctx.restore();}
+    if(Math.sin(t*0.4)>0.88){ctx.save();ctx.globalAlpha=0.1+Math.random()*0.07;ctx.fillStyle='rgba(255,200,80,0.3)';ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();ctx.restore();}
+    ctx.restore();
+
+  } else {
+    ctx.save();ctx.translate(0,bob);
+    var aFlap=Math.sin(t*4)*0.35+0.1;
+    for(var wi6=0;wi6<2;wi6++){
+      var yd6=wi6===0?-1:1;
+      ctx.save();ctx.translate(4,0);ctx.rotate(aFlap*yd6*0.4);
+      var aWG=ctx.createLinearGradient(-44,0,0,0);aWG.addColorStop(0,'rgba(8,20,4,0.85)');aWG.addColorStop(0.5,'rgba(14,30,8,0.75)');aWG.addColorStop(1,'rgba(20,40,10,0.2)');ctx.fillStyle=aWG;
+      ctx.beginPath();ctx.moveTo(-2,yd6*3);ctx.bezierCurveTo(-12,yd6*14,-32,yd6*16,-44,yd6*8);ctx.bezierCurveTo(-38,yd6*2,-18,yd6*0,-2,yd6*3);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(20,40,10,0.55)';ctx.lineWidth=1;for(var bi4=0;bi4<4;bi4++){ctx.beginPath();ctx.moveTo(-8-bi4*7,yd6*4);ctx.lineTo(-10-bi4*8,yd6*15);ctx.stroke();}
+      ctx.save();ctx.globalAlpha=0.25+Math.sin(t*0.06+wi6)*0.12;ctx.strokeStyle='rgba(0,200,60,0.6)';ctx.lineWidth=1;ctx.shadowColor='rgba(0,200,60,0.5)';ctx.shadowBlur=4;ctx.beginPath();ctx.moveTo(-6,yd6*7);ctx.bezierCurveTo(-20,yd6*12,-36,yd6*11,-42,yd6*6);ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+      ctx.globalAlpha=1;ctx.restore();
+      ctx.save();ctx.translate(-8,0);ctx.rotate(aFlap*yd6*0.28);ctx.fillStyle='rgba(12,26,6,0.6)';ctx.beginPath();ctx.moveTo(-2,yd6*2);ctx.bezierCurveTo(-8,yd6*9,-22,yd6*9,-28,yd6*5);ctx.bezierCurveTo(-22,yd6*1,-8,0,-2,yd6*2);ctx.closePath();ctx.fill();ctx.restore();
+    }
+    for(var si6=0;si6<7;si6++){var bx6=-18-si6*11,by6=Math.sin(si6*0.55+t*0.4)*(si6*0.7),bw6=7-si6/6*5.5,bh6=5-si6/6*3.8;var aBG=ctx.createRadialGradient(bx6,by6,0,bx6,by6,bw6);aBG.addColorStop(0,'#1E2E14');aBG.addColorStop(0.6,'#0E1A08');aBG.addColorStop(1,'#040804');ctx.fillStyle=aBG;ctx.beginPath();ctx.ellipse(bx6,by6,bw6,bh6,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(30,50,18,0.45)';ctx.lineWidth=0.7;ctx.beginPath();ctx.ellipse(bx6,by6,bw6,bh6,0,0,Math.PI,true);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(-95,Math.sin(7*0.55+t*0.4)*4.9);ctx.lineTo(-102,0);ctx.strokeStyle='#0E1A08';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+    var aTG=ctx.createRadialGradient(-3,-3,1,0,0,15);aTG.addColorStop(0,'#253318');aTG.addColorStop(0.4,'#141e0a');aTG.addColorStop(1,'#060c04');ctx.fillStyle=aTG;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#0a1408';ctx.strokeStyle='rgba(15,25,10,0.7)';ctx.lineWidth=2.5;for(var dti2=0;dti2<3;dti2++){ctx.beginPath();ctx.moveTo(-4+dti2*4,-9);ctx.lineTo(-4+dti2*4,0);ctx.stroke();ctx.beginPath();ctx.arc(-4+dti2*4,-9,2,0,Math.PI*2);ctx.fill();}
+    for(var li5=0;li5<3;li5++){var lx5=legX[li5];ctx.strokeStyle='#0E1A08';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(lx5,7);ctx.lineTo(lx5-3,14);ctx.lineTo(lx5-1,19);ctx.stroke();ctx.beginPath();ctx.moveTo(lx5,7);ctx.lineTo(lx5+4,14);ctx.lineTo(lx5+2,19);ctx.stroke();}
+    ctx.save();ctx.translate(17,-1);ctx.rotate(Math.sin(t*0.04)*0.08);
+    ctx.fillStyle='#1a2810';ctx.beginPath();ctx.moveTo(-4,-5);ctx.bezierCurveTo(-5,-8,-4,-11,-1,-13);ctx.bezierCurveTo(1,-14,4,-13,5,-11);ctx.bezierCurveTo(6,-8,5,-5,3,-5);ctx.closePath();ctx.fill();
+    var aHG=ctx.createRadialGradient(-2,-16,3,0,-10,15);aHG.addColorStop(0,'#253318');aHG.addColorStop(0.4,'#141e0a');aHG.addColorStop(0.8,'#080e04');aHG.addColorStop(1,'#030604');ctx.fillStyle=aHG;
+    ctx.beginPath();ctx.moveTo(5,-4);ctx.bezierCurveTo(8,-9,7,-20,3,-28);ctx.bezierCurveTo(1,-33,-2,-35,-4,-35);ctx.bezierCurveTo(-9,-35,-14,-29,-15,-20);ctx.bezierCurveTo(-17,-11,-15,-4,-11,-4);ctx.bezierCurveTo(-6,-3,1,-3,5,-4);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(20,32,12,0.45)';ctx.lineWidth=0.9;for(var hri=0;hri<4;hri++){ctx.beginPath();ctx.moveTo(-5+hri*3,-4);ctx.bezierCurveTo(-5+hri*3,-10,-4+hri*2.5,-18,-2+hri*1.5,-30);ctx.stroke();}
+    var ijE4=3+Math.sin(t*0.1)*2;ctx.fillStyle='#0c1808';ctx.beginPath();ctx.moveTo(-5,-2);ctx.bezierCurveTo(-6,2,-5,5+ijE4,-2,7+ijE4);ctx.bezierCurveTo(1,9+ijE4,5,7+ijE4,6,5+ijE4);ctx.bezierCurveTo(7,2,6,-2,5,-2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(150,200,100,0.75)';for(var it4=0;it4<4;it4++){ctx.beginPath();ctx.moveTo(-3+it4*2.2,3+ijE4);ctx.lineTo(-2.5+it4*2.2,6+ijE4+2.5);ctx.lineTo(-1+it4*2.2,3+ijE4);ctx.closePath();ctx.fill();}
+    ctx.fillStyle='rgba(180,220,120,0.5)';for(var ot5=0;ot5<4;ot5++){ctx.beginPath();ctx.moveTo(-4+ot5*2.8,-2);ctx.lineTo(-3.5+ot5*2.8,2);ctx.lineTo(-2+ot5*2.8,-2);ctx.closePath();ctx.fill();}
+    ctx.save();ctx.globalAlpha=0.55+Math.sin(t*0.08)*0.2;ctx.strokeStyle='rgba(80,200,40,0.65)';ctx.lineWidth=1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(2,-3);ctx.bezierCurveTo(4,-1,4,3,3,5+Math.sin(t*0.12)*2);ctx.stroke();ctx.beginPath();ctx.moveTo(2,3);ctx.bezierCurveTo(4,5,4,9,3,11+Math.sin(t*0.1+1)*2);ctx.stroke();ctx.fillStyle='rgba(80,200,40,0.5)';ctx.beginPath();ctx.arc(3,5+Math.sin(t*0.12)*2,1.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(3,11+Math.sin(t*0.1+1)*2,1.2,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.save();ctx.globalAlpha=0.07+Math.sin(t*0.06)*0.03;var brG3=ctx.createRadialGradient(-2,-18,2,-2,-18,10);brG3.addColorStop(0,'rgba(0,255,100,0.5)');brG3.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=brG3;ctx.beginPath();ctx.arc(-2,-18,10,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.restore();ctx.restore();
+  }
 }
 
 function drawFly(){
@@ -5114,6 +5584,24 @@ function drawFly(){
   var mThorax=[lerpHex(baseThorax[0],GOLD[0],infT),lerpHex(baseThorax[1],GOLD[1],infT),lerpHex(baseThorax[2],GOLD[2],infT)];
   var mEye=lerpHex(lerpHex(DEFAULT_SKIN.eye,sk.eye,cmt),GOLD_EYE,infT);
   var mLeg=lerpHex(lerpHex(DEFAULT_SKIN.leg,sk.leg,cmt),GOLD_LEG,infT);
+
+  if(sk.bossReward){
+    // During transform: dragonfly body fades out, boss body fades in
+    // cmt goes 0→1 as skinTransformTimer counts down
+    if(cmt<1){
+      // Draw dragonfly body fading out
+      ctx.save();ctx.globalAlpha=1-cmt;
+      for(var si=0;si<7;si++){var t2=si/6,sx=-18-si*11,sy2=Math.sin(si*0.55+t*0.4)*(si*0.7),sw=7-t2*5.5,sh=5-t2*3.8;var sg3=ctx.createRadialGradient(sx,sy2,0,sx,sy2,sw);sg3.addColorStop(0,mBody[0]);sg3.addColorStop(0.6,mBody[1]);sg3.addColorStop(1,mBody[2]);ctx.beginPath();ctx.ellipse(sx,sy2,sw,sh,0,0,Math.PI*2);ctx.fillStyle=sg3;ctx.fill();}
+      var tg2=ctx.createRadialGradient(-3,-3,1,0,0,15);tg2.addColorStop(0,mThorax[0]);tg2.addColorStop(0.4,mThorax[1]);tg2.addColorStop(1,mThorax[2]);ctx.fillStyle=tg2;ctx.beginPath();ctx.ellipse(0,0,15,10,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // Draw boss body fading in
+    ctx.save();ctx.globalAlpha=cmt;
+    drawBossSkin(sk);
+    ctx.restore();
+    ctx.restore();
+    return;
+  }
 
   for(var si=0;si<7;si++){
     var t2=si/6,sx=-18-si*11,sy=Math.sin(si*0.55+t*0.4)*(si*0.7);
@@ -7000,26 +7488,22 @@ function updateInfinite(){
   if(infiniteOwned && !infiniteActive && !infiniteMothSpawned && !infMoth){
     infMothSpawnTimer++;
 
-    // Mercy spawn — died 12+ times on same level: spawn at start (after 120 frames)
+    // Mercy spawn — died 12+ times on same level: spawn after 180 frames (3s)
     var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
     var mercySpawn=curLid&&curLid===lastDeathLevelId&&deathStreakOnLevel>=12;
-    if(mercySpawn&&infMothSpawnTimer>=120){
+    if(mercySpawn&&infMothSpawnTimer>=180){
       infMoth=spawnInfMoth();infiniteMothSpawned=true;return;
     }
 
-    // Normal spawn — rarity increases with level progress
-    // currentLevel ~1-40 across all worlds. Spawn interval scales from 600 (early) to never (late)
-    // World 1 (lvl 1-7): spawn fairly often. World 5 (lvl 30+): almost never.
+    // Natural spawn — ONLY in World 1 (earth levels e1-e7, currentLevel 1-7)
     var lvl=currentLevel||1;
-    // Base interval: starts at 600 frames (~10s), grows by 180 per level, caps at never spawning past lvl 20
-    if(lvl>=20&&!mercySpawn) return; // never spawns naturally in worlds 4-5
-    var baseInterval=600+lvl*180; // lvl1=780, lvl5=1500, lvl10=2400, lvl19=4020
-    // Add randomness — only attempt spawn 30% of the time when timer hits
+    if(lvl>7) return; // worlds 2+ never spawn naturally
+    var baseInterval=600+lvl*180; // lvl1=780, lvl7=1860
     if(infMothSpawnTimer>=baseInterval){
       if(Math.random()<0.30){
         infMoth=spawnInfMoth();infiniteMothSpawned=true;
       } else {
-        infMothSpawnTimer=Math.floor(baseInterval*0.6); // reset partially, try again later
+        infMothSpawnTimer=Math.floor(baseInterval*0.6);
       }
     }
   }
@@ -7332,6 +7816,7 @@ function loseLife(){
     return;
   }
   currentRunNoDamage=false;
+  noDamageLevelsStreak=0;
   lives--; updateLivesUI();
   shakeFrames=14; shakeIntensity=7;
   try{sfxHitGeneric();}catch(e){}
@@ -7356,7 +7841,16 @@ function triggerLevelClear(){
   state='levelclear';
   colorP=0;
   totalLevelsCleared++;
-  if(currentRunNoDamage) bestNoDamageLevels++;
+  if(currentRunNoDamage){
+    bestNoDamageLevels++;
+    noDamageLevelsStreak++;
+    bestNoDamageStreak=Math.max(bestNoDamageStreak,noDamageLevelsStreak);
+  } else {
+    noDamageLevelsStreak=0;
+  }
+  mothsInOneLevelBest=Math.max(mothsInOneLevelBest,currentRunMoths);
+  var overlayStars2=currentWorldLevel?calcStars(currentRunMoths, currentRunNoDamage):0;
+  totalStars+=overlayStars2;
   if(currentWorldLevel) worldsVisited=Math.max(worldsVisited,['earth','fire','water','ice','galaxy'].indexOf(currentWorldLevel.worldId)+1);
 
   // Stars for overlay
@@ -7427,6 +7921,7 @@ function triggerLevelClear(){
 function die(){
   try{sfxGameOver(); stopMusic();}catch(e){}
   state='dead';
+  totalDeaths++;
   // Track death streak on same level for mercy infinite spawn
   var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
   if(curLid){
@@ -7732,17 +8227,27 @@ function buildSkins(){
     var skin=SKINS[i];
     var owned=ownedSkins.indexOf(skin.id)>=0;
     var active=activeSkin===skin.id;
+    // Boss skins — only show if that boss is defeated
+    if(skin.bossReward&&defeatedBosses.indexOf(skin.bossId)<0) continue;
     var card=document.createElement('div');
     card.className='skin-card'+(owned?' owned':'')+(active?' active':'');
     var swatch='<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:linear-gradient(135deg,'+skin.body[0]+','+skin.body[1]+','+skin.body[2]+');border:2px solid '+skin.wing[0]+'"></div>';
-    var rarity=skin.moths>=25000?'LEGENDARY':skin.moths>=10000?'MYTHIC':skin.moths>=5000?'EPIC':skin.moths>=1000?'RARE':skin.moths>=200?'UNCOMMON':'COMMON';
-    var rarityCol=skin.moths>=25000?'#ffd700':skin.moths>=10000?'#ff44ff':skin.moths>=5000?'#aa44ff':skin.moths>=1000?'#4488ff':skin.moths>=200?'#44cc44':'#888888';
-    var priceLabel=owned?(active?'\u2713 Equipped':'Equip'):skin.moths===0?'Free':'\ud83e\udd8b '+skin.moths.toLocaleString();
+    var rarity,rarityCol,priceLabel;
+    if(skin.bossReward){
+      rarity='\uD83D\uDC51 BOSS REWARD';
+      rarityCol='#ffd700';
+      priceLabel=owned?(active?'\u2713 Equipped':'Equip'):'\uD83D\uDC51 EARNED';
+    } else {
+      rarity=skin.moths>=25000?'LEGENDARY':skin.moths>=10000?'MYTHIC':skin.moths>=5000?'EPIC':skin.moths>=1000?'RARE':skin.moths>=200?'UNCOMMON':'COMMON';
+      rarityCol=skin.moths>=25000?'#ffd700':skin.moths>=10000?'#ff44ff':skin.moths>=5000?'#aa44ff':skin.moths>=1000?'#4488ff':skin.moths>=200?'#44cc44':'#888888';
+      priceLabel=owned?(active?'\u2713 Equipped':'Equip'):skin.moths===0?'Free':'\ud83e\udd8b '+skin.moths.toLocaleString();
+    }
     card.innerHTML=swatch+'<div class="skin-name">'+skin.name+'</div><div style="font-size:7px;color:'+rarityCol+';margin-bottom:2px;">'+rarity+'</div><div class="skin-price">'+priceLabel+'</div>'+(active?'<div class="skin-badge">ON</div>':'');
     (function(sk){
       card.addEventListener('click',function(){
         sfxMenuTap();
-        if(ownedSkins.indexOf(sk.id)>=0){activeSkin=sk.id;sfxMenuSelect();showToast(sk.name+' equipped!');buildSkins();}
+        if(ownedSkins.indexOf(sk.id)>=0){activeSkin=sk.id;sfxMenuSelect();showToast(sk.name+' equipped!');buildSkins();saveGame();}
+        else if(sk.bossReward){showToast('\uD83D\uDC51 Defeat the boss to unlock this skin!');}
         else if(sk.moths===0){ownedSkins.push(sk.id);activeSkin=sk.id;buildSkins();}
         else if(mothsTotal>=sk.moths){mothsTotal-=sk.moths;ownedSkins.push(sk.id);activeSkin=sk.id;updateCurrencyUI();updateMothUI();sfxMenuSelect();showToast(sk.name+' unlocked!');buildSkins();}
         else{showToast('Need \ud83e\udd8b '+sk.moths.toLocaleString()+' -- you have '+mothsTotal);}
@@ -7759,8 +8264,8 @@ function buyWithMoths(itemId,cost){
   else if(itemId==='life5'){lives=Math.min(lives+5,99);updateLivesUI();showToast('\u2764\ufe0f +5 lives!');}
   else if(itemId==='life10'){lives=Math.min(lives+10,99);updateLivesUI();showToast('\u2764\ufe0f +10 lives!');}
   else if(itemId==='shield'){shieldActive=true;showToast('\ud83d\udee1\ufe0f Shield active!');}
-  else if(itemId==='slowmo'){slowMoActive=true;slowMoTimer=SLOW_MO_DURATION;showToast('⏱️ Slow-Mo active for 8 seconds!');}
-  else if(itemId==='ghost'){ghostActive=true;showToast('👻 Ghost mode ready — pass through 1 obstacle!');}
+  else if(itemId==='slowmo'){slowMoActive=true;slowMoTimer=SLOW_MO_DURATION;totalSlowMoUses++;totalPowerupsUsed++;showToast('⏱️ Slow-Mo active for 8 seconds!');}
+  else if(itemId==='ghost'){ghostActive=true;totalGhostUses++;totalPowerupsUsed++;showToast('👻 Ghost mode ready — pass through 1 obstacle!');}
   else if(itemId==='trail'){wingTrailRuns=Math.min(wingTrailRuns+3,99);showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');}
 }
 
@@ -7863,7 +8368,14 @@ var devTestShieldBtn=document.getElementById('devTestShield');
 var devTestWingsBtn=document.getElementById('devTestWings');
 var devResetBtn=document.getElementById('devReset');
 if(devUnlockSkinsBtn) devUnlockSkinsBtn.addEventListener('click',function(){sfxMenuSelect();mothsTotal+=50000;updateCurrencyUI();updateMothUI();showToast('\ud83e\udd8b +50,000 moths added!');});
-if(devUnlockAllBtn) devUnlockAllBtn.addEventListener('click',function(){sfxMenuSelect();for(var i=0;i<SKINS.length;i++)if(ownedSkins.indexOf(SKINS[i].id)<0)ownedSkins.push(SKINS[i].id);buildSkins();showToast('\ud83d\udc51 All skins unlocked!');});
+if(devUnlockAllBtn) devUnlockAllBtn.addEventListener('click',function(){
+  sfxMenuSelect();
+  for(var i=0;i<SKINS.length;i++) if(ownedSkins.indexOf(SKINS[i].id)<0) ownedSkins.push(SKINS[i].id);
+  defeatedBosses=['owl','dragon','leviathan','tempest','jeanjacket','grey'];
+  ngPlusUnlocked=true;
+  buildSkins();showToast('\uD83D\uDC51 All skins + boss skins unlocked!');
+  saveGame();
+});
 if(devTestShieldBtn) devTestShieldBtn.addEventListener('click',function(){sfxMenuTap();shieldActive=true;showToast('\ud83d\udee1\ufe0f Shield activated!');});
 if(devTestWingsBtn) devTestWingsBtn.addEventListener('click',function(){sfxMenuTap();wingTrailRuns+=5;showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');});
 if(devResetBtn) devResetBtn.addEventListener('click',function(){sfxMenuBack();mothsTotal=0;ownedSkins=['default'];activeSkin='default';shieldActive=false;wingTrailRuns=0;highScoreStory=0;highScoreInfinite=0;levelProgress={};leaderboard=[];try{localStorage.removeItem('dragonflySave');}catch(e){}updateCurrencyUI();updateMothUI();buildSkins();showToast('\ud83d\udd04 Progress reset');});
@@ -7984,7 +8496,7 @@ var WORLDS = [
       { id:'f2', name:'Desert Sands',       icon:'\ud83c\udfdc', biomeIdx:13, desc:'Scorching dunes under a blazing sun',    duration:83 },
       { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:12, desc:'Crumbling buildings engulfed in fire',   duration:86 },
       { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:10, desc:'Deep underground rivers of magma',       duration:89 },
-      { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:2,  desc:'The eye of an eternal firestorm',        duration:92 },
+      { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:9,  desc:'The eye of an eternal firestorm',        duration:92 },
       { id:'f6', name:'The Inferno Drake',  icon:'\uD83D\uDC09', biomeIdx:27,  desc:'Face the lord of fire and destruction',  duration:120, isBoss:true, bossType:'dragon' }
     ]
   },
