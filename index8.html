@@ -314,11 +314,7 @@ canvas { display:block; width:100%; height:100%; }
       <div id="timerBar"><div id="timerFill" style="width:0%"></div></div>
       <div id="timerText">45s</div>
     </div>
-    <div id="lives">
-      <span class="life-icon" id="life1">🪲</span>
-      <span class="life-icon" id="life2">🪲</span>
-      <span class="life-icon" id="life3">🪲</span>
-    </div>
+    <div id="lives"></div>
     <div id="mothCounter">
       <span style="font-size:15px">🦋</span>
       <span id="mothHudCount">0</span>
@@ -462,9 +458,23 @@ canvas { display:block; width:100%; height:100%; }
         <div class="opt-left"><span class="opt-icon">🔊</span><div class="opt-label">Sound Effects</div></div>
         <label class="toggle"><input type="checkbox" id="optSound" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
       </div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="opt-left"><span class="opt-icon">🔉</span><div class="opt-label">SFX Volume</div></div>
+          <span id="sfxVolLabel" style="color:#c8a0ff;font-size:13px;font-weight:700;">80%</span>
+        </div>
+        <input type="range" id="sfxVolSlider" min="0" max="100" value="80" style="width:100%;accent-color:#9b59ff;">
+      </div>
       <div class="opt-row">
         <div class="opt-left"><span class="opt-icon">🎵</span><div class="opt-label">Music</div></div>
         <label class="toggle"><input type="checkbox" id="optMusic" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="opt-left"><span class="opt-icon">🎶</span><div class="opt-label">Music Volume</div></div>
+          <span id="musicVolLabel" style="color:#c8a0ff;font-size:13px;font-weight:700;">45%</span>
+        </div>
+        <input type="range" id="musicVolSlider" min="0" max="100" value="45" style="width:100%;accent-color:#9b59ff;">
       </div>
       <div class="opt-section">Controls</div>
       <div class="opt-row">
@@ -562,12 +572,12 @@ canvas { display:block; width:100%; height:100%; }
       <div class="shop-card">
         <div class="shop-card-icon">💖</div>
         <div style="flex:1"><div class="shop-card-name">5 Lives Pack</div><div class="shop-card-desc">+5 lives banked</div></div>
-        <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 800</span><span class="bc">or $1.99</span></button>
+        <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 1000</span><span class="bc">or $1.99</span></button>
       </div>
       <div class="shop-card">
         <div class="shop-card-icon">💞</div>
         <div style="flex:1"><div class="shop-card-name">10 Lives Pack</div><div class="shop-card-desc">+10 lives banked</div></div>
-        <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 1800</span><span class="bc">or $4.99</span></button>
+        <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 1800</span><span class="bc">or $2.99</span></button>
       </div>
       <div class="shop-section">⭐ Premium</div>
       <div class="shop-card" style="border:1px solid #ffd700;background:rgba(60,40,0,0.35);">
@@ -688,9 +698,6 @@ var ctx     = canvas.getContext('2d');
 var wrapper = document.getElementById('gameWrapper');
 var scoreEl = document.getElementById('score');
 var highScEl= document.getElementById('highScore');
-var life1   = document.getElementById('life1');
-var life2   = document.getElementById('life2');
-var life3   = document.getElementById('life3');
 var levelLbl= document.getElementById('levelLabel');
 var timerFill=document.getElementById('timerFill');
 var timerTxt= document.getElementById('timerText');
@@ -714,6 +721,7 @@ var leaderboard = [];
 var state = 'idle';
 var score=0, frameN=0, speed=2.6, maxSpeed=6.0;
 var lives=3, currentLevel=1;
+var bankedLives=0; // lives purchased from shop, added at level start
 var levelTimer=0, levelDuration=45, levelTransitioning=false, colorP=0;
 var diffMult=0.8;
 
@@ -746,8 +754,11 @@ var deathStreakOnLevel=0, lastDeathLevelId=null;
 var debris=[], steamParticles=[], lightningBolts=[];
 var lightningTimer=0, lightningBurstActive=false, lightningBurstFrames=0, lightningBurstCooldown=0;
 
-var ownedSkins=['default'], activeSkin='default', noAds=false;
+var ownedSkins=['default','boss_owl','boss_dragon','boss_leviathan','boss_tempest','boss_jeanjacket','boss_alien'], activeSkin='default', noAds=false;
 var defeatedBosses=[], ngPlusUnlocked=false;
+// DEV: always unlock all boss skins
+defeatedBosses=['owl','dragon','leviathan','tempest','jeanjacket','grey'];
+ngPlusUnlocked=true;
 
 // ── OWL BOSS ──
 var boss=null, bossActive=false, bossPhase=0, bossHP=0, bossMaxHP=0;
@@ -2510,6 +2521,7 @@ function updateBoss(){
       dp.x+=dp.vx;dp.y+=dp.vy;dp.life-=0.018;dp.r+=0.15;
       if(dp.life<=0) b.deathParticles.splice(pi2,1);
     }
+    if(b.deathTimer===1){sfxBossDeath();}
     if(b.deathTimer===60){shakeFrames=40;shakeIntensity=14;}
     if(b.deathTimer>=180){
       bossActive=false;
@@ -2534,6 +2546,7 @@ function updateBoss(){
     if(bossEntryTimer===0){
       // Dramatic entrance effects
       shakeFrames=25; shakeIntensity=10;
+      sfxBossEnter();
       var sf=document.getElementById('screenFlash');
       if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},300);}
       document.getElementById('bossHud').classList.add('show');
@@ -2549,6 +2562,7 @@ function updateBoss(){
   if(hpPct<0.5&&bossPhase<2){
     bossPhase=2;
     showToast('\uD83D\uDD25 THE OWL ENRAGES!');
+    sfxBossEnrage();
     shakeFrames=30; shakeIntensity=12;
   }
 
@@ -2560,6 +2574,7 @@ function updateBoss(){
       b.attackTimer=0;
       b.chargeActive=true;
       b.chargeTimer=0;
+      sfxBossCharge();
       // Target just in front of the player — close enough to hit
       b.tx=fly.x+60;
       b.ty=fly.y;
@@ -2574,6 +2589,7 @@ function updateBoss(){
     b.y+=(b.ty-b.y)*0.18;
     // Dragon breathes fire during charge
     if(getBossType()==='dragon'&&b.chargeTimer%3===0&&b.breathParticles){
+      if(b.chargeTimer===3) sfxBossFireBreath();
       var headX=b.x-30, headY=b.y-58;
       b.breathParticles.push({
         x:headX,y:headY,
@@ -2587,6 +2603,7 @@ function updateBoss(){
       b.chargeActive=false;
       b.tx=W*0.72;
       b.ty=H*0.25+Math.random()*H*0.45;
+      sfxBossAttack();
       fireFeathers();
     }
   } else {
@@ -2599,8 +2616,10 @@ function updateBoss(){
   }
 
   // Periodic feather volleys
-  if(bossPhase>=2&&frameN%70===0) fireFeathers();
-  else if(bossPhase<2&&frameN%110===0) fireFeathers();
+  if(bossPhase>=2&&frameN%70===0){sfxBossFeather();fireFeathers();}
+  else if(bossPhase<2&&frameN%110===0){sfxBossFeather();fireFeathers();}
+  // Wing flap ambient SFX
+  if(frameN%80===0&&!b.chargeActive) sfxBossFloat();
 
   // Update feathers/bubbles — add wobble for leviathan
   var newF=[];
@@ -2855,6 +2874,7 @@ function hitBoss(){
   if(!boss||bossDefeated) return;
   bossHP--;
   boss.hurtTimer=20;
+  sfxBossHurt();
   shakeFrames=8; shakeIntensity=5;
   var pct=bossHP/bossMaxHP;
   var fill=document.getElementById('bossHpFill');
@@ -3145,6 +3165,7 @@ function initBoss(){
   bossHP=bossMaxHP=(type==='dragon'?110:type==='leviathan'?140:type==='tempest'?170:type==='jeanjacket'?220:type==='grey'?250:80);
   bossPhase=1;
   bossActive=true;
+  playMusic('boss_'+type);
   bossDefeated=false;
   bossFeathers=[];
   bossEntryTimer=BOSS_ENTRY_DURATION;
@@ -3212,7 +3233,7 @@ var BIOMES=[
  {name:'City Skyline',skyTop:'#000814',skyMid:'#001428',skyBot:'#002040',moonCol:'#ddeeff',moonShadow:'#000814',hasSun:false,starCol:'200,220,255',auroraCol:'60,120,200',cloudCol:'30,50,80',mtnFar:'#001028',mtnNear0:'#001a38',mtnNear1:'#000c20',iceCap:'180,220,255',groundTop:'#0a0c14',groundBot:'#050608',glowR:60,glowG:120,glowB:255,ruinCol:'#0c1428',ruinWin:'80,180,255',treeCol:['#0a1020','#081828','#060e18'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'city',obstStyle:'building',groundStyle:'asphalt',fogCol:'40,80,160'},
  {name:'Burning City',skyTop:'#100200',skyMid:'#280800',skyBot:'#501400',moonCol:'#ff8844',moonShadow:'#100200',hasSun:false,starCol:'255,150,80',auroraCol:'220,60,10',cloudCol:'100,30,10',mtnFar:'#200400',mtnNear0:'#380800',mtnNear1:'#200400',iceCap:'255,120,40',groundTop:'#1a0400',groundBot:'#0c0200',glowR:255,glowG:80,glowB:10,ruinCol:'#280600',ruinWin:'255,100,20',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'burningcity',obstStyle:'rubble',groundStyle:'ash',fogCol:'200,50,10'},
  {name:'Desert Sands',skyTop:'#1a0a00',skyMid:'#4a2000',skyBot:'#c05010',moonCol:'#fff4c0',moonShadow:'#1a0a00',hasSun:true,sunCol:'#ffee80',sunGlowCol:'255,230,100',starCol:'255,220,150',auroraCol:'255,160,60',cloudCol:'200,150,80',mtnFar:'#8a4820',mtnNear0:'#c06820',mtnNear1:'#8a4810',iceCap:'255,240,180',groundTop:'#d89040',groundBot:'#a06020',glowR:255,glowG:160,glowB:40,ruinCol:'#b07030',ruinWin:'255,200,80',treeCol:['#4a2a08','#603810','#382008'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'desert',obstStyle:'sandstone',groundStyle:'sand',fogCol:'200,140,40'},
- {name:'Ice Cavern',skyTop:'#000510',skyMid:'#001525',skyBot:'#002840',moonCol:'#a0e8ff',moonShadow:'#000510',hasSun:false,starCol:'160,220,255',auroraCol:'40,180,220',cloudCol:'40,100,140',mtnFar:'#001828',mtnNear0:'#002840',mtnNear1:'#001828',iceCap:'200,240,255',groundTop:'#a0d8f0',groundBot:'#60a8d0',glowR:60,glowG:200,glowB:255,ruinCol:'#80c0e0',ruinWin:'160,230,255',treeCol:['#a0c8e8','#80b0d0','#c0ddf0'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'icecave',obstStyle:'icicle',groundStyle:'icefloor',fogCol:'80,180,240'},
+ {name:'Lava Cavern',skyTop:'#050000',skyMid:'#0a0100',skyBot:'#140200',moonCol:'#ff6600',moonShadow:'#050000',hasSun:false,starCol:'255,100,30',auroraCol:'255,60,0',cloudCol:'80,10,0',mtnFar:'#1a0100',mtnNear0:'#220200',mtnNear1:'#150100',iceCap:'255,80,10',groundTop:'#1a0100',groundBot:'#0a0000',glowR:255,glowG:50,glowB:0,ruinCol:'#180100',ruinWin:'255,60,0',treeCol:['#180100','#200200','#0f0100'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'lavacavern',obstStyle:'lava',groundStyle:'lava',fogCol:'200,30,0'},
  {name:'Tropical Beach',skyTop:'#006090',skyMid:'#0090c0',skyBot:'#40c0e0',moonCol:'#fffce0',moonShadow:'#006090',hasSun:true,sunCol:'#ffee60',sunGlowCol:'255,240,80',starCol:'200,240,255',auroraCol:'255,255,200',cloudCol:'255,255,255',mtnFar:'#007050',mtnNear0:'#00904a',mtnNear1:'#005a30',iceCap:'255,255,255',groundTop:'#f0d878',groundBot:'#d8b848',glowR:255,glowG:220,glowB:80,ruinCol:'#a09040',ruinWin:'255,240,100',treeCol:['#1a5010','#206018','#143808'],hasMoving:false,hasFrogs:true,hasForest:false,bgStyle:'beach',obstStyle:'beach',groundStyle:'sand',fogCol:'200,240,100'},
  {name:'Mountain Lake',skyTop:'#001830',skyMid:'#003060',skyBot:'#006090',moonCol:'#c0e8ff',moonShadow:'#001830',hasSun:true,sunCol:'#ffe880',sunGlowCol:'255,230,100',starCol:'180,220,255',auroraCol:'80,180,255',cloudCol:'255,255,255',mtnFar:'#004060',mtnNear0:'#005a80',mtnNear1:'#003050',iceCap:'220,240,255',groundTop:'#1a8040',groundBot:'#0c5028',glowR:80,glowG:180,glowB:255,ruinCol:'#006090',ruinWin:'100,200,255',treeCol:['#0a3018','#144020','#082010'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'lake',obstStyle:'lake',groundStyle:'water',fogCol:'60,140,200'},
  {name:'Jungle Canopy',skyTop:'#004400',skyMid:'#006600',skyBot:'#228800',moonCol:'#a0ff80',moonShadow:'#011200',hasSun:true,sunCol:'#ffee40',sunGlowCol:'255,230,60',starCol:'140,255,100',auroraCol:'60,220,40',cloudCol:'200,255,160',mtnFar:'#022800',mtnNear0:'#064010',mtnNear1:'#033000',iceCap:'180,255,140',groundTop:'#264010',groundBot:'#142808',glowR:40,glowG:220,glowB:40,ruinCol:'#084018',ruinWin:'120,255,80',treeCol:['#062800','#0a4000','#042000'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'jungle',obstStyle:'jungle',groundStyle:'jungle',fogCol:'60,180,30'},
@@ -3355,7 +3376,7 @@ function initBg(){
 
 function resetGame(){
   score=0; frameN=0; colorP=0;
-  lives=3; currentLevel=1;
+  lives=3+bankedLives; bankedLives=0; currentLevel=1;
   levelTimer=0; levelTransitioning=false;
   if(gameMode==='story'){
     levelDuration=getLevelDuration(1);
@@ -3387,6 +3408,7 @@ function resetGame(){
   // Clear tempest feather storm if active
   if(boss&&boss.featherStorm) boss.featherStorm=[];
   state='playing';
+  try{sfxLevelStart();}catch(e){}
 }
 
 function startNextLevel(){
@@ -3409,9 +3431,23 @@ function startNextLevel(){
 }
 
 function updateLivesUI(){
-  var icons=[life1,life2,life3];
-  for(var i=0;i<icons.length;i++){
-    if(icons[i]) icons[i].className='life-icon'+(i>=lives?' lost':'');
+  var container=document.getElementById('lives');
+  if(!container) return;
+  container.innerHTML='';
+  // Always show exactly 3 beetle icons
+  var show=Math.min(lives,3);
+  for(var i=0;i<3;i++){
+    var s=document.createElement('span');
+    s.className='life-icon'+(i>=lives?' lost':'');
+    s.textContent='🪲';
+    container.appendChild(s);
+  }
+  // If more than 3 lives, show +N badge
+  if(lives>3){
+    var b=document.createElement('span');
+    b.style.cssText='font-size:12px;font-weight:800;color:#ffdd44;background:rgba(0,0,0,0.55);border-radius:8px;padding:2px 6px;margin-left:3px;';
+    b.textContent='+'+( lives-3);
+    container.appendChild(b);
   }
 }
 function updateLevelUI(){
@@ -4096,68 +4132,47 @@ function drawFarLayer(mfC,gameH){
 
     ctx.globalAlpha=1;
 
-  } else if(style==='volcano'||style==='burningcity'){
-    // ── SCENIC VOLCANIC LANDSCAPE — no sharp triangles ──
-    // 1. Distant lava-lit horizon glow
+  } else if(style==='volcano'){
+    // ── VOLCANIC LANDSCAPE — wide smooth hills, glowing calderas ──
     ctx.globalAlpha=0.5;
     var horizG=ctx.createLinearGradient(0,gameH*0.4,0,gameH*0.7);
-    horizG.addColorStop(0,'rgba(255,60,0,0)');
-    horizG.addColorStop(0.5,'rgba(200,30,0,0.3)');
-    horizG.addColorStop(1,'rgba(255,80,0,0)');
+    horizG.addColorStop(0,'rgba(255,60,0,0)');horizG.addColorStop(0.5,'rgba(200,30,0,0.3)');horizG.addColorStop(1,'rgba(255,80,0,0)');
     ctx.fillStyle=horizG;ctx.fillRect(0,gameH*0.4,W,gameH*0.3);
-
-    // 2. Rounded volcanic mountains — broad smooth hills, not triangles
     ctx.globalAlpha=0.7;
-    var vm1=ctx.createLinearGradient(0,gameH*0.25,0,gameH);
-    vm1.addColorStop(0,'#2a0600');vm1.addColorStop(1,'#180300');
-    ctx.fillStyle=vm1;
-    // Far left volcano — wide rounded dome
-    ctx.beginPath();
-    ctx.moveTo(0,gameH);
-    ctx.bezierCurveTo(W*0.05,gameH,W*0.1,gameH*0.65,W*0.18,gameH*0.42);
-    ctx.bezierCurveTo(W*0.22,gameH*0.32,W*0.28,gameH*0.28,W*0.34,gameH*0.32);
-    ctx.bezierCurveTo(W*0.42,gameH*0.38,W*0.46,gameH*0.55,W*0.5,gameH);
-    ctx.closePath();ctx.fill();
-    // Right volcano — another rounded dome
+    ctx.fillStyle='#2a0600';
+    ctx.beginPath();ctx.moveTo(0,gameH);ctx.bezierCurveTo(W*0.05,gameH,W*0.1,gameH*0.65,W*0.18,gameH*0.42);ctx.bezierCurveTo(W*0.22,gameH*0.32,W*0.28,gameH*0.28,W*0.34,gameH*0.32);ctx.bezierCurveTo(W*0.42,gameH*0.38,W*0.46,gameH*0.55,W*0.5,gameH);ctx.closePath();ctx.fill();
     ctx.fillStyle='#220500';
-    ctx.beginPath();
-    ctx.moveTo(W*0.42,gameH);
-    ctx.bezierCurveTo(W*0.5,gameH,W*0.55,gameH*0.6,W*0.62,gameH*0.38);
-    ctx.bezierCurveTo(W*0.66,gameH*0.28,W*0.74,gameH*0.26,W*0.8,gameH*0.32);
-    ctx.bezierCurveTo(W*0.88,gameH*0.4,W*0.94,gameH*0.6,W,gameH*0.65);
-    ctx.lineTo(W,gameH);
-    ctx.closePath();ctx.fill();
-
-    // 3. Glowing calderas at volcano tops — rounded craters not tips
-    var calderas=[{x:W*0.28,y:gameH*0.30},{x:W*0.72,y:gameH*0.29}];
-    calderas.forEach(function(c){
+    ctx.beginPath();ctx.moveTo(W*0.42,gameH);ctx.bezierCurveTo(W*0.5,gameH,W*0.55,gameH*0.6,W*0.62,gameH*0.38);ctx.bezierCurveTo(W*0.66,gameH*0.28,W*0.74,gameH*0.26,W*0.8,gameH*0.32);ctx.bezierCurveTo(W*0.88,gameH*0.4,W*0.94,gameH*0.6,W,gameH*0.65);ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
+    [{x:W*0.28,y:gameH*0.30},{x:W*0.72,y:gameH*0.29}].forEach(function(c){
       ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.04)*0.15;
-      var cg=ctx.createRadialGradient(c.x,c.y,4,c.x,c.y,W*0.1);
-      cg.addColorStop(0,'rgba(255,120,10,0.8)');
-      cg.addColorStop(0.4,'rgba(255,50,0,0.4)');
-      cg.addColorStop(1,'rgba(200,20,0,0)');
-      ctx.fillStyle=cg;ctx.beginPath();ctx.arc(c.x,c.y,W*0.1,0,Math.PI*2);ctx.fill();
-      ctx.restore();
-      // Lava rivers — curved organic flows
-      ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle='#ff5500';ctx.lineWidth=4;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(c.x,c.y);
-      ctx.bezierCurveTo(c.x-W*0.04,c.y+gameH*0.12,c.x-W*0.06,c.y+gameH*0.25,c.x-W*0.03,gameH);
-      ctx.stroke();
-      ctx.beginPath();ctx.moveTo(c.x,c.y);
-      ctx.bezierCurveTo(c.x+W*0.04,c.y+gameH*0.1,c.x+W*0.07,c.y+gameH*0.22,c.x+W*0.04,gameH);
-      ctx.stroke();
-      ctx.restore();
+      var cg=ctx.createRadialGradient(c.x,c.y,4,c.x,c.y,W*0.1);cg.addColorStop(0,'rgba(255,120,10,0.8)');cg.addColorStop(0.4,'rgba(255,50,0,0.4)');cg.addColorStop(1,'rgba(200,20,0,0)');
+      ctx.fillStyle=cg;ctx.beginPath();ctx.arc(c.x,c.y,W*0.1,0,Math.PI*2);ctx.fill();ctx.restore();
     });
-
-    // 4. Ash cloud puffs — rolling dark billows
     ctx.globalAlpha=0.25;
-    var ashCols=['#1a0400','#280800','#200500'];
-    for(var ai=0;ai<5;ai++){
-      var ax=((ai*W/4+farOff*0.05)%W+W)%W;
-      var ay=gameH*(0.15+Math.sin(ai*1.3)*0.08);
-      ctx.fillStyle=ashCols[ai%3];
-      ctx.beginPath();ctx.ellipse(ax,ay,W*0.12+ai*8,gameH*0.06+ai*3,0,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.ellipse(ax+W*0.06,ay-gameH*0.03,W*0.08,gameH*0.04,0,0,Math.PI*2);ctx.fill();
+    ['#1a0400','#280800','#200500'].forEach(function(ac,ai){var ax=((ai*W/3+farOff*0.05)%W+W)%W,ay=gameH*(0.15+Math.sin(ai*1.3)*0.08);ctx.fillStyle=ac;ctx.beginPath();ctx.ellipse(ax,ay,W*0.12+ai*8,gameH*0.06+ai*3,0,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;
+
+  } else if(style==='burningcity'){
+    // ── BURNING CITY — ruined skyline, fire glow, smoke clouds ──
+    ctx.globalAlpha=0.4;
+    for(var bi=0;bi<bgMtnFar.length;bi++){
+      var m=bgMtnFar[bi]; var rx=((m.x-farOff*0.3)%W+W*2)%W;
+      drawBgBuilding(rx,gameH,m.h*0.8,m.w*0.7,'#1a0200','rgba(255,80,10,0.35)');
+    }
+    // Fire glow behind buildings
+    for(var fi3=0;fi3<3;fi3++){
+      var fx3=W*(0.2+fi3*0.3);
+      ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.06+fi3)*0.1;
+      var fg3=ctx.createRadialGradient(fx3,gameH*0.5,10,fx3,gameH*0.5,W*0.15);
+      fg3.addColorStop(0,'rgba(255,120,0,0.8)');fg3.addColorStop(1,'rgba(255,40,0,0)');
+      ctx.fillStyle=fg3;ctx.beginPath();ctx.arc(fx3,gameH*0.5,W*0.15,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    // Smoke clouds
+    ctx.globalAlpha=0.3;
+    for(var si7=0;si7<4;si7++){
+      var sx7=((si7*W/3+farOff*0.04)%W+W)%W,sy7=gameH*(0.12+Math.sin(si7*1.1)*0.06);
+      ctx.fillStyle='#1a0800';
+      ctx.beginPath();ctx.ellipse(sx7,sy7,W*0.1+si7*6,gameH*0.05+si7*2,0,0,Math.PI*2);ctx.fill();
     }
     ctx.globalAlpha=1;
 
@@ -4221,25 +4236,11 @@ function drawFarLayer(mfC,gameH){
       ctx.fillRect(cx3+8,cy3-gameH*0.17,8,8);
     }
 
-  } else if(style==='city'||style==='burningcity'){
+  } else if(style==='city'){
     ctx.globalAlpha=0.4;
-    // Burning city — ruined building silhouettes with fire glow
-    var bcols=style==='burningcity'?'#1a0200':'#0a1428';
     for(var bi=0;bi<bgMtnFar.length;bi++){
       var m=bgMtnFar[bi]; var rx=((m.x-farOff*0.3)%W+W*2)%W;
-      var bh2=m.h*0.8; var bw2=m.w*0.7;
-      drawBgBuilding(rx,gameH,bh2,bw2,bcols,style==='burningcity'?'rgba(255,80,10,0.35)':'rgba(80,180,255,0.3)');
-    }
-    if(style==='burningcity'){
-      // Fire glow from behind buildings
-      for(var fi2=0;fi2<3;fi2++){
-        var fx2=W*(0.2+fi2*0.3);
-        ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.06+fi2)*0.1;
-        var fg=ctx.createRadialGradient(fx2,gameH*0.5,10,fx2,gameH*0.5,W*0.15);
-        fg.addColorStop(0,'rgba(255,120,0,0.8)');fg.addColorStop(1,'rgba(255,40,0,0)');
-        ctx.fillStyle=fg;ctx.beginPath();ctx.arc(fx2,gameH*0.5,W*0.15,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-      }
+      drawBgBuilding(rx,gameH,m.h*0.8,m.w*0.7,'#0a1428','rgba(80,180,255,0.3)');
     }
   } else if(style==='firestorm'){
     // Firestorm — massive swirling fire wall in distance, no solid shapes
@@ -4559,63 +4560,97 @@ function drawNearLayer(mn0,gameH){
     ctx.fillStyle=sfbG;ctx.fillRect(0,gameH-10,W,10);
     ctx.globalAlpha=1;
 
-  } else if(style==='volcano'||style==='burningcity'){
-    ctx.globalAlpha=0.95;
-    for(var smi=0;smi<9;smi++){
-      var smx=((smi*W/7+nearOff*0.55)%W+W)%W;
-      var smh=gameH*0.22+Math.sin(smi*2.1)*gameH*0.08;
-      var smw=50+Math.sin(smi*1.4)*18;
-      var smG=ctx.createLinearGradient(smx,gameH-smh,smx,gameH);
-      smG.addColorStop(0,'#2a0400');smG.addColorStop(0.6,'#180100');smG.addColorStop(1,'#0a0000');
-      ctx.fillStyle=smG;
-      // Rounded rocky pillar — flat or slightly domed top, no sharp tip
+  } else if(style==='volcano'){
+    // Volcano only — wide flat-topped rocky mounds, no pointed tips
+    ctx.globalAlpha=0.85;
+    for(var smi=0;smi<7;smi++){
+      var smx=((smi*W/6+nearOff*0.55)%W+W)%W;
+      var smh=gameH*0.18+Math.sin(smi*2.1)*gameH*0.06;
+      var smw=80+Math.sin(smi*1.4)*25;
+      ctx.fillStyle='#1e0300';
+      // Completely flat top — rectangle base with rounded shoulders only
       ctx.beginPath();
       ctx.moveTo(smx-smw*0.5,gameH);
-      ctx.bezierCurveTo(smx-smw*0.5,gameH-smh*0.5,smx-smw*0.35,gameH-smh*0.85,smx-smw*0.2,gameH-smh*0.95);
-      ctx.bezierCurveTo(smx-smw*0.08,gameH-smh,smx+smw*0.08,gameH-smh,smx+smw*0.2,gameH-smh*0.95);
-      ctx.bezierCurveTo(smx+smw*0.35,gameH-smh*0.85,smx+smw*0.5,gameH-smh*0.5,smx+smw*0.5,gameH);
+      ctx.lineTo(smx-smw*0.5,gameH-smh*0.6);
+      ctx.bezierCurveTo(smx-smw*0.5,gameH-smh*0.9,smx-smw*0.3,gameH-smh,smx-smw*0.15,gameH-smh);
+      ctx.lineTo(smx+smw*0.15,gameH-smh);
+      ctx.bezierCurveTo(smx+smw*0.3,gameH-smh,smx+smw*0.5,gameH-smh*0.9,smx+smw*0.5,gameH-smh*0.6);
+      ctx.lineTo(smx+smw*0.5,gameH);
       ctx.closePath();ctx.fill();
-      // Lava glow pooling at base — not at tip
-      ctx.save();ctx.globalAlpha=0.35+Math.sin(frameN*0.05+smi*1.1)*0.15;
-      var stg2=ctx.createRadialGradient(smx,gameH,0,smx,gameH,smw*0.6);
-      stg2.addColorStop(0,'rgba(255,100,10,0.7)');stg2.addColorStop(0.5,'rgba(200,40,0,0.3)');stg2.addColorStop(1,'rgba(180,20,0,0)');
-      ctx.fillStyle=stg2;ctx.beginPath();ctx.ellipse(smx,gameH,smw*0.5,smw*0.25,0,0,Math.PI*2);ctx.fill();
-      ctx.restore();
     }
-    // Lava river flowing along ground
+    // Lava river at ground
     ctx.globalAlpha=0.75;
     var lrG=ctx.createLinearGradient(0,gameH-18,0,gameH);
-    lrG.addColorStop(0,'rgba(255,160,0,0.9)');lrG.addColorStop(0.5,'rgba(255,60,0,0.7)');lrG.addColorStop(1,'rgba(180,10,0,0.4)');
+    lrG.addColorStop(0,'rgba(255,140,0,0.8)');lrG.addColorStop(1,'rgba(160,10,0,0.4)');
     ctx.fillStyle=lrG;
     ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(W,gameH);
-    for(var lrx=W;lrx>=0;lrx-=20){
-      ctx.lineTo(lrx,gameH-14+Math.sin((lrx+nearOff*0.8)*0.06)*6);
-    }
+    for(var lrx=W;lrx>=0;lrx-=20){ctx.lineTo(lrx,gameH-12+Math.sin((lrx+nearOff*0.8)*0.06)*5);}
     ctx.closePath();ctx.fill();
-    // Lava surface highlight shimmer
-    ctx.globalAlpha=0.4+Math.sin(frameN*0.06)*0.15;
-    ctx.strokeStyle='rgba(255,240,100,0.7)';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(0,gameH-13);
-    for(var lsx=0;lsx<W;lsx+=25){
-      ctx.lineTo(lsx+12,gameH-13+Math.sin((lsx+nearOff)*0.07)*4);
-    }
-    ctx.stroke();
     ctx.globalAlpha=1;
 
-  } else if(style==='volcano'||style==='burningcity'){
-    // Rounded rocky outcroppings — no sharp mountains
+  } else if(style==='burningcity'){
+    // Burning City — ruined building silhouettes with fire on top
     ctx.globalAlpha=0.7;
     for(var i=0;i<bgMtnNear.length;i++){
       var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
-      var rh=m.h*0.7, rw=m.w*1.2;
-      var rmG=ctx.createLinearGradient(rx,gameH-rh,rx,gameH);
-      rmG.addColorStop(0,'#300600');rmG.addColorStop(1,'#180200');
-      ctx.fillStyle=rmG;
+      var bh3=m.h*0.9, bw3=m.w*0.8;
+      // Building body
+      ctx.fillStyle='#1a0200';
+      ctx.fillRect(rx-bw3*0.5,gameH-bh3,bw3,bh3);
+      // Broken top chunks
+      ctx.fillStyle='#0d0100';
+      ctx.fillRect(rx-bw3*0.5,gameH-bh3,bw3*0.3,bh3*0.12);
+      ctx.fillRect(rx+bw3*0.1,gameH-bh3,bw3*0.2,bh3*0.08);
+      // Fire glow from windows
+      ctx.save();ctx.globalAlpha=0.25+Math.sin(frameN*0.06+rx)*0.12;
+      ctx.fillStyle='rgba(255,80,0,0.5)';
+      ctx.fillRect(rx-bw3*0.3,gameH-bh3*0.4,bw3*0.15,bh3*0.08);
+      ctx.fillRect(rx+bw3*0.1,gameH-bh3*0.6,bw3*0.15,bh3*0.08);
+      ctx.restore();
+      // Flames on top of building — flickering orange/yellow
+      var flameH=bh3*0.25+Math.sin(frameN*0.15+rx*0.02)*bh3*0.08;
+      var flameX=rx-bw3*0.3, flameW=bw3*0.6;
+      ctx.save();
+      ctx.globalAlpha=0.7+Math.sin(frameN*0.12+rx*0.01)*0.2;
+      // Outer flame — orange
+      var fG1=ctx.createRadialGradient(rx,gameH-bh3,2,rx,gameH-bh3-flameH*0.5,flameW*0.5);
+      fG1.addColorStop(0,'rgba(255,140,0,0.9)');fG1.addColorStop(0.5,'rgba(255,60,0,0.5)');fG1.addColorStop(1,'rgba(200,20,0,0)');
+      ctx.fillStyle=fG1;
       ctx.beginPath();
-      ctx.moveTo(rx-rw*0.5,gameH);
-      ctx.bezierCurveTo(rx-rw*0.5,gameH-rh*0.4,rx-rw*0.3,gameH-rh*0.85,rx-rw*0.1,gameH-rh);
-      ctx.bezierCurveTo(rx+rw*0.1,gameH-rh,rx+rw*0.3,gameH-rh*0.85,rx+rw*0.5,gameH-rh*0.4);
-      ctx.lineTo(rx+rw*0.5,gameH);ctx.closePath();ctx.fill();
+      ctx.moveTo(flameX,gameH-bh3);
+      ctx.bezierCurveTo(flameX-5,gameH-bh3-flameH*0.4,rx-bw3*0.1,gameH-bh3-flameH,rx,gameH-bh3-flameH*1.1);
+      ctx.bezierCurveTo(rx+bw3*0.1,gameH-bh3-flameH,flameX+flameW+5,gameH-bh3-flameH*0.4,flameX+flameW,gameH-bh3);
+      ctx.closePath();ctx.fill();
+      // Inner flame — bright yellow core
+      ctx.globalAlpha=0.5+Math.sin(frameN*0.18+rx*0.015)*0.25;
+      var fG2=ctx.createRadialGradient(rx,gameH-bh3-flameH*0.2,1,rx,gameH-bh3-flameH*0.4,flameW*0.2);
+      fG2.addColorStop(0,'rgba(255,240,100,1)');fG2.addColorStop(0.5,'rgba(255,160,0,0.6)');fG2.addColorStop(1,'rgba(255,80,0,0)');
+      ctx.fillStyle=fG2;ctx.beginPath();ctx.ellipse(rx,gameH-bh3-flameH*0.3,flameW*0.2,flameH*0.4,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;
+
+  } else if(style==='lavacavern'){
+    // Lava Cavern — stalactites from ceiling, lava pools below
+    ctx.globalAlpha=0.85;
+    // Ceiling stalactites — rounded hanging shapes
+    for(var i=0;i<bgMtnNear.length;i++){
+      var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.4)%W+W*2)%W;
+      var sh=m.h*0.6, sw=m.w*0.5;
+      var sG=ctx.createLinearGradient(rx,0,rx,sh);
+      sG.addColorStop(0,'#1a0100');sG.addColorStop(1,'#0a0000');
+      ctx.fillStyle=sG;
+      ctx.beginPath();
+      ctx.moveTo(rx-sw*0.5,0);
+      ctx.bezierCurveTo(rx-sw*0.5,sh*0.5,rx-sw*0.2,sh*0.85,rx,sh);
+      ctx.bezierCurveTo(rx+sw*0.2,sh*0.85,rx+sw*0.5,sh*0.5,rx+sw*0.5,0);
+      ctx.closePath();ctx.fill();
+      // Lava drip glow at tip
+      ctx.save();ctx.globalAlpha=0.4+Math.sin(frameN*0.05+rx)*0.15;
+      var dg=ctx.createRadialGradient(rx,sh,2,rx,sh,sw*0.4);
+      dg.addColorStop(0,'rgba(255,80,0,0.8)');dg.addColorStop(1,'rgba(200,20,0,0)');
+      ctx.fillStyle=dg;ctx.beginPath();ctx.arc(rx,sh,sw*0.4,0,Math.PI*2);ctx.fill();
+      ctx.restore();
     }
     ctx.globalAlpha=1;
 
@@ -4885,8 +4920,38 @@ function drawGround(bm,nbm,tb,mn1,icC,gameH){
   ctx.strokeStyle='rgba('+icC+',0.2)'; ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(0,gameH-18);ctx.lineTo(W,gameH-18);ctx.stroke();
   if(gs==='lava'){
-    ctx.strokeStyle='rgba(255,80,10,0.5)';ctx.lineWidth=1.5;
-    for(var ci=0;ci<5;ci++){var cx2=(ci*W/4+ruinOff*0.25)%W;ctx.beginPath();ctx.moveTo(cx2,gameH-18);ctx.bezierCurveTo(cx2+8,gameH-12,cx2+4,gameH-8,cx2+18,gameH);ctx.stroke();}
+    // Flowing lava surface — bright orange/red pools with animated shimmer
+    var lavaBG=ctx.createLinearGradient(0,gameH-18,0,gameH);
+    lavaBG.addColorStop(0,'rgba(255,100,0,0.85)');lavaBG.addColorStop(0.4,'rgba(200,40,0,0.7)');lavaBG.addColorStop(1,'rgba(140,10,0,0.5)');
+    ctx.fillStyle=lavaBG;ctx.fillRect(0,gameH-18,W,18);
+    // Bright flowing lava veins
+    ctx.save();
+    for(var li3=0;li3<8;li3++){
+      var lx3=((li3*W/7+ruinOff*0.6)%W+W)%W;
+      var lw3=18+Math.sin(li3*1.3)*8;
+      var lavaPulse=0.6+Math.sin(frameN*0.08+li3*0.9)*0.3;
+      ctx.globalAlpha=lavaPulse;
+      var lavaG=ctx.createLinearGradient(lx3,gameH-18,lx3+lw3,gameH);
+      lavaG.addColorStop(0,'rgba(255,200,50,0.9)');lavaG.addColorStop(0.5,'rgba(255,120,0,0.7)');lavaG.addColorStop(1,'rgba(200,40,0,0)');
+      ctx.fillStyle=lavaG;
+      ctx.beginPath();ctx.ellipse(lx3+lw3*0.5,gameH-8,lw3,7,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    // Bright yellow-white hotspots
+    ctx.save();
+    for(var hi2=0;hi2<5;hi2++){
+      var hx2=((hi2*W/4+ruinOff*0.3)%W+W)%W;
+      ctx.globalAlpha=0.4+Math.sin(frameN*0.12+hi2*1.7)*0.3;
+      ctx.fillStyle='rgba(255,240,100,0.8)';
+      ctx.beginPath();ctx.ellipse(hx2,gameH-14,8,4,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    // Glow rising from lava surface
+    ctx.save();ctx.globalAlpha=0.3+Math.sin(frameN*0.05)*0.1;
+    var riseG=ctx.createLinearGradient(0,gameH-40,0,gameH-18);
+    riseG.addColorStop(0,'rgba(255,80,0,0)');riseG.addColorStop(1,'rgba(255,80,0,0.4)');
+    ctx.fillStyle=riseG;ctx.fillRect(0,gameH-40,W,22);
+    ctx.restore();
   } else if(gs==='snow'||gs==='icefloor'){
     ctx.fillStyle='rgba(220,240,255,0.5)';
     for(var si=0;si<7;si++){var sx=(si*W/6+ruinOff*0.15)%W;ctx.beginPath();ctx.arc(sx,gameH-18,18,Math.PI,Math.PI*2);ctx.fill();}
@@ -6646,35 +6711,22 @@ function drawThemedObstacle(o, gameH, os){
 
   // ---- LAVA: black volcanic rock column with glowing edges ----
   } else if(os==='lava'){
-    // Black rock body — strongly contrasts with red sky
+    // Black rock body
     ctx.fillStyle='#0d0200';
     ctx.fillRect(x,o.y,w,h);
-    // Dark grey rock texture stripe
+    // Dark texture stripes
     ctx.fillStyle='#1a0800';
     ctx.fillRect(x+w*0.1,o.y,w*0.2,h);
     ctx.fillRect(x+w*0.6,o.y,w*0.2,h);
-    // Bright orange glowing edge at tip
+    // Glowing orange edge at face (not a diagonal line — a solid bar)
     var edgeY=side==='bottom'?o.y:o.y+h;
-    var edgeGrad=ctx.createLinearGradient(x,edgeY,x+w,edgeY);
-    edgeGrad.addColorStop(0,'#ff4400'); edgeGrad.addColorStop(0.3,'#ff8800'); edgeGrad.addColorStop(0.7,'#ff6600'); edgeGrad.addColorStop(1,'#ff4400');
-    ctx.fillStyle=edgeGrad;
-    ctx.fillRect(x,side==='bottom'?o.y:o.y+h-6,w,6);
-    // Lava crack lines glowing bright
-    ctx.strokeStyle='rgba(255,140,0,0.9)'; ctx.lineWidth=2;
-    for(var li2=0;li2<3;li2++){
-      var lx2=x+w*0.2+li2*w*0.25;
-      var ly1=side==='bottom'?o.y+6:o.y+h-6;
-      var ly2=side==='bottom'?o.y+h*0.6:o.y+h*0.4;
-      ctx.beginPath(); ctx.moveTo(lx2,ly1);
-      ctx.lineTo(lx2+5,ly1+(ly2-ly1)*0.35); ctx.lineTo(lx2-4,ly1+(ly2-ly1)*0.65); ctx.lineTo(lx2,ly2);
-      ctx.stroke();
-    }
-    // Strong orange glow at the tip
-    ctx.globalAlpha=0.6;
-    var tipY=side==='bottom'?o.y:o.y+h;
-    var lg2=ctx.createRadialGradient(cx,tipY,2,cx,tipY,w*0.8);
-    lg2.addColorStop(0,'rgba(255,160,0,0.9)'); lg2.addColorStop(0.4,'rgba(255,80,0,0.5)'); lg2.addColorStop(1,'rgba(255,40,0,0)');
-    ctx.fillStyle=lg2; ctx.beginPath(); ctx.ellipse(cx,tipY,w*0.8,20,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ff5500';
+    ctx.fillRect(x,side==='bottom'?o.y:o.y+h-4,w,4);
+    // Soft lava glow at face — ellipse, not a triangle outline
+    ctx.globalAlpha=0.5;
+    var lg2=ctx.createRadialGradient(cx,edgeY,2,cx,edgeY,w*0.7);
+    lg2.addColorStop(0,'rgba(255,140,0,0.7)');lg2.addColorStop(0.5,'rgba(255,60,0,0.3)');lg2.addColorStop(1,'rgba(255,40,0,0)');
+    ctx.fillStyle=lg2;ctx.beginPath();ctx.ellipse(cx,edgeY,w*0.7,16,0,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
 
   // ---- ICE / ICICLE: solid ice column with pointed tip ----
@@ -7115,9 +7167,11 @@ function drawObstacles(){
   // Override obstStyle per world level for visual consistency
   if(currentWorldLevel){
     var lid3=currentWorldLevel.level.id;
-    if(lid3==='f1'||lid3==='f4'||lid3==='f5') os='lava';
+    if(lid3==='f1') os='lava';
     else if(lid3==='f2') os='sandstone';
     else if(lid3==='f3') os='rubble';
+    else if(lid3==='f4') os='dragonlair';
+    else if(lid3==='f5') os='burningcity';
     else if(lid3==='f6') os='dragonlair';
     else if(lid3==='w1'||lid3==='i4') os='crystal';
     else if(lid3==='w2'||lid3==='i3') os='icicle';
@@ -7611,7 +7665,7 @@ function deactivateInfinite(){
   steamParticles=[]; lightningBolts=[]; lightningTimer=0;
   lightningBurstActive=false; lightningBurstFrames=0; lightningBurstCooldown=0;
   document.getElementById('infiniteHud').classList.remove('show');
-  playMusic('main');
+  playMusic('level');
   showToast('\u26a1 Infinite power faded');
 }
 
@@ -7703,9 +7757,11 @@ function checkCollision(){
   var os=bm.obstStyle||'default';
   if(currentWorldLevel){
     var lid4=currentWorldLevel.level.id;
-    if(lid4==='f1'||lid4==='f4'||lid4==='f5') os='lava';
+    if(lid4==='f1') os='lava';
     else if(lid4==='f2') os='sandstone';
     else if(lid4==='f3') os='rubble';
+    else if(lid4==='f4') os='dragonlair';
+    else if(lid4==='f5') os='burningcity';
   }
   var isForest=(os==='root'||os==='branch'||os==='swamp');
   var isJungle=(os==='jungle');
@@ -7742,7 +7798,7 @@ function checkCollision(){
     }
     if(hx<ox+ow&&hx+hw>ox&&hy<oy+oh&&hy+hh>oy){
       if(infiniteActive){spawnDebris(o);obstacles.splice(i,1);return null;}
-      if(ghostActive){ghostActive=false;obstacles.splice(i,1);showToast('👻 Ghost mode used!');return null;}
+      if(ghostActive){ghostActive=false;sfxGhostPassthrough();obstacles.splice(i,1);showToast('👻 Ghost mode used!');return null;}
       return 'rock';
     }
     // Near-miss: within 12px but not hitting
@@ -7751,6 +7807,7 @@ function checkCollision(){
       var nearY=hy<oy?oy-(hy+hh):hy>(oy+oh)?hy-(oy+oh):0;
       if(nearX>=0&&nearX<12&&nearY===0||nearY>=0&&nearY<12&&nearX===0){
         nearMissActive=true; nearMissTimer=NEAR_MISS_DURATION; nearMissCooldown=90;
+        try{sfxNearMiss();}catch(e){}
         totalNearMisses++;
         showToast('😅 CLOSE!');
       }
@@ -7810,6 +7867,7 @@ document.addEventListener('mousedown',function(e){
 function loseLife(){
   if(shieldActive){
     shieldActive=false;
+    sfxShieldBlock();
     showToast('\uD83D\uDEE1\uFE0F Shield absorbed the hit!');
     fly.vy=0; fly.y=H*0.42; fly.trail=[];
     obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
@@ -7819,7 +7877,7 @@ function loseLife(){
   noDamageLevelsStreak=0;
   lives--; updateLivesUI();
   shakeFrames=14; shakeIntensity=7;
-  try{sfxHitGeneric();}catch(e){}
+  try{sfxLoseLife();}catch(e){}
   fly.vy=0; fly.y=H*0.42; fly.trail=[];
   obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
   magnetItems=[]; magnetActive=false;
@@ -7851,6 +7909,7 @@ function triggerLevelClear(){
   mothsInOneLevelBest=Math.max(mothsInOneLevelBest,currentRunMoths);
   var overlayStars2=currentWorldLevel?calcStars(currentRunMoths, currentRunNoDamage):0;
   totalStars+=overlayStars2;
+  if(overlayStars2>0) try{sfxStarEarned();}catch(e){}
   if(currentWorldLevel) worldsVisited=Math.max(worldsVisited,['earth','fire','water','ice','galaxy'].indexOf(currentWorldLevel.worldId)+1);
 
   // Stars for overlay
@@ -8162,62 +8221,743 @@ function W(t,dest){
   try{var len=Math.floor(AC.sampleRate*0.12),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);for(var i=0;i<len;i++)d[i]=(Math.random()*2-1);var src=AC.createBufferSource();src.buffer=buf;var f=AC.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(700,t);f.frequency.linearRampToValueAtTime(150,t+0.12);f.Q.value=1.5;var g=AC.createGain();g.connect(dest||sfxGain);g.gain.setValueAtTime(0.22,t);g.gain.linearRampToValueAtTime(0,t+0.12);src.connect(f);f.connect(g);src.start(t);src.stop(t+0.13);}catch(e){}
 }
 
-function sfxTap(){if(!AC||!sfxEnabled) return; W(AC.currentTime);}
-function sfxMothCollect(g2){if(!AC||!sfxEnabled) return;var t=AC.currentTime;if(g2){[523,659,784,1047].forEach(function(f,i){O(f,'sine',t+i*0.06,0.18,0.4);});O(1047,'sine',t+0.24,0.3,0.5);}else{O(880,'sine',t,0.08,0.3);O(1100,'sine',t+0.07,0.1,0.3);}}
-function sfxHitGeneric(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;N(t,0.08,0.35);O(80,'sawtooth',t,0.1,0.4);}
-function sfxLevelClear(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;[523,659,784,1047,784,1047,1319].forEach(function(f,i){O(f,'square',t+i*0.1,0.15,0.35);});}
-function sfxGameOver(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;[440,330,220,165].forEach(function(f,i){O(f,'sawtooth',t+i*0.18,0.25,0.3);});}
-function sfxInfiniteActivate(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;S(200,1200,t,0.3,0.5);O(880,'sine',t+0.15,0.2,0.4);O(1100,'sine',t+0.22,0.2,0.4);O(1320,'sine',t+0.29,0.3,0.5);}
+function sfxTap(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Rising sparkle notes
+  [0,0.04,0.08,0.13].forEach(function(off,i){
+    try{
+      var g=AC.createGain();g.connect(sfxGain);
+      g.gain.setValueAtTime(0.18,t+off);
+      g.gain.exponentialRampToValueAtTime(0.001,t+off+0.18);
+      var o=AC.createOscillator();o.type='sine';
+      var baseFreq=[600,800,1000,1300][i];
+      o.frequency.setValueAtTime(baseFreq,t+off);
+      o.frequency.linearRampToValueAtTime(baseFreq*1.3,t+off+0.1);
+      o.connect(g);o.start(t+off);o.stop(t+off+0.2);
+    }catch(e){}
+  });
+  // Soft air puff underneath
+  try{
+    var len=Math.floor(AC.sampleRate*0.2);
+    var buf=AC.createBuffer(1,len,AC.sampleRate);var d=buf.getChannelData(0);
+    for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/len);
+    var src=AC.createBufferSource();src.buffer=buf;
+    var lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
+    var g2=AC.createGain();g2.connect(sfxGain);
+    g2.gain.setValueAtTime(0.12,t);g2.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    src.connect(lp);lp.connect(g2);src.start(t);src.stop(t+0.22);
+  }catch(e){}
+}
+function sfxMothCollect(golden){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  if(golden){
+    // Golden moth — sparkling arpeggio
+    [523,659,784,1047,1319].forEach(function(f,i){O(f,'sine',t+i*0.055,0.16,0.4);});
+    O(1568,'sine',t+0.28,0.25,0.5);
+    N(t,0.04,0.1,2000);
+  } else {
+    // Regular moth — soft chime
+    O(880,'sine',t,0.06,0.12);
+    O(1100,'sine',t+0.05,0.08,0.14);
+    O(1320,'sine',t+0.09,0.06,0.1);
+  }
+}
+function sfxHitGeneric(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  N(t,0.06,0.4,400);
+  S(180,60,t,0.12,0.5);
+  O(80,'sawtooth',t,0.08,0.35);
+}
+function sfxLoseLife(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Dramatic hit + descend
+  N(t,0.08,0.5,600);
+  S(300,80,t,0.3,0.5);
+  O(120,'sawtooth',t+0.05,0.35,0.4);
+  O(80,'sawtooth',t+0.15,0.4,0.35);
+  S(160,60,t+0.2,0.3,0.35);
+}
+function sfxShieldBlock(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Metallic clang + energy dissipate
+  O(440,'square',t,0.06,0.4);
+  O(880,'square',t,0.04,0.3);
+  S(1200,400,t,0.2,0.3);
+  N(t,0.08,0.15,3000);
+}
+function sfxShieldActivate(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  S(200,800,t,0.25,0.35);
+  O(660,'sine',t+0.1,0.15,0.2);
+  O(880,'sine',t+0.18,0.15,0.2);
+}
+function sfxGhostActivate(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Ethereal whoosh
+  S(400,1600,t,0.2,0.3);
+  O(880,'sine',t+0.05,0.12,0.25);
+  O(1100,'sine',t+0.1,0.1,0.2);
+  O(1320,'sine',t+0.15,0.08,0.2);
+}
+function sfxGhostPassthrough(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Phase through sound
+  N(t,0.1,0.2,2000);
+  S(800,200,t,0.15,0.25);
+  O(660,'sine',t+0.05,0.1,0.2);
+}
+function sfxSlowMoActivate(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Time warp — pitch bends down then back
+  S(800,200,t,0.4,0.4);
+  O(220,'sine',t+0.15,0.3,0.4);
+  O(330,'sine',t+0.25,0.2,0.35);
+}
+function sfxNearMiss(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Whoosh + heartbeat skip
+  S(600,200,t,0.12,0.3);
+  N(t,0.05,0.2,1000);
+  O(60,'sine',t+0.08,0.25,0.15);
+}
+function sfxLevelClear(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Victory fanfare — ascending then resolve
+  [294,330,392,494,392,494,587].forEach(function(f,i){O(f,'square',t+i*0.1,0.16,0.32);});
+  O(587,'sine',t+0.65,0.3,0.5);
+  N(t+0.6,0.15,0.1,3000);
+}
+function sfxLevelStart(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Short ready chime
+  O(440,'sine',t,0.08,0.12);
+  O(554,'sine',t+0.1,0.08,0.12);
+  O(659,'sine',t+0.2,0.12,0.2);
+}
+function sfxStarEarned(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  O(880,'sine',t,0.1,0.08);
+  O(1100,'sine',t+0.06,0.1,0.08);
+  O(1320,'sine',t+0.12,0.12,0.15);
+}
+function sfxGameOver(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Dramatic descend
+  [440,370,294,220,165].forEach(function(f,i){O(f,'sawtooth',t+i*0.2,0.22,0.28);});
+  N(t+0.6,0.4,0.3,300);
+  O(82,'sine',t+0.8,0.3,0.8);
+}
+function sfxInfiniteActivate(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  S(150,1400,t,0.35,0.5);
+  N(t,0.08,0.2,3000);
+  [880,1100,1320,1568].forEach(function(f,i){O(f,'sine',t+0.1+i*0.07,0.18,0.25);});
+  O(1568,'sine',t+0.42,0.35,0.4);
+}
 function sfxMenuTap(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;O(660,'sine',t,0.06,0.2);O(880,'sine',t+0.04,0.06,0.15);}
 function sfxMenuSelect(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;O(523,'sine',t,0.05,0.2);O(659,'sine',t+0.05,0.05,0.2);O(784,'sine',t+0.1,0.1,0.3);}
 function sfxMenuBack(){if(!AC||!sfxEnabled) return;var t=AC.currentTime;O(440,'sine',t,0.05,0.2);O(330,'sine',t+0.05,0.08,0.15);}
 function sfxMenuTick(){if(!AC||!sfxEnabled) return;O(880,'sine',AC.currentTime,0.04,0.12);}
 
-var ML=[
-  {f:523,d:0.5},{f:659,d:0.5},{f:784,d:0.5},{f:1047,d:0.5},
-  {f:988,d:0.5},{f:880,d:0.5},{f:784,d:0.5},{f:698,d:0.5},
-  {f:659,d:0.25},{f:698,d:0.25},{f:659,d:0.25},{f:587,d:0.25},{f:523,d:0.5},{f:440,d:0.5},
-  {f:349,d:0.25},{f:392,d:0.25},{f:440,d:0.25},{f:523,d:0.25},{f:587,d:0.5},{f:659,d:0.5},
-  {f:784,d:0.25},{f:880,d:0.25},{f:988,d:0.25},{f:1047,d:0.25},
-  {f:988,d:0.25},{f:880,d:0.25},{f:784,d:0.25},{f:698,d:0.25},
-  {f:659,d:0.5},{f:523,d:0.5},{f:440,d:0.5},{f:349,d:0.5},
-  {f:392,d:0.25},{f:440,d:0.25},{f:523,d:0.25},{f:587,d:0.25},
-  {f:659,d:0.5},{f:784,d:0.5},{f:1047,d:0.5},{f:784,d:0.25},{f:659,d:0.25},{f:523,d:1.0}
-];
-var BL=[{f:131,d:1},{f:131,d:1},{f:110,d:1},{f:110,d:1},{f:131,d:1},{f:131,d:1},{f:98,d:1},{f:131,d:1}];
-var IL=[
-  {f:784,d:0.125},{f:784,d:0.125},{f:784,d:0.125},{f:659,d:0.5},
-  {f:0,d:0.125},{f:698,d:0.125},{f:698,d:0.125},{f:698,d:0.125},{f:587,d:0.5},
-  {f:0,d:0.25},{f:784,d:0.25},{f:880,d:0.25},{f:988,d:0.25},{f:1047,d:0.25},
-  {f:1175,d:0.25},{f:1319,d:0.25},{f:1047,d:0.5},
-  {f:0,d:0.25},{f:988,d:0.25},{f:880,d:0.25},{f:784,d:0.25},{f:698,d:0.25},{f:659,d:0.5},
-  {f:784,d:0.25},{f:880,d:0.25},{f:988,d:0.25},{f:880,d:0.25},{f:784,d:0.5},
-  {f:523,d:0.25},{f:659,d:0.25},{f:784,d:0.25},{f:1047,d:0.25},
-  {f:988,d:0.5},{f:784,d:0.5},{f:1047,d:1.0}
-];
-var IBL=[{f:131,d:0.5},{f:131,d:0.5},{f:147,d:0.5},{f:131,d:0.5},{f:110,d:0.5},{f:110,d:0.5},{f:123,d:0.5},{f:131,d:0.5},{f:131,d:0.5},{f:131,d:0.5},{f:147,d:0.5},{f:131,d:0.5},{f:98,d:0.5},{f:98,d:0.5},{f:110,d:0.5},{f:131,d:1.0}];
+// ── BOSS SOUND EFFECTS ──
+function sfxBossEnter(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Huge low boom + rising screech
+  N(t,0.4,0.5); // thunder crack
+  S(60,200,t,0.5,0.6);  // rising rumble
+  O(80,'sawtooth',t+0.1,0.6,0.5);
+  S(400,100,t+0.3,0.4,0.3); // downward whoosh
+}
+function sfxBossCharge(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Swooping wing rush + screech
+  S(800,200,t,0.35,0.4);  // downward screech
+  N(t,0.15,0.3);           // wind rush
+  O(120,'sawtooth',t+0.1,0.3,0.35);
+  S(150,80,t+0.2,0.25,0.3);
+}
+function sfxBossAttack(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Sharp impact + shockwave
+  N(t,0.06,0.5);            // crack
+  O(150,'square',t,0.08,0.4);
+  S(300,50,t+0.04,0.3,0.35);  // impact boom
+  O(60,'sawtooth',t+0.05,0.4,0.4);
+}
+function sfxBossFireBreath(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Roaring fire crackle
+  N(t,0.3,0.4);
+  S(200,600,t,0.25,0.35);   // rising roar
+  N(t+0.1,0.3,0.35);
+  O(100,'sawtooth',t,0.4,0.3);
+}
+function sfxBossFeather(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Sharp whoosh of projectile
+  S(600,200,t,0.12,0.2);
+}
+function sfxBossHurt(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Pained shriek + rumble
+  S(440,880,t,0.08,0.4);
+  S(880,220,t+0.06,0.15,0.35);
+  N(t+0.05,0.1,0.2);
+}
+function sfxBossEnrage(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Dramatic roar escalation
+  S(80,400,t,0.4,0.5);
+  N(t,0.5,0.4);
+  O(160,'sawtooth',t+0.2,0.3,0.4);
+  S(400,100,t+0.35,0.3,0.35);
+  O(200,'square',t+0.4,0.25,0.4);
+}
+function sfxBossDeath(){
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  // Epic collapse — long
+  N(t,0.3,0.5);
+  S(300,40,t,0.8,0.5);
+  O(80,'sawtooth',t+0.2,0.6,0.4);
+  N(t+0.4,0.4,0.35);
+  S(200,30,t+0.5,0.6,0.4);
+  O(60,'sawtooth',t+0.7,0.5,0.35);
+  // Final low drone fade
+  O(40,'sine',t+0.8,1.2,0.3);
+}
+function sfxBossFloat(){
+  // Called periodically while boss floats — subtle wing flap
+  if(!AC||!sfxEnabled) return;
+  var t=AC.currentTime;
+  N(t,0.06,0.06);
+  S(300,200,t,0.08,0.08);
+}
 
-function musicLoop(seq,bpm,track){
+// ═══════════════════════════════════════════════════════
+// MUSIC ENGINE — dark atmospheric, multi-layer
+// Each track: melody + bass + pulse (rhythmic accent)
+// Uses sawtooth/square with detuned layers for richness
+// ═══════════════════════════════════════════════════════
+
+// Advanced oscillator — detuned for thickness
+function OD(freq,t,dur,vol,dest){
+  if(!AC||freq<=0) return;
+  try{
+    var g=AC.createGain();g.connect(dest||musicGain);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    // Two slightly detuned oscillators for warmth
+    [0,4].forEach(function(detune){
+      var o=AC.createOscillator();o.type='sawtooth';
+      o.frequency.setValueAtTime(freq,t);o.detune.setValueAtTime(detune,t);
+      o.connect(g);o.start(t);o.stop(t+dur+0.05);
+    });
+  }catch(e){}
+}
+// Square wave pulse — punchy rhythmic hit
+function OP(freq,t,dur,vol,dest){
+  if(!AC||freq<=0) return;
+  try{
+    var g=AC.createGain();g.connect(dest||musicGain);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur*0.6);
+    var o=AC.createOscillator();o.type='square';o.frequency.setValueAtTime(freq,t);
+    o.connect(g);o.start(t);o.stop(t+dur);
+  }catch(e){}
+}
+// Soft sine pad — atmospheric underlayer
+function OPAD(freq,t,dur,vol,dest){
+  if(!AC||freq<=0) return;
+  try{
+    var g=AC.createGain();g.connect(dest||musicGain);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.08);g.gain.setValueAtTime(vol,t+dur-0.1);g.gain.linearRampToValueAtTime(0,t+dur);
+    var o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(freq,t);
+    o.connect(g);o.start(t);o.stop(t+dur+0.05);
+  }catch(e){}
+}
+// Low boom — sub bass hit
+function BOOM(freq,t,dur,vol){
+  if(!AC) return;
+  try{
+    var g=AC.createGain();g.connect(musicGain);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    var o=AC.createOscillator();o.type='triangle';
+    o.frequency.setValueAtTime(freq*2,t);o.frequency.exponentialRampToValueAtTime(freq,t+0.08);
+    o.connect(g);o.start(t);o.stop(t+dur);
+  }catch(e){}
+}
+
+// ── TRACK DEFINITIONS ──
+// Each note: {f:freq, d:duration_in_beats}  f=0 is rest
+// Frequencies use equal temperament: A2=110, Bb2=116.5, B2=123.5, C3=130.8, D3=146.8, Eb3=155.6, E3=164.8, F3=174.6, G3=196, Ab3=207.7, A3=220 etc.
+
+// EARTH — Dorian mode, mysterious adventure. Think Castlevania corridors.
+var EARTH_M=[
+  {f:220,d:0.5},{f:247,d:0.25},{f:220,d:0.25},{f:196,d:0.5},{f:175,d:0.5},
+  {f:196,d:0.25},{f:220,d:0.25},{f:247,d:0.5},{f:220,d:0.5},
+  {f:261,d:0.5},{f:247,d:0.25},{f:220,d:0.25},{f:196,d:0.5},{f:175,d:0.5},
+  {f:155,d:0.25},{f:175,d:0.25},{f:196,d:0.25},{f:175,d:0.25},{f:165,d:1.0}
+];
+var EARTH_B=[
+  {f:55,d:0.5},{f:0,d:0.25},{f:55,d:0.25},{f:49,d:0.5},{f:0,d:0.5},
+  {f:55,d:0.5},{f:0,d:0.25},{f:55,d:0.25},{f:58,d:0.5},{f:0,d:0.5},
+  {f:55,d:0.5},{f:0,d:0.25},{f:55,d:0.25},{f:44,d:0.5},{f:0,d:0.5},
+  {f:49,d:0.5},{f:0,d:0.25},{f:49,d:0.25},{f:41,d:1.0}
+];
+var EARTH_P=[  // pulse rhythm
+  {f:110,d:0.25},{f:0,d:0.75},{f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.25},
+  {f:98,d:0.25},{f:0,d:0.75},{f:98,d:0.25},{f:0,d:0.75},
+  {f:110,d:0.25},{f:0,d:0.75},{f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.25},
+  {f:87,d:0.25},{f:0,d:0.75},{f:87,d:0.25},{f:0,d:0.75}
+];
+
+// FIRE — Scorching Phrygian descent, fast chromatic runs
+var FIRE_M=[
+  {f:330,d:0.25},{f:311,d:0.25},{f:294,d:0.5},{f:330,d:0.5},{f:277,d:0.5},
+  {f:294,d:0.25},{f:311,d:0.25},{f:330,d:0.5},{f:311,d:0.5},{f:0,d:0.5},
+  {f:277,d:0.25},{f:294,d:0.25},{f:330,d:0.5},{f:311,d:0.5},{f:294,d:0.5},
+  {f:262,d:0.25},{f:0,d:0.25},{f:247,d:0.5},{f:262,d:1}
+];
+var FIRE_B=[
+  {f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:87,d:0.5},{f:82,d:0.5},
+  {f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.5},{f:73,d:0.5},{f:0,d:0.5},
+  {f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:92,d:0.5},{f:82,d:0.5},
+  {f:65,d:0.25},{f:0,d:0.25},{f:73,d:0.25},{f:0,d:0.25},{f:62,d:1}
+];
+var FIRE_P=[
+  {f:165,d:0.25},{f:0,d:0.25},{f:165,d:0.25},{f:0,d:0.25},{f:165,d:0.25},{f:165,d:0.25},{f:0,d:0.5},
+  {f:165,d:0.25},{f:0,d:0.25},{f:165,d:0.25},{f:0,d:0.25},{f:147,d:0.5},{f:0,d:0.5},
+  {f:165,d:0.25},{f:0,d:0.25},{f:165,d:0.25},{f:0,d:0.25},{f:175,d:0.25},{f:175,d:0.25},{f:0,d:0.5},
+  {f:130,d:0.25},{f:0,d:0.25},{f:138,d:0.25},{f:0,d:0.25},{f:123,d:1}
+];
+
+// WATER — Deep Ocean: undulating, eerie, haunting beauty
+var WATER_M=[
+  {f:330,d:1},{f:294,d:0.5},{f:330,d:0.5},{f:370,d:1},{f:0,d:1},
+  {f:349,d:0.75},{f:330,d:0.25},{f:294,d:1},{f:277,d:1},{f:0,d:1},
+  {f:330,d:0.5},{f:370,d:0.5},{f:415,d:1},{f:370,d:0.5},{f:330,d:0.5},{f:294,d:1},
+  {f:247,d:0.5},{f:262,d:0.5},{f:294,d:2}
+];
+var WATER_B=[
+  {f:82,d:2},{f:0,d:0.5},{f:82,d:0.5},{f:87,d:2},{f:0,d:1},
+  {f:73,d:2},{f:0,d:0.5},{f:73,d:0.5},{f:82,d:2},{f:0,d:1}
+];
+var WATER_PAD=[
+  {f:164,d:4},{f:174,d:4},{f:164,d:4},{f:155,d:4}
+];
+var WATER_P=[
+  {f:164,d:0.5},{f:0,d:1.5},{f:164,d:0.5},{f:0,d:0.5},{f:164,d:0.5},{f:0,d:0.5},
+  {f:174,d:0.5},{f:0,d:1.5},{f:174,d:0.5},{f:0,d:1.5},
+  {f:164,d:0.5},{f:0,d:0.5},{f:164,d:0.5},{f:0,d:0.5},{f:164,d:0.5},{f:0,d:1},
+  {f:155,d:0.5},{f:0,d:0.5},{f:146,d:2}
+];
+
+// AIR/ICE — Aeolian with wide leaps, cold and unsettling
+var ICE_M=[
+  {f:440,d:0.5},{f:0,d:0.25},{f:329,d:0.25},{f:370,d:0.5},{f:0,d:0.25},{f:415,d:0.25},
+  {f:440,d:0.75},{f:0,d:0.25},{f:415,d:0.5},{f:370,d:0.5},
+  {f:329,d:0.5},{f:0,d:0.25},{f:370,d:0.25},{f:415,d:0.5},{f:440,d:0.5},
+  {f:494,d:0.5},{f:440,d:0.25},{f:415,d:0.25},{f:370,d:1.0}
+];
+var ICE_B=[
+  {f:82,d:2},{f:87,d:2},{f:74,d:2},{f:82,d:2}
+];
+var ICE_P=[
+  {f:165,d:0.5},{f:0,d:1.5},{f:175,d:0.5},{f:0,d:1.5},
+  {f:165,d:0.5},{f:0,d:0.5},{f:165,d:0.5},{f:0,d:0.5},
+  {f:147,d:0.5},{f:0,d:1.5},{f:165,d:0.5},{f:0,d:1.5}
+];
+
+// GALAXY — Void Space: whole tone, alien, vast and cold
+var GALAXY_M=[
+  {f:277,d:1},{f:0,d:0.5},{f:311,d:0.5},{f:349,d:1},{f:392,d:1},
+  {f:370,d:0.5},{f:349,d:0.5},{f:311,d:1},{f:0,d:2},
+  {f:247,d:0.5},{f:0,d:0.5},{f:277,d:0.5},{f:0,d:0.5},{f:311,d:1},{f:277,d:1},
+  {f:247,d:0.5},{f:233,d:0.5},{f:220,d:2}
+];
+var GALAXY_PAD=[
+  {f:110,d:4},{f:123,d:4},{f:138,d:4},{f:123,d:4}
+];
+var GALAXY_B=[
+  {f:55,d:0.5},{f:0,d:0.5},{f:55,d:0.5},{f:0,d:0.5},{f:62,d:1},{f:0,d:1},
+  {f:55,d:0.5},{f:0,d:0.5},{f:55,d:0.5},{f:0,d:0.5},{f:49,d:2},
+  {f:52,d:0.5},{f:0,d:0.5},{f:52,d:0.5},{f:0,d:0.5},{f:58,d:1},{f:0,d:1},
+  {f:46,d:0.5},{f:0,d:0.5},{f:44,d:0.5},{f:0,d:0.5},{f:41,d:2}
+];
+var GALAXY_P=[
+  {f:110,d:0.25},{f:0,d:1.75},{f:123,d:0.25},{f:0,d:1.75},
+  {f:110,d:0.25},{f:0,d:0.75},{f:110,d:0.25},{f:0,d:1.75},
+  {f:104,d:0.25},{f:0,d:1.75},{f:116,d:0.25},{f:0,d:1.75},
+  {f:92,d:0.25},{f:0,d:0.75},{f:82,d:0.25},{f:0,d:2.5}
+];
+
+// FOREST — Natural minor, brooding wonder. Dark forest magic.
+var FOREST_M=[
+  {f:196,d:0.5},{f:220,d:0.25},{f:196,d:0.25},{f:175,d:0.5},{f:165,d:0.5},
+  {f:175,d:0.25},{f:196,d:0.25},{f:220,d:0.75},{f:0,d:0.25},
+  {f:247,d:0.5},{f:220,d:0.25},{f:196,d:0.25},{f:175,d:0.5},{f:155,d:0.5},
+  {f:165,d:0.25},{f:175,d:0.25},{f:196,d:0.25},{f:175,d:0.25},{f:165,d:1.0}
+];
+var FOREST_B=[
+  {f:49,d:1},{f:0,d:0.5},{f:49,d:0.5},{f:44,d:1},{f:0,d:1},
+  {f:49,d:1},{f:0,d:0.5},{f:49,d:0.5},{f:41,d:1},{f:0,d:1}
+];
+var FOREST_P=[
+  {f:98,d:0.5},{f:0,d:0.5},{f:98,d:0.25},{f:0,d:0.25},{f:98,d:0.25},{f:0,d:0.25},
+  {f:87,d:0.5},{f:0,d:0.5},{f:87,d:0.5},{f:0,d:0.5},
+  {f:98,d:0.5},{f:0,d:0.5},{f:98,d:0.25},{f:0,d:0.25},{f:98,d:0.25},{f:0,d:0.25},
+  {f:82,d:0.5},{f:0,d:0.5},{f:82,d:1.0}
+];
+
+// DESERT — Phrygian, tense and exotic. Sand and danger.
+var DESERT_M=[
+  {f:233,d:0.5},{f:261,d:0.5},{f:247,d:0.5},{f:220,d:0.5},
+  {f:196,d:0.25},{f:220,d:0.25},{f:233,d:0.5},{f:0,d:0.5},
+  {f:233,d:0.25},{f:261,d:0.25},{f:294,d:0.5},{f:261,d:0.5},
+  {f:247,d:0.5},{f:233,d:0.5},{f:220,d:1.0}
+];
+var DESERT_B=[
+  {f:58,d:0.5},{f:0,d:0.25},{f:58,d:0.25},{f:65,d:0.5},{f:58,d:0.5},
+  {f:55,d:0.5},{f:0,d:0.5},{f:55,d:0.5},{f:0,d:0.5},
+  {f:58,d:0.5},{f:0,d:0.25},{f:58,d:0.25},{f:65,d:0.5},{f:62,d:0.5},
+  {f:55,d:0.5},{f:0,d:0.5},{f:46,d:1.0}
+];
+var DESERT_P=[
+  {f:116,d:0.25},{f:0,d:0.25},{f:116,d:0.25},{f:0,d:0.25},{f:116,d:0.5},{f:0,d:0.5},
+  {f:116,d:0.25},{f:0,d:0.25},{f:130,d:0.25},{f:0,d:0.25},{f:116,d:0.5},{f:0,d:0.5},
+  {f:116,d:0.25},{f:0,d:0.25},{f:116,d:0.25},{f:0,d:0.25},{f:116,d:0.5},{f:0,d:0.5},
+  {f:110,d:0.25},{f:0,d:0.25},{f:92,d:0.25},{f:0,d:0.25},{f:92,d:1.0}
+];
+
+// MAIN MENU — Dorian, noble and mysterious. Draws you in.
+var ML=[
+  {f:294,d:0.5},{f:330,d:0.25},{f:294,d:0.25},{f:261,d:0.5},{f:247,d:0.5},
+  {f:261,d:0.25},{f:294,d:0.25},{f:330,d:0.75},{f:0,d:0.25},
+  {f:370,d:0.5},{f:330,d:0.25},{f:294,d:0.25},{f:261,d:0.5},{f:233,d:0.5},
+  {f:220,d:0.25},{f:233,d:0.25},{f:247,d:0.25},{f:261,d:0.25},{f:247,d:1.0}
+];
+var BL=[
+  {f:73,d:1},{f:0,d:0.5},{f:73,d:0.5},{f:65,d:1},{f:0,d:1},
+  {f:73,d:1},{f:0,d:0.5},{f:73,d:0.5},{f:58,d:1},{f:0,d:1}
+];
+var ML_P=[
+  {f:147,d:0.5},{f:0,d:0.5},{f:147,d:0.25},{f:0,d:0.25},{f:147,d:0.25},{f:0,d:0.25},
+  {f:130,d:0.5},{f:0,d:0.5},{f:130,d:0.5},{f:0,d:0.5},
+  {f:147,d:0.5},{f:0,d:0.5},{f:147,d:0.25},{f:0,d:0.25},{f:147,d:0.25},{f:0,d:0.25},
+  {f:116,d:0.5},{f:0,d:0.5},{f:116,d:1.0}
+];
+var ML_PAD=[
+  {f:147,d:4},{f:165,d:4},{f:147,d:4},{f:131,d:4}
+];
+
+// INFINITE — Fast, frantic, electric. Gold adrenaline rush.
+var IL=[
+  {f:587,d:0.25},{f:659,d:0.25},{f:587,d:0.25},{f:523,d:0.25},{f:587,d:0.5},{f:494,d:0.5},
+  {f:523,d:0.25},{f:587,d:0.25},{f:523,d:0.25},{f:466,d:0.25},{f:523,d:0.5},{f:440,d:0.5},
+  {f:494,d:0.25},{f:523,d:0.25},{f:587,d:0.25},{f:659,d:0.25},{f:698,d:0.5},{f:587,d:0.5},
+  {f:523,d:0.25},{f:466,d:0.25},{f:494,d:0.25},{f:523,d:0.25},{f:587,d:1.0}
+];
+var IBL=[
+  {f:147,d:0.5},{f:0,d:0.25},{f:147,d:0.25},{f:130,d:0.5},{f:0,d:0.5},
+  {f:116,d:0.5},{f:0,d:0.25},{f:116,d:0.25},{f:123,d:0.5},{f:0,d:0.5},
+  {f:147,d:0.5},{f:0,d:0.25},{f:147,d:0.25},{f:155,d:0.5},{f:0,d:0.5},
+  {f:130,d:0.5},{f:0,d:0.25},{f:110,d:0.25},{f:123,d:1.0}
+];
+var IL_P=[
+  {f:294,d:0.25},{f:0,d:0.25},{f:294,d:0.25},{f:0,d:0.25},{f:294,d:0.25},{f:0,d:0.25},{f:294,d:0.25},{f:0,d:0.25},
+  {f:261,d:0.25},{f:0,d:0.25},{f:261,d:0.25},{f:0,d:0.25},{f:261,d:0.5},{f:0,d:0.5},
+  {f:294,d:0.25},{f:0,d:0.25},{f:294,d:0.25},{f:0,d:0.25},{f:311,d:0.25},{f:0,d:0.25},{f:294,d:0.25},{f:0,d:0.25},
+  {f:261,d:0.25},{f:0,d:0.25},{f:247,d:0.25},{f:0,d:0.25},{f:246,d:1.0}
+];
+
+// BOSS — Ancient Greek tragedy meets heart-pounding battle.
+// Melody: Dorian mode on E (E F G A B C D) — the original Greek Dorian.
+// Bass: Deep sustained drones like ancient lyres/aulos pipes.
+// Pulse: War drum pattern — urgent, escalating.
+// Chant layer uses long sustained tones mimicking male choir.
+var BOSS_M=[
+  // Main theme — ominous stepwise descent, then leap up
+  {f:165,d:0.5},{f:147,d:0.5},{f:131,d:0.5},{f:147,d:0.5},
+  {f:165,d:0.5},{f:175,d:0.5},{f:196,d:1.0},
+  {f:196,d:0.5},{f:175,d:0.25},{f:165,d:0.25},{f:175,d:0.5},{f:196,d:0.5},
+  {f:220,d:0.5},{f:196,d:0.5},{f:175,d:1.0},
+  // Tension rise — climbs then crashes
+  {f:220,d:0.25},{f:247,d:0.25},{f:220,d:0.25},{f:196,d:0.25},{f:175,d:0.5},{f:165,d:0.5},
+  {f:147,d:0.25},{f:131,d:0.25},{f:147,d:0.5},{f:165,d:1.0},
+  // Resolution back to root — but dark
+  {f:131,d:0.5},{f:147,d:0.5},{f:165,d:0.5},{f:175,d:0.5},
+  {f:165,d:0.5},{f:147,d:0.5},{f:131,d:1.5}
+];
+// Chant layer — slow, whole notes, voice-like sine pads
+var BOSS_CHANT=[
+  {f:82,d:2},{f:87,d:2},{f:98,d:2},{f:87,d:2},
+  {f:82,d:2},{f:73,d:2},{f:82,d:4}
+];
+var BOSS_B=[
+  // Deep thumping — sub bass war drum feel
+  {f:41,d:0.25},{f:41,d:0.25},{f:0,d:0.25},{f:41,d:0.25},{f:0,d:0.5},{f:41,d:0.5},
+  {f:41,d:0.25},{f:41,d:0.25},{f:0,d:0.25},{f:41,d:0.25},{f:37,d:0.5},{f:0,d:0.5},
+  {f:41,d:0.25},{f:41,d:0.25},{f:0,d:0.25},{f:41,d:0.25},{f:44,d:0.5},{f:41,d:0.5},
+  {f:33,d:0.25},{f:0,d:0.25},{f:37,d:0.25},{f:0,d:0.25},{f:41,d:1.5}
+];
+var BOSS_P=[
+  // Urgent war drums — boom-taka-boom-boom
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.5},{f:73,d:0.5},
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.5},
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:87,d:0.5},{f:87,d:0.5},
+  {f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:73,d:0.5},{f:65,d:1.0}
+];
+
+// BERSERKER RAGE — Tempest boss. Viking war chant, relentless.
+var BERSERK_M=[
+  {f:220,d:0.25},{f:220,d:0.25},{f:220,d:0.25},{f:0,d:0.25},{f:220,d:0.5},{f:196,d:0.5},
+  {f:220,d:0.25},{f:220,d:0.25},{f:220,d:0.25},{f:0,d:0.25},{f:233,d:0.5},{f:220,d:0.5},
+  {f:247,d:0.25},{f:247,d:0.25},{f:247,d:0.25},{f:0,d:0.25},{f:247,d:0.5},{f:220,d:0.5},
+  {f:233,d:0.25},{f:0,d:0.25},{f:220,d:0.25},{f:0,d:0.25},{f:196,d:1}
+];
+var BERSERK_CHANT=[
+  {f:110,d:1},{f:110,d:1},{f:116,d:1},{f:110,d:1},
+  {f:98,d:1},{f:98,d:1},{f:104,d:1},{f:110,d:2}
+];
+var BERSERK_B=[
+  {f:55,d:0.25},{f:0,d:0.25},{f:55,d:0.25},{f:0,d:0.25},{f:55,d:0.5},{f:49,d:0.5},
+  {f:55,d:0.25},{f:0,d:0.25},{f:55,d:0.25},{f:55,d:0.25},{f:0,d:0.25},{f:55,d:0.5},
+  {f:55,d:0.25},{f:0,d:0.25},{f:55,d:0.25},{f:0,d:0.25},{f:58,d:0.5},{f:55,d:0.5},
+  {f:44,d:0.25},{f:44,d:0.25},{f:0,d:0.25},{f:49,d:0.25},{f:41,d:1}
+];
+var BERSERK_P=[
+  {f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:110,d:0.25},{f:0,d:0.5},
+  {f:110,d:0.25},{f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.75},
+  {f:110,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.25},{f:116,d:0.25},{f:116,d:0.25},{f:0,d:0.5},
+  {f:98,d:0.25},{f:98,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:82,d:1}
+];
+
+// OLYMPIAN WRATH — Jean Jacket boss. Fast Greek Dorian, surging, war drums + chant.
+var OLYMPIAN_M=[
+  {f:330,d:0.25},{f:294,d:0.25},{f:330,d:0.5},{f:370,d:0.5},{f:330,d:0.5},
+  {f:294,d:0.25},{f:262,d:0.25},{f:294,d:0.5},{f:330,d:1},
+  {f:370,d:0.25},{f:330,d:0.25},{f:370,d:0.5},{f:415,d:0.5},{f:370,d:0.5},
+  {f:330,d:0.25},{f:294,d:0.25},{f:262,d:0.5},{f:247,d:1}
+];
+var OLYMPIAN_CHANT=[
+  {f:82,d:2},{f:87,d:2},{f:98,d:2},{f:87,d:2},
+  {f:82,d:2},{f:73,d:2},{f:82,d:2},{f:78,d:2}
+];
+var OLYMPIAN_B=[
+  {f:41,d:0.25},{f:41,d:0.25},{f:0,d:0.25},{f:41,d:0.25},{f:37,d:0.5},{f:41,d:0.5},
+  {f:41,d:0.25},{f:41,d:0.25},{f:0,d:0.5},{f:44,d:0.25},{f:41,d:0.5},
+  {f:33,d:0.25},{f:0,d:0.25},{f:37,d:0.25},{f:0,d:0.25},{f:41,d:1}
+];
+var OLYMPIAN_P=[
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:82,d:0.25},{f:0,d:0.5},
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:73,d:0.5},{f:0,d:0.5},
+  {f:82,d:0.25},{f:0,d:0.25},{f:82,d:0.25},{f:0,d:0.25},{f:87,d:0.25},{f:87,d:0.25},{f:0,d:0.5},
+  {f:73,d:0.25},{f:73,d:0.25},{f:65,d:0.25},{f:0,d:0.25},{f:65,d:1}
+];
+
+// TITAN CLASH — Alien boss. Aggressive cinematic, relentless chromatic.
+var TITAN_M=[
+  {f:262,d:0.25},{f:247,d:0.25},{f:233,d:0.25},{f:220,d:0.25},{f:233,d:0.5},{f:247,d:0.5},
+  {f:262,d:0.25},{f:0,d:0.25},{f:262,d:0.25},{f:294,d:0.25},{f:330,d:0.5},{f:294,d:0.5},
+  {f:262,d:0.25},{f:247,d:0.25},{f:233,d:0.5},{f:220,d:0.5},{f:208,d:0.5},{f:220,d:0.5},
+  {f:196,d:0.25},{f:0,d:0.25},{f:208,d:0.25},{f:0,d:0.25},{f:196,d:1.5}
+];
+var TITAN_MEL2=[
+  {f:131,d:0.5},{f:0,d:0.25},{f:131,d:0.25},{f:138,d:0.5},{f:0,d:0.5},
+  {f:131,d:0.5},{f:0,d:0.25},{f:131,d:0.25},{f:147,d:0.5},{f:0,d:0.5},
+  {f:131,d:0.25},{f:131,d:0.25},{f:138,d:0.25},{f:131,d:0.25},{f:116,d:0.5},{f:0,d:0.5},
+  {f:98,d:0.25},{f:0,d:0.25},{f:110,d:0.25},{f:0,d:0.25},{f:98,d:1.5}
+];
+var TITAN_B=[
+  {f:65,d:0.25},{f:65,d:0.25},{f:0,d:0.25},{f:65,d:0.25},{f:62,d:0.25},{f:65,d:0.25},{f:0,d:0.5},
+  {f:65,d:0.25},{f:65,d:0.25},{f:0,d:0.25},{f:65,d:0.25},{f:69,d:0.5},{f:0,d:0.5},
+  {f:65,d:0.25},{f:65,d:0.25},{f:0,d:0.25},{f:65,d:0.25},{f:58,d:0.25},{f:58,d:0.25},{f:0,d:0.5},
+  {f:52,d:0.25},{f:0,d:0.25},{f:55,d:0.25},{f:0,d:0.25},{f:49,d:1.5}
+];
+var TITAN_P=[
+  {f:130,d:0.25},{f:0,d:0.25},{f:130,d:0.25},{f:0,d:0.25},{f:130,d:0.25},{f:130,d:0.25},{f:0,d:0.5},
+  {f:130,d:0.25},{f:0,d:0.25},{f:130,d:0.25},{f:0,d:0.25},{f:116,d:0.5},{f:0,d:0.5},
+  {f:130,d:0.25},{f:0,d:0.25},{f:130,d:0.25},{f:0,d:0.25},{f:138,d:0.25},{f:138,d:0.25},{f:0,d:0.5},
+  {f:110,d:0.25},{f:0,d:0.25},{f:104,d:0.25},{f:0,d:0.25},{f:98,d:1.5}
+];
+// GATE OF THE UNDERWORLD — Dragon boss. Slow, inevitable, tritone clashes, heavy choir.
+var GATE_CHANT=[
+  {f:55,d:3},{f:58,d:3},{f:55,d:3},{f:52,d:3},
+  {f:55,d:3},{f:49,d:3},{f:55,d:6}
+];
+var GATE_M=[
+  {f:220,d:1},{f:311,d:1},{f:277,d:0.5},{f:247,d:0.5},{f:220,d:2},
+  {f:196,d:1},{f:277,d:1},{f:247,d:0.5},{f:220,d:0.5},{f:196,d:2},
+  {f:175,d:1},{f:247,d:1},{f:220,d:0.5},{f:196,d:0.5},{f:175,d:2}
+];
+var GATE_B=[
+  {f:55,d:2},{f:0,d:0.5},{f:55,d:0.5},{f:55,d:1},{f:49,d:2},
+  {f:55,d:2},{f:0,d:0.5},{f:55,d:0.5},{f:44,d:3},
+  {f:41,d:2},{f:0,d:0.5},{f:41,d:0.5},{f:37,d:3}
+];
+var GATE_P=[
+  {f:110,d:0.5},{f:0,d:1.5},{f:110,d:0.5},{f:110,d:0.5},{f:0,d:1},
+  {f:110,d:0.5},{f:0,d:1.5},{f:98,d:0.5},{f:0,d:1.5},
+  {f:110,d:0.5},{f:0,d:0.5},{f:110,d:0.5},{f:0,d:0.5},{f:110,d:0.5},{f:0,d:1}
+];
+// ORACLE'S PROPHECY — Leviathan boss. Phrygian, slow build, chant-heavy.
+var ORACLE_M=[
+  {f:220,d:0.75},{f:233,d:0.25},{f:220,d:1},{f:196,d:0.5},{f:175,d:0.5},
+  {f:185,d:0.5},{f:196,d:0.5},{f:220,d:1},{f:233,d:1},
+  {f:247,d:0.75},{f:233,d:0.25},{f:220,d:1},{f:196,d:0.5},{f:185,d:0.5},
+  {f:175,d:0.5},{f:165,d:0.5},{f:175,d:2}
+];
+var ORACLE_CHANT=[
+  {f:87,d:3},{f:92,d:1},{f:87,d:3},{f:82,d:1},
+  {f:87,d:2},{f:78,d:2},{f:87,d:4}
+];
+var ORACLE_PAD=[
+  {f:130,d:4},{f:138,d:4},{f:130,d:4},{f:116,d:4}
+];
+var ORACLE_B=[
+  {f:55,d:2},{f:58,d:2},{f:55,d:2},{f:49,d:2},
+  {f:44,d:2},{f:49,d:2},{f:41,d:4}
+];
+var ORACLE_P=[
+  {f:110,d:0.5},{f:0,d:1.5},{f:110,d:0.5},{f:0,d:0.5},{f:110,d:0.5},{f:0,d:0.5},
+  {f:116,d:0.5},{f:0,d:1.5},{f:116,d:0.5},{f:0,d:1.5},
+  {f:110,d:0.5},{f:0,d:0.5},{f:110,d:0.5},{f:0,d:0.5},{f:110,d:0.5},{f:0,d:1},
+  {f:98,d:0.5},{f:0,d:0.5},{f:87,d:2}
+];
+
+function getBiomeTrack(){
+  if(!currentWorldLevel) return {mel:ML,bas:BL,pls:ML_P,bpm:128};
+  var wid=currentWorldLevel.worldId||'earth';
+  var bt=typeof getBossType==='function'?getBossType():'';
+  if(currentWorldLevel.level&&currentWorldLevel.level.isBoss){
+    if(bt==='leviathan') return {mel:ORACLE_M,bas:ORACLE_B,pls:ORACLE_P,pad:ORACLE_PAD,chant:ORACLE_CHANT,bpm:120};
+    if(bt==='dragon')    return {mel:GATE_M,bas:GATE_B,pls:GATE_P,chant:GATE_CHANT,bpm:112};
+    if(bt==='tempest')   return {mel:BERSERK_M,bas:BERSERK_B,pls:BERSERK_P,chant:BERSERK_CHANT,bpm:160};
+    if(bt==='jeanjacket')return {mel:OLYMPIAN_M,bas:OLYMPIAN_B,pls:OLYMPIAN_P,chant:OLYMPIAN_CHANT,bpm:168};
+    if(bt==='grey')      return {mel:TITAN_M,bas:TITAN_B,pls:TITAN_P,mel2:TITAN_MEL2,bpm:180};
+    if(bt==='owl')       return {mel:BOSS_M,bas:BOSS_B,pls:BOSS_P,chant:BOSS_CHANT,bpm:138}; // Sacred Horror — wise & ancient
+    return {mel:BOSS_M,bas:BOSS_B,pls:BOSS_P,chant:BOSS_CHANT,bpm:138};
+  }
+  if(wid==='fire') return {mel:FIRE_M,bas:FIRE_B,pls:FIRE_P,bpm:158};
+  if(wid==='water') return {mel:WATER_M,bas:WATER_B,pls:WATER_P,pad:WATER_PAD,bpm:108};
+  if(wid==='ice') return {mel:ICE_M,bas:ICE_B,pls:ICE_P,bpm:104};
+  if(wid==='galaxy') return {mel:GALAXY_M,bas:GALAXY_B,pls:GALAXY_P,pad:GALAXY_PAD,bpm:100};
+  var bm=getBiome(currentLevel)||BIOMES[0];
+  var bs=bm.bgStyle||'default';
+  if(bs==='desert') return {mel:DESERT_M,bas:DESERT_B,pls:DESERT_P,bpm:136};
+  if(bs==='forest'||bs==='enchanted'||bs==='jungle'||bs==='swamp') return {mel:FOREST_M,bas:FOREST_B,pls:FOREST_P,bpm:116};
+  return {mel:EARTH_M,bas:EARTH_B,pls:EARTH_P,bpm:124};
+}
+
+function musicLoop(seq,bpm,track,layer){
   if(!AC||curTrack!==track) return;
   var beat=60/bpm,start=AC.currentTime+0.05,c=0,tot=0;
-  for(var i=0;i<seq.length;i++){var n=seq[i],dur=n.d*beat;if(n.f&&n.f>0)O(n.f,'square',start+c,dur*0.88,0.28,musicGain);c+=dur;tot+=dur;}
-  (function(tk){var id=setTimeout(function(){musicLoop(seq,bpm,tk);},(tot-0.1)*1000);musicIds.push(id);})(track);
+  var isBoss=(track==='boss'||track==='leviathan');
+  for(var i=0;i<seq.length;i++){
+    var n=seq[i],dur=n.d*beat;
+    if(n.f&&n.f>0){
+      if(layer==='mel'){
+        OD(n.f,start+c,dur*0.9,isBoss?0.30:0.22,musicGain);
+        OPAD(n.f*2,start+c,dur*0.85,isBoss?0.07:0.05,musicGain);
+      } else if(layer==='bas'){
+        BOOM(n.f,start+c,dur*0.85,isBoss?0.45:0.32);
+        OPAD(n.f*1.5,start+c,dur*0.7,0.06,musicGain);
+      } else if(layer==='pls'){
+        OP(n.f,start+c,dur*0.5,isBoss?0.26:0.18,musicGain);
+      } else if(layer==='chant'){
+        OPAD(n.f,start+c,dur*0.96,0.20,musicGain);
+        OPAD(n.f*1.5,start+c,dur*0.95,0.09,musicGain);
+        OPAD(n.f*0.5,start+c,dur*0.95,0.13,musicGain);
+      } else if(layer==='mel2'){
+        OP(n.f,start+c,dur*0.85,0.18,musicGain);
+        OPAD(n.f,start+c,dur*0.9,0.08,musicGain);
+        OPAD(n.f,start+c,dur*0.98,0.14,musicGain);
+        OPAD(n.f*1.335,start+c,dur*0.95,0.07,musicGain);
+      }
+    }
+    c+=dur;tot+=dur;
+  }
+  (function(tk,sq,bp,ly){
+    var id=setTimeout(function(){musicLoop(sq,bp,tk,ly);},(tot-0.1)*1000);
+    musicIds.push(id);
+  })(track,seq,bpm,layer);
 }
-function stopMusic(){musicIds.forEach(function(i){clearTimeout(i);});musicIds=[];curTrack=null;}
+
+function stopMusic(){
+  musicIds.forEach(function(i){clearTimeout(i);});
+  musicIds=[];
+  curTrack=null;
+  if(!AC) return;
+  // Disconnect old musicGain — all scheduled oscillators lose their output instantly
+  try{musicGain.disconnect();}catch(e){}
+  // Create a fresh musicGain for the next track
+  musicGain=AC.createGain();
+  var mv=parseInt(document.getElementById('musicVolSlider')?document.getElementById('musicVolSlider').value:45)/100*0.6;
+  musicGain.gain.value=mv||0.45;
+  musicGain.connect(masterGain);
+}
+
 function playMusic(track){
   if(!AC||!musicEnabled) return;
   stopMusic();curTrack=track;
-  var bpm=track==='infinite'?150:140;
-  var mel=track==='infinite'?IL:ML;
-  var bas=track==='infinite'?IBL:BL;
-  musicLoop(mel,bpm,track);
-  musicLoop(bas,bpm,track);
+  var cfg;
+  if(track==='infinite') cfg={mel:IL,bas:IBL,pls:IL_P,bpm:168};
+  else if(track==='menu') cfg={mel:ML,bas:BL,pls:ML_P,pad:ML_PAD,bpm:128};
+  else if(track==='boss_owl')       cfg={mel:BOSS_M,bas:BOSS_B,pls:BOSS_P,chant:BOSS_CHANT,bpm:138};
+  else if(track==='boss_dragon')    cfg={mel:GATE_M,bas:GATE_B,pls:GATE_P,chant:GATE_CHANT,bpm:112};
+  else if(track==='boss_leviathan') cfg={mel:ORACLE_M,bas:ORACLE_B,pls:ORACLE_P,pad:ORACLE_PAD,chant:ORACLE_CHANT,bpm:120};
+  else if(track==='boss_tempest')   cfg={mel:BERSERK_M,bas:BERSERK_B,pls:BERSERK_P,chant:BERSERK_CHANT,bpm:160};
+  else if(track==='boss_jeanjacket')cfg={mel:OLYMPIAN_M,bas:OLYMPIAN_B,pls:OLYMPIAN_P,chant:OLYMPIAN_CHANT,bpm:168};
+  else if(track==='boss_grey')      cfg={mel:TITAN_M,bas:TITAN_B,pls:TITAN_P,mel2:TITAN_MEL2,bpm:180};
+  else if(track==='boss'||track.indexOf('boss_')===0) cfg={mel:BOSS_M,bas:BOSS_B,pls:BOSS_P,chant:BOSS_CHANT,bpm:138};
+  else if(track==='level') cfg=getBiomeTrack();
+  else cfg={mel:ML,bas:BL,pls:ML_P,bpm:128};
+  var t=track;
+  musicLoop(cfg.mel,cfg.bpm,t,'mel');
+  setTimeout(function(){if(curTrack===t)musicLoop(cfg.bas,cfg.bpm,t,'bas');},80);
+  setTimeout(function(){if(curTrack===t)musicLoop(cfg.pls,cfg.bpm,t,'pls');},160);
+  if(cfg.chant) setTimeout(function(){if(curTrack===t)musicLoop(cfg.chant,cfg.bpm,t,'chant');},240);
+  if(cfg.pad)   setTimeout(function(){if(curTrack===t)musicLoop(cfg.pad,cfg.bpm,t,'pad');},320);
+  if(cfg.mel2)  setTimeout(function(){if(curTrack===t)musicLoop(cfg.mel2,cfg.bpm,t,'mel2');},40);
 }
 
-document.getElementById('optSound').addEventListener('change',function(e){sfxEnabled=e.target.checked;if(sfxGain)sfxGain.gain.value=sfxEnabled?1.0:0;sfxMenuTick();showToast('Sound '+(e.target.checked?'On':'Off'));});
-document.getElementById('optMusic').addEventListener('change',function(e){musicEnabled=e.target.checked;if(musicEnabled)playMusic(curTrack||'main');else stopMusic();sfxMenuTick();showToast('Music '+(e.target.checked?'On':'Off'));});
+document.getElementById('optSound').addEventListener('change',function(e){sfxEnabled=e.target.checked;if(sfxGain)sfxGain.gain.value=sfxEnabled?parseFloat(document.getElementById('sfxVolSlider').value)/100:0;sfxMenuTick();showToast('Sound '+(e.target.checked?'On':'Off'));});
+document.getElementById('optMusic').addEventListener('change',function(e){musicEnabled=e.target.checked;if(musicEnabled)playMusic(state==='playing'?'level':'level');else stopMusic();sfxMenuTick();showToast('Music '+(e.target.checked?'On':'Off'));});
 document.getElementById('optVibe').addEventListener('change',function(e){sfxMenuTick();showToast('Vibration '+(e.target.checked?'On':'Off'));});
 document.getElementById('optHitbox').addEventListener('change',function(e){sfxMenuTick();showToast('Hitbox '+(e.target.checked?'Visible':'Hidden'));});
+
+// Volume sliders
+document.getElementById('sfxVolSlider').addEventListener('input',function(e){
+  var v=parseInt(e.target.value)/100;
+  document.getElementById('sfxVolLabel').textContent=e.target.value+'%';
+  if(sfxGain&&sfxEnabled) sfxGain.gain.value=v;
+});
+document.getElementById('musicVolSlider').addEventListener('input',function(e){
+  var v=parseInt(e.target.value)/100*0.6;
+  document.getElementById('musicVolLabel').textContent=e.target.value+'%';
+  if(musicGain) musicGain.gain.value=v;
+});
 
 function buildSkins(){
   var row=document.getElementById('skinRow');
@@ -8227,32 +8967,32 @@ function buildSkins(){
     var skin=SKINS[i];
     var owned=ownedSkins.indexOf(skin.id)>=0;
     var active=activeSkin===skin.id;
-    // Boss skins — only show if that boss is defeated
-    if(skin.bossReward&&defeatedBosses.indexOf(skin.bossId)<0) continue;
+    var bossDefeatedForSkin=!skin.bossReward||defeatedBosses.indexOf(skin.bossId)>=0;
     var card=document.createElement('div');
-    card.className='skin-card'+(owned?' owned':'')+(active?' active':'');
-    var swatch='<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:linear-gradient(135deg,'+skin.body[0]+','+skin.body[1]+','+skin.body[2]+');border:2px solid '+skin.wing[0]+'"></div>';
+    card.className='skin-card'+(owned?' owned':'')+(active?' active':'')+(skin.bossReward&&!bossDefeatedForSkin?' locked':'');
+    var swatch='<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:linear-gradient(135deg,'+skin.body[0]+','+skin.body[1]+','+skin.body[2]+');border:2px solid '+skin.wing[0]+';'+(skin.bossReward&&!bossDefeatedForSkin?'filter:grayscale(0.7);opacity:0.6':'')+'"></div>';
     var rarity,rarityCol,priceLabel;
     if(skin.bossReward){
-      rarity='\uD83D\uDC51 BOSS REWARD';
-      rarityCol='#ffd700';
-      priceLabel=owned?(active?'\u2713 Equipped':'Equip'):'\uD83D\uDC51 EARNED';
+      rarity=bossDefeatedForSkin?'\uD83D\uDC51 BOSS REWARD':'\uD83D\uDD12 LOCKED';
+      rarityCol=bossDefeatedForSkin?'#ffd700':'#666666';
+      priceLabel=bossDefeatedForSkin?(owned?(active?'\u2713 Equipped':'Equip'):'\uD83D\uDC51 EARNED'):'Defeat the boss';
     } else {
       rarity=skin.moths>=25000?'LEGENDARY':skin.moths>=10000?'MYTHIC':skin.moths>=5000?'EPIC':skin.moths>=1000?'RARE':skin.moths>=200?'UNCOMMON':'COMMON';
       rarityCol=skin.moths>=25000?'#ffd700':skin.moths>=10000?'#ff44ff':skin.moths>=5000?'#aa44ff':skin.moths>=1000?'#4488ff':skin.moths>=200?'#44cc44':'#888888';
       priceLabel=owned?(active?'\u2713 Equipped':'Equip'):skin.moths===0?'Free':'\ud83e\udd8b '+skin.moths.toLocaleString();
     }
     card.innerHTML=swatch+'<div class="skin-name">'+skin.name+'</div><div style="font-size:7px;color:'+rarityCol+';margin-bottom:2px;">'+rarity+'</div><div class="skin-price">'+priceLabel+'</div>'+(active?'<div class="skin-badge">ON</div>':'');
-    (function(sk){
+    (function(sk,bdf){
       card.addEventListener('click',function(){
         sfxMenuTap();
         if(ownedSkins.indexOf(sk.id)>=0){activeSkin=sk.id;sfxMenuSelect();showToast(sk.name+' equipped!');buildSkins();saveGame();}
+        else if(sk.bossReward&&!bdf){showToast('\uD83D\uDD12 Defeat the boss to unlock this skin!');}
         else if(sk.bossReward){showToast('\uD83D\uDC51 Defeat the boss to unlock this skin!');}
         else if(sk.moths===0){ownedSkins.push(sk.id);activeSkin=sk.id;buildSkins();}
         else if(mothsTotal>=sk.moths){mothsTotal-=sk.moths;ownedSkins.push(sk.id);activeSkin=sk.id;updateCurrencyUI();updateMothUI();sfxMenuSelect();showToast(sk.name+' unlocked!');buildSkins();}
         else{showToast('Need \ud83e\udd8b '+sk.moths.toLocaleString()+' -- you have '+mothsTotal);}
       });
-    })(skin);
+    })(skin,bossDefeatedForSkin);
     row.appendChild(card);
   }
 }
@@ -8260,12 +9000,12 @@ function buildSkins(){
 function buyWithMoths(itemId,cost){
   if(mothsTotal<cost){showToast('Need \ud83e\udd8b '+cost+' -- you have '+mothsTotal);return;}
   mothsTotal-=cost;updateCurrencyUI();updateMothUI();
-  if(itemId==='life'){lives=Math.min(lives+1,9);updateLivesUI();showToast('\u2764\ufe0f +1 life!');}
-  else if(itemId==='life5'){lives=Math.min(lives+5,99);updateLivesUI();showToast('\u2764\ufe0f +5 lives!');}
-  else if(itemId==='life10'){lives=Math.min(lives+10,99);updateLivesUI();showToast('\u2764\ufe0f +10 lives!');}
-  else if(itemId==='shield'){shieldActive=true;showToast('\ud83d\udee1\ufe0f Shield active!');}
-  else if(itemId==='slowmo'){slowMoActive=true;slowMoTimer=SLOW_MO_DURATION;totalSlowMoUses++;totalPowerupsUsed++;showToast('⏱️ Slow-Mo active for 8 seconds!');}
-  else if(itemId==='ghost'){ghostActive=true;totalGhostUses++;totalPowerupsUsed++;showToast('👻 Ghost mode ready — pass through 1 obstacle!');}
+  if(itemId==='life'){bankedLives+=1;lives+=1;updateLivesUI();showToast('\u2764\ufe0f +1 life!');}
+  else if(itemId==='life5'){bankedLives+=5;lives+=5;updateLivesUI();showToast('\u2764\ufe0f +5 lives!');}
+  else if(itemId==='life10'){bankedLives+=10;lives+=10;updateLivesUI();showToast('\u2764\ufe0f +10 lives!');}
+  else if(itemId==='shield'){shieldActive=true;sfxShieldActivate();showToast('\ud83d\udee1\ufe0f Shield active!');}
+  else if(itemId==='slowmo'){slowMoActive=true;slowMoTimer=SLOW_MO_DURATION;totalSlowMoUses++;totalPowerupsUsed++;sfxSlowMoActivate();showToast('⏱️ Slow-Mo active for 8 seconds!');}
+  else if(itemId==='ghost'){ghostActive=true;totalGhostUses++;totalPowerupsUsed++;sfxGhostActivate();showToast('👻 Ghost mode ready — pass through 1 obstacle!');}
   else if(itemId==='trail'){wingTrailRuns=Math.min(wingTrailRuns+3,99);showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');}
 }
 
@@ -8279,7 +9019,7 @@ document.getElementById('screenShop').addEventListener('click',function(e){
   var el=e.target.closest('[data-action]');if(!el) return;
   sfxMenuTap();var a=el.getAttribute('data-action');
   if(a==='moths-life') buyWithMoths('life',100);
-  else if(a==='moths-life5') buyWithMoths('life5',800);
+  else if(a==='moths-life5') buyWithMoths('life5',1000);
   else if(a==='moths-life10') buyWithMoths('life10',1800);
   else if(a==='moths-shield') buyWithMoths('shield',150);
   else if(a==='moths-slowmo') buyWithMoths('slowmo',120);
@@ -8342,7 +9082,7 @@ function buildLevelPicker(){
           fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
           obstacles=[]; frogs=[]; branches=[]; movingObst=[]; moths=[];
           state='playing'; updateLevelUI();
-          initAudio(); if(AC) AC.resume().then(function(){playMusic('main');});
+          initAudio(); if(AC) AC.resume(); playMusic('level');
         });
         row.appendChild(btn);
       })(world, world.levels[li], li);
@@ -8382,15 +9122,17 @@ if(devResetBtn) devResetBtn.addEventListener('click',function(){sfxMenuBack();mo
 
 function startGame(){
   initAudio();sfxMenuSelect();
+  stopMusic();
   if(wingTrailRuns>0) wingTrailRuns--;
   showScreen(null);resetGame();state='playing';
   gameStartTime=Date.now();
-  if(AC) AC.resume().then(function(){playMusic('main');});
-  // Show tutorial on very first play
+  if(AC) AC.resume();
+  playMusic('level');
   if(!tutorialShown) startTutorial();
 }
 function restartGame(){
   initAudio();sfxMenuSelect();
+  stopMusic();
   document.getElementById('overlayDead').classList.add('hidden');
   if(wingTrailRuns>0) wingTrailRuns--;
   var savedWorldLevel=currentWorldLevel;
@@ -8403,7 +9145,8 @@ function restartGame(){
   }
   state='playing';
   gameStartTime=Date.now();
-  if(AC) AC.resume().then(function(){playMusic('main');});
+  if(AC) AC.resume();
+  playMusic('level');
 }
 
 var btnWorldMap=document.getElementById('btnWorldMap');
@@ -8420,7 +9163,8 @@ document.getElementById('btnFlyAgain').addEventListener('click',restartGame);
 document.getElementById('btnBackMenu').addEventListener('click',function(){
   sfxMenuBack();
   document.getElementById('overlayDead').classList.add('hidden');
-  stopMusic();showScreen('screenMain');
+  stopMusic();
+  showScreen('screenMain');
 });
 
 var btnShop=document.getElementById('btnShop');
@@ -8495,7 +9239,7 @@ var WORLDS = [
       { id:'f1', name:'Volcanic Hellscape', icon:'\ud83c\udf0b', biomeIdx:2,  desc:'Lava flows and molten boulders',        duration:80 },
       { id:'f2', name:'Desert Sands',       icon:'\ud83c\udfdc', biomeIdx:13, desc:'Scorching dunes under a blazing sun',    duration:83 },
       { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:12, desc:'Crumbling buildings engulfed in fire',   duration:86 },
-      { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:10, desc:'Deep underground rivers of magma',       duration:89 },
+      { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:11, desc:'Deep underground rivers of magma',       duration:89 },
       { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:9,  desc:'The eye of an eternal firestorm',        duration:92 },
       { id:'f6', name:'The Inferno Drake',  icon:'\uD83D\uDC09', biomeIdx:27,  desc:'Face the lord of fire and destruction',  duration:120, isBoss:true, bossType:'dragon' }
     ]
@@ -8662,6 +9406,7 @@ document.getElementById('ldPlayBtn').addEventListener('touchstart',function(e){
   if(!_ldLevel||!_ldWorld) return;
   if(!worldUnlocked(_ldWorld)){showToast('Equip the required skin first!');return;}
   try{sfxMenuSelect();}catch(ex){}
+  stopMusic();
   var _sld3=document.getElementById('screenLevelDetail');
   if(_sld3){_sld3.classList.add('hidden');_sld3.style.display='none';}
   gameMode='story';
@@ -8678,13 +9423,15 @@ document.getElementById('ldPlayBtn').addEventListener('touchstart',function(e){
   fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
   obstacles=[]; frogs=[]; moths=[];
   gameStartTime=Date.now();
-  try{if(AC) AC.resume().then(function(){playMusic('main');});}catch(ex){}
+  try{if(AC) AC.resume();}catch(ex){}
+  try{playMusic('level');}catch(ex){}
 },{passive:false});
 
 document.getElementById('ldPlayBtn').addEventListener('click',function(){
   if(!_ldLevel||!_ldWorld) return;
   if(!worldUnlocked(_ldWorld)){showToast('Equip the required skin first!');return;}
   try{sfxMenuSelect();}catch(ex){}
+  stopMusic();
   var _sldh=document.getElementById('screenLevelDetail');if(_sldh){_sldh.classList.add('hidden');_sldh.style.display='none';}
   gameMode='story';
   currentWorldLevel={worldId:_ldWorld.id,levelIdx:_ldWorld.levels.indexOf(_ldLevel),level:_ldLevel};
@@ -8700,7 +9447,8 @@ document.getElementById('ldPlayBtn').addEventListener('click',function(){
   fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
   obstacles=[]; frogs=[]; moths=[];
   gameStartTime=Date.now();
-  try{if(AC) AC.resume().then(function(){playMusic('main');});}catch(ex){}
+  try{if(AC) AC.resume();}catch(ex){}
+  try{playMusic('level');}catch(ex){}
 });
 
 document.getElementById('ldBackBtn').addEventListener('click',function(){
