@@ -10739,6 +10739,10 @@ function handleCoopMessage(msg){
     document.getElementById('coopCodeText').textContent=msg.code;
     document.getElementById('coopRoomCode').style.display='block';
     document.getElementById('btnCoopShare').style.display='block';
+    // Clear join input so host can't accidentally join their own room
+    var inp=document.getElementById('coopJoinCode');
+    if(inp) inp.value='';
+    document.getElementById('btnCoopCreate').style.display='none';
     setCoopStatus('Waiting for your friend to join...');
   }
   else if(msg.type==='roomJoined'){
@@ -10874,6 +10878,7 @@ if(btnCoopJoin){
     var input=document.getElementById('coopJoinCode');
     var code=input?input.value.toUpperCase().trim():'';
     if(!code||code.length<4){setCoopStatus('Please enter a room code');return;}
+    if(code===coopRoomCode){setCoopStatus('You cannot join your own room');return;}
     if(!coopWS||coopWS.readyState!==WebSocket.OPEN){initCoopSocket();setTimeout(doJoinRoom,1500);return;}
     coopSend({type:'joinRoom',code:code,name:'Player 2',skin:activeSkin||'default'});
   }
