@@ -10908,7 +10908,6 @@ if(btnCoopJoin){
     var input=document.getElementById('coopJoinCode');
     var code=input?input.value.toUpperCase().trim():'';
     if(!code||code.length<4){setCoopStatus('Please enter a room code');return;}
-    if(code===coopRoomCode){setCoopStatus('You cannot join your own room');return;}
     if(!coopWS||coopWS.readyState!==WebSocket.OPEN){initCoopSocket();setTimeout(doJoinRoom,1500);return;}
     coopSend({type:'joinRoom',code:code,name:'Player 2',skin:activeSkin||'default'});
   }
