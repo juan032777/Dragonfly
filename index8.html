@@ -457,6 +457,7 @@ canvas { display:block; width:100%; height:100%; }
     </div>
     <div class="menu-nav">
       <button class="mbtn mbtn-primary" id="btnWorldMap">🌍 &nbsp;WORLD MAP</button>
+      <button class="mbtn mbtn-primary" id="btnCoop" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">👥 &nbsp;CO-OP MODE</button>
       <button class="mbtn mbtn-primary" id="btnPlayInfinite" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">▶ &nbsp;INFINITE MODE</button>
       <button class="mbtn mbtn-secondary" id="btnShop" style="display:flex;align-items:center;justify-content:center;gap:10px;">🎃 &nbsp;SHOP</button>
       <button class="mbtn mbtn-secondary" id="btnAchievements">🏅 &nbsp;ACHIEVEMENTS</button>
@@ -688,6 +689,73 @@ canvas { display:block; width:100%; height:100%; }
   </div>
   <div style="text-align:center;padding:4px 16px 20px;font-size:9px;color:rgba(180,140,255,0.4);line-height:1.5;">
     Purchases are processed securely. Subscriptions auto-renew unless cancelled.<br>Terms of Service &amp; Privacy Policy apply.
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Co-op Screen -->
+
+  <div class="menu-screen hidden" id="screenCoop">
+    <div class="topband"></div>
+    <div class="sub-header">
+      <div class="back-btn" id="coopBack">←</div>
+      <div class="sub-title">CO-OP MODE</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px;width:100%;">
+      <!-- Status display -->
+      <div id="coopStatus" style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:13px;text-align:center;min-height:20px;"></div>
+
+```
+  <!-- Room code display -->
+  <div id="coopRoomCode" style="display:none;background:rgba(0,60,120,0.3);border:2px solid #40a0ff;border-radius:16px;padding:16px 32px;text-align:center;">
+    <div style="font-size:10px;color:#4080cc;letter-spacing:3px;margin-bottom:6px;">YOUR ROOM CODE</div>
+    <div id="coopCodeText" style="font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:#80d0ff;letter-spacing:6px;">----</div>
+    <div style="font-size:10px;color:#4080cc;margin-top:6px;">Share this with your friend</div>
+  </div>
+
+  <!-- Countdown display -->
+  <div id="coopCountdown" style="display:none;font-family:'Cinzel',serif;font-size:64px;font-weight:900;color:#40c0ff;text-shadow:0 0 40px #40c0ff;">3</div>
+
+  <!-- Partner status -->
+  <div id="coopPartnerStatus" style="display:none;background:rgba(0,40,80,0.4);border:1px solid rgba(64,160,255,0.3);border-radius:12px;padding:12px 20px;text-align:center;width:100%;">
+    <div style="font-size:10px;color:#4080cc;letter-spacing:2px;">PARTNER</div>
+    <div id="coopPartnerName" style="font-family:'Cinzel',serif;font-size:16px;color:#80d0ff;margin-top:4px;">Waiting...</div>
+  </div>
+
+  <!-- Buttons -->
+  <div id="coopButtons" style="display:flex;flex-direction:column;gap:12px;width:100%;">
+    <button class="mbtn mbtn-primary" id="btnCoopCreate" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
+      ➕ &nbsp;CREATE ROOM
+    </button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input id="coopJoinCode" placeholder="Enter room code" maxlength="9"
+        style="flex:1;background:rgba(0,40,80,0.4);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;
+        padding:12px 16px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
+        text-transform:uppercase;outline:none;text-align:center;"/>
+      <button class="mbtn mbtn-primary" id="btnCoopJoin" style="background:linear-gradient(135deg,#003060,#0060c0);border-color:#40a0ff;white-space:nowrap;padding:12px 20px;">
+        JOIN
+      </button>
+    </div>
+  </div>
+
+  <!-- Share button (shown after room created) -->
+  <button id="btnCoopShare" style="display:none;background:linear-gradient(135deg,#004020,#008040);border:1.5px solid #40ff80;border-radius:10px;color:#a0ffcc;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;width:100%;cursor:pointer;">
+    📤 &nbsp;SHARE ROOM LINK
+  </button>
+
+  <!-- Emotes (shown during game) -->
+  <div id="coopEmotes" style="display:none;gap:12px;justify-content:center;">
+    <button class="coop-emote" data-emote="👍">👍</button>
+    <button class="coop-emote" data-emote="❤️">❤️</button>
+    <button class="coop-emote" data-emote="😂">😂</button>
+    <button class="coop-emote" data-emote="🔥">🔥</button>
+    <button class="coop-emote" data-emote="💀">💀</button>
+  </div>
+
+  <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:#4a3070;text-align:center;margin-top:8px;">
+    Both players fly together on the same level.<br>Both must survive to clear it!
   </div>
 </div>
 ```
@@ -10601,5 +10669,359 @@ try{
 }
 
 </script>
+
+<!-- Socket.io client — loaded separately so game works without it -->
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+// ── CO-OP CLIENT ─────────────────────────────────────────────────────
+// Replace this URL with your Railway deployment URL
+var COOP_SERVER_URL = 'https://dragonfly-coop-server-production.up.railway.app';
+
+var coopSocket = null;
+var coopActive = false;
+var coopPlayerNum = 1;
+var coopRoomCode = '';
+var coopPartnerSkin = 'default';
+var partnerFly = { x:0, y:0, vy:0, alive:true, trail:[], skin:'default' };
+var coopPositionTimer = 0;
+var coopEmoteDisplay = null;
+var coopEmoteTimer = 0;
+
+// CSS for emote buttons
+var coopStyle = document.createElement('style');
+coopStyle.textContent = '.coop-emote{background:rgba(0,60,120,0.5);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;font-size:24px;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;} .coop-emote:active{transform:scale(0.9);}';
+document.head.appendChild(coopStyle);
+
+function initCoopSocket(){
+  if(coopSocket && coopSocket.connected) return;
+  try {
+    coopSocket = io(COOP_SERVER_URL, {
+      transports: ['websocket'],
+      timeout: 5000,
+      reconnection: true,
+      reconnectionAttempts: 3
+    });
+
+    coopSocket.on('connect', function(){
+      setCoopStatus('Connected to co-op server ✓');
+    });
+
+    coopSocket.on('connect_error', function(){
+      setCoopStatus('Could not connect to server. Check your connection.');
+    });
+
+    coopSocket.on('roomCreated', function(data){
+      coopRoomCode = data.code;
+      coopPlayerNum = 1;
+      document.getElementById('coopCodeText').textContent = data.code;
+      document.getElementById('coopRoomCode').style.display = 'block';
+      document.getElementById('btnCoopShare').style.display = 'block';
+      setCoopStatus('Waiting for your friend to join...');
+    });
+
+    coopSocket.on('roomJoined', function(data){
+      coopRoomCode = data.code;
+      coopPlayerNum = 2;
+      coopPartnerSkin = data.hostSkin;
+      var ps = document.getElementById('coopPartnerStatus');
+      var pn = document.getElementById('coopPartnerName');
+      if(ps) ps.style.display = 'block';
+      if(pn) pn.textContent = data.hostName;
+      setCoopStatus('Joined! Game starting...');
+    });
+
+    coopSocket.on('joinError', function(data){
+      setCoopStatus('❌ ' + data.message);
+    });
+
+    coopSocket.on('partnerJoined', function(data){
+      coopPartnerSkin = data.skin;
+      var ps = document.getElementById('coopPartnerStatus');
+      var pn = document.getElementById('coopPartnerName');
+      if(ps) ps.style.display = 'block';
+      if(pn) pn.textContent = data.name;
+      setCoopStatus('Friend joined! Starting soon...');
+    });
+
+    coopSocket.on('countdown', function(data){
+      var cd = document.getElementById('coopCountdown');
+      if(cd){ cd.style.display = 'block'; cd.textContent = data.count; }
+      try{ sfxMenuSelect(); }catch(e){}
+    });
+
+    coopSocket.on('gameStart', function(data){
+      var cd = document.getElementById('coopCountdown');
+      if(cd) cd.style.display = 'none';
+      coopActive = true;
+      showScreen(null);
+      // Start the level
+      var targetLevel = data.level || 'e1';
+      var targetWorld = data.worldId || 'earth';
+      // Find and load the level
+      var worlds = getWorldData ? getWorldData() : null;
+      if(worlds){
+        worlds.forEach(function(w){
+          if(w.id === targetWorld){
+            w.levels.forEach(function(lv){
+              if(lv.id === targetLevel){
+                currentWorldLevel = { worldId:w.id, levelIdx:w.levels.indexOf(lv), level:lv };
+              }
+            });
+          }
+        });
+      }
+      showToast('👥 Co-op started! Fly together!');
+      try{ sfxLevelStart(); }catch(e){}
+      state = 'playing';
+      resetGame();
+    });
+
+    coopSocket.on('partnerPosition', function(data){
+      partnerFly.x = data.x;
+      partnerFly.y = data.y;
+      partnerFly.vy = data.vy;
+      partnerFly.alive = data.alive;
+      partnerFly.trail = data.trail || [];
+      partnerFly.skin = data.skin || 'default';
+    });
+
+    coopSocket.on('partnerEvent', function(data){
+      if(data.type === 'mothCollect'){
+        // Show visual feedback that partner collected a moth
+        showToast('👥 Partner collected a moth!');
+      }
+      if(data.type === 'bossHit'){
+        // Partner hit the boss
+        if(boss && bossActive) hitBoss();
+      }
+    });
+
+    coopSocket.on('partnerDied', function(data){
+      showToast('👥 Partner lost a life!');
+    });
+
+    coopSocket.on('bothDead', function(){
+      showToast('💀 Both players died!');
+      coopActive = false;
+      die();
+    });
+
+    coopSocket.on('bothCleared', function(data){
+      showToast('🎉 Both players cleared the level!');
+    });
+
+    coopSocket.on('waitingForPartner', function(){
+      showToast('⏳ Waiting for your partner...');
+    });
+
+    coopSocket.on('partnerDisconnected', function(data){
+      showToast('⚠️ ' + data.message);
+      coopActive = false;
+    });
+
+    coopSocket.on('partnerReconnected', function(){
+      showToast('👥 Partner reconnected!');
+      coopActive = true;
+    });
+
+    coopSocket.on('partnerEmote', function(data){
+      coopEmoteDisplay = data.emote;
+      coopEmoteTimer = 120; // show for 2 seconds
+    });
+
+  } catch(e){
+    console.warn('[COOP] Socket.io not available:', e);
+  }
+}
+
+function setCoopStatus(msg){
+  var el = document.getElementById('coopStatus');
+  if(el) el.textContent = msg;
+}
+
+// Send position to server every 2 frames (30fps sync)
+function updateCoopSync(){
+  if(!coopActive || !coopSocket || !coopSocket.connected) return;
+  coopPositionTimer++;
+  if(coopPositionTimer % 2 === 0){
+    coopSocket.emit('position', {
+      x: fly.x, y: fly.y, vy: fly.vy,
+      alive: lives > 0,
+      trail: fly.trail ? fly.trail.slice(-6) : []
+    });
+  }
+  // Show partner emote
+  if(coopEmoteTimer > 0) coopEmoteTimer--;
+}
+
+// Draw partner dragonfly on screen
+function drawPartnerFly(){
+  if(!coopActive || !partnerFly) return;
+  ctx.save();
+  ctx.globalAlpha = partnerFly.alive ? 0.75 : 0.3;
+  // Draw partner trail
+  if(partnerFly.trail && partnerFly.trail.length > 1){
+    ctx.strokeStyle = 'rgba(64,160,255,0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    partnerFly.trail.forEach(function(p,i){
+      i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y);
+    });
+    ctx.stroke();
+  }
+  // Draw partner dragonfly (simplified blue version)
+  ctx.translate(partnerFly.x, partnerFly.y);
+  // Wings
+  ctx.fillStyle = 'rgba(64,160,255,0.5)';
+  ctx.beginPath(); ctx.ellipse(-8,-6,18,7,Math.PI*-0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(8,-6,18,7,Math.PI*0.2,0,Math.PI*2); ctx.fill();
+  // Body
+  ctx.fillStyle = '#4080ff';
+  ctx.beginPath(); ctx.ellipse(0,0,6,10,0,0,Math.PI*2); ctx.fill();
+  // Eyes
+  ctx.fillStyle = '#80e0ff';
+  ctx.beginPath(); ctx.arc(-4,-8,3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4,-8,3,0,Math.PI*2); ctx.fill();
+  // Partner label
+  ctx.globalAlpha = 0.8;
+  ctx.font = '9px -apple-system,sans-serif';
+  ctx.fillStyle = '#80d0ff';
+  ctx.textAlign = 'center';
+  ctx.fillText('P2', 0, -18);
+  ctx.restore();
+
+  // Draw partner emote if active
+  if(coopEmoteTimer > 0 && coopEmoteDisplay){
+    ctx.save();
+    ctx.font = '24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = Math.min(1, coopEmoteTimer/30);
+    ctx.fillText(coopEmoteDisplay, partnerFly.x, partnerFly.y - 30);
+    ctx.restore();
+  }
+}
+
+// Wire co-op button
+var btnCoop = document.getElementById('btnCoop');
+if(btnCoop){
+  function openCoop(){
+    sfxMenuTap();
+    // Add to showScreen list
+    var screens=['screenMain','screenOptions','screenShop','screenStory',
+      'screenLeaderboard','screenWorldMap','screenAchievements','screenCoop'];
+    screens.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){el.classList.add('hidden');el.style.display='none';}
+    });
+    var sc = document.getElementById('screenCoop');
+    if(sc){sc.classList.remove('hidden');sc.style.display='flex';}
+    initCoopSocket();
+  }
+  btnCoop.addEventListener('click', openCoop);
+  btnCoop.addEventListener('touchstart', function(e){ e.preventDefault(); openCoop(); },{passive:false});
+}
+
+// Co-op back button
+var coopBack = document.getElementById('coopBack');
+if(coopBack){
+  coopBack.addEventListener('click', function(){ sfxMenuBack(); showScreen('screenMain'); });
+  coopBack.addEventListener('touchstart', function(e){ e.preventDefault(); sfxMenuBack(); showScreen('screenMain'); },{passive:false});
+}
+
+// Create room button
+var btnCoopCreate = document.getElementById('btnCoopCreate');
+if(btnCoopCreate){
+  function doCreateRoom(){
+    if(!coopSocket || !coopSocket.connected){ initCoopSocket(); setTimeout(doCreateRoom, 1000); return; }
+    coopSocket.emit('createRoom', {
+      name: 'Player 1',
+      skin: activeSkin || 'default',
+      level: currentWorldLevel ? currentWorldLevel.level.id : 'e1',
+      worldId: currentWorldLevel ? currentWorldLevel.worldId : 'earth'
+    });
+  }
+  btnCoopCreate.addEventListener('click', doCreateRoom);
+  btnCoopCreate.addEventListener('touchstart', function(e){ e.preventDefault(); doCreateRoom(); },{passive:false});
+}
+
+// Join room button
+var btnCoopJoin = document.getElementById('btnCoopJoin');
+if(btnCoopJoin){
+  function doJoinRoom(){
+    var input = document.getElementById('coopJoinCode');
+    var code = input ? input.value.toUpperCase().trim() : '';
+    if(!code || code.length < 4){ setCoopStatus('Please enter a room code'); return; }
+    if(!coopSocket || !coopSocket.connected){ initCoopSocket(); setTimeout(doJoinRoom, 1000); return; }
+    coopSocket.emit('joinRoom', {
+      code: code,
+      name: 'Player 2',
+      skin: activeSkin || 'default'
+    });
+  }
+  btnCoopJoin.addEventListener('click', doJoinRoom);
+  btnCoopJoin.addEventListener('touchstart', function(e){ e.preventDefault(); doJoinRoom(); },{passive:false});
+}
+
+// Share room link button
+var btnCoopShare = document.getElementById('btnCoopShare');
+if(btnCoopShare){
+  btnCoopShare.addEventListener('click', function(){
+    var url = 'https://dragonfly.game/join/' + coopRoomCode;
+    var msg = "Join my Dragonfly's Flight co-op game! Room code: " + coopRoomCode + "\n" + url;
+    if(navigator.share){
+      navigator.share({ title: "Dragonfly's Flight Co-op", text: msg, url: url });
+    } else {
+      navigator.clipboard.writeText(msg).then(function(){
+        showToast('Room link copied to clipboard!');
+      });
+    }
+  });
+}
+
+// Emote buttons
+document.querySelectorAll('.coop-emote').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    if(!coopSocket || !coopActive) return;
+    coopSocket.emit('emote', { emote: this.dataset.emote });
+    // Show own emote briefly
+    coopEmoteDisplay = this.dataset.emote;
+    coopEmoteTimer = 60;
+  });
+});
+
+// Hook co-op sync into game loop — add to update()
+var _origUpdate = update;
+update = function(){
+  _origUpdate();
+  updateCoopSync();
+};
+
+// Hook co-op drawing into draw() — add partner fly after main fly drawn
+var _origDraw = draw;
+draw = function(){
+  _origDraw();
+  if(coopActive) drawPartnerFly();
+};
+
+// Send game events to server
+var _origDie = die;
+die = function(){
+  if(coopActive && coopSocket){
+    coopSocket.emit('gameEvent', { type:'die', payload:{ playerNum:coopPlayerNum } });
+  }
+  _origDie();
+};
+
+var _origTriggerLevelClear = triggerLevelClear;
+triggerLevelClear = function(){
+  if(coopActive && coopSocket){
+    coopSocket.emit('gameEvent', { type:'levelClear', payload:{} });
+  }
+  _origTriggerLevelClear();
+};
+</script>
+
 </body>
 </html>
