@@ -10768,9 +10768,15 @@ function handleCoopMessage(msg){
     var cd=document.getElementById('coopCountdown');
     if(cd) cd.style.display='none';
     coopActive=true;
-    showScreen(null);
+    // Hide all menu screens and show game canvas
+    ['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard',
+     'screenWorldMap','screenAchievements','screenCoop'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){el.classList.add('hidden');el.style.display='none';}
+    });
     state='playing';
     resetGame();
+    if(!animRunning){ animRunning=true; loop(); }
     showToast('👥 Co-op! Fly together!');
   }
   else if(msg.type==='partnerPosition'){
