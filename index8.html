@@ -10815,27 +10815,57 @@ function updateCoopSync(){
 function drawPartnerFly(){
   if(!coopActive) return;
   ctx.save();
-  ctx.globalAlpha=partnerFly.alive?0.75:0.3;
+  ctx.globalAlpha=partnerFly.alive?0.85:0.3;
+  // Draw trail
   if(partnerFly.trail&&partnerFly.trail.length>1){
     ctx.strokeStyle='rgba(64,160,255,0.4)';ctx.lineWidth=3;ctx.beginPath();
     partnerFly.trail.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});
     ctx.stroke();
   }
   ctx.translate(partnerFly.x,partnerFly.y);
-  ctx.fillStyle='rgba(64,160,255,0.5)';
-  ctx.beginPath();ctx.ellipse(-8,-6,18,7,Math.PI*-0.2,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(8,-6,18,7,Math.PI*0.2,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#4080ff';ctx.beginPath();ctx.ellipse(0,0,6,10,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#80e0ff';
-  ctx.beginPath();ctx.arc(-4,-8,3,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(4,-8,3,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=0.8;ctx.font='9px -apple-system,sans-serif';ctx.fillStyle='#80d0ff';ctx.textAlign='center';
-  ctx.fillText('P'+(coopPlayerNum===1?2:1),0,-18);
+  // Blue tint overlay — draw actual dragonfly then tint it
+  var t=Date.now()/1000;
+  var bob=Math.sin(t*3)*2;
+  ctx.translate(0,bob);
+  // Wings — blue tinted
+  ctx.save();
+  ctx.globalAlpha=0.7;
+  ctx.fillStyle='rgba(100,180,255,0.6)';
+  ctx.beginPath();ctx.ellipse(-14,-8,20,8,Math.PI*-0.25,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(14,-8,20,8,Math.PI*0.25,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(100,180,255,0.4)';
+  ctx.beginPath();ctx.ellipse(-12,2,15,6,Math.PI*-0.15,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(12,2,15,6,Math.PI*0.15,0,Math.PI*2);ctx.fill();
   ctx.restore();
+  // Body — blue dragonfly
+  ctx.fillStyle='#2060cc';
+  ctx.beginPath();ctx.ellipse(0,0,5,12,0,0,Math.PI*2);ctx.fill();
+  // Abdomen segments
+  ctx.fillStyle='#1848aa';
+  ctx.beginPath();ctx.ellipse(0,8,4,5,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(0,15,3,4,0,0,Math.PI*2);ctx.fill();
+  // Head
+  ctx.fillStyle='#40a0ff';
+  ctx.beginPath();ctx.arc(0,-12,6,0,Math.PI*2);ctx.fill();
+  // Eyes
+  ctx.fillStyle='#80ffff';
+  ctx.beginPath();ctx.arc(-4,-13,2.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(4,-13,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#004488';
+  ctx.beginPath();ctx.arc(-4,-13,1,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(4,-13,1,0,Math.PI*2);ctx.fill();
+  // P2 label
+  ctx.globalAlpha=0.9;
+  ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.fillStyle='#80d0ff';
+  ctx.textAlign='center';
+  ctx.fillText('P'+(coopPlayerNum===1?2:1),0,-26);
+  ctx.restore();
+  // Emote
   if(coopEmoteTimer>0&&coopEmoteDisplay){
     ctx.save();ctx.font='24px sans-serif';ctx.textAlign='center';
     ctx.globalAlpha=Math.min(1,coopEmoteTimer/30);
-    ctx.fillText(coopEmoteDisplay,partnerFly.x,partnerFly.y-30);ctx.restore();
+    ctx.fillText(coopEmoteDisplay,partnerFly.x,partnerFly.y-35);ctx.restore();
   }
 }
 
