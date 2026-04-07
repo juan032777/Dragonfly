@@ -10670,358 +10670,236 @@ try{
 
 </script>
 
-<!-- Socket.io client — loaded separately so game works without it -->
-
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<!-- Co-op uses native WebSockets — no external library needed -->
 
 <script>
-// ── CO-OP CLIENT ─────────────────────────────────────────────────────
-// Replace this URL with your Railway deployment URL
-var COOP_SERVER_URL = 'https://dragonfly-coop-server-production.up.railway.app';
+// ── CO-OP CLIENT (Native WebSocket) ─────────────────────────────────
+var COOP_SERVER_WS = 'wss://dragonfly-coop-server-production.up.railway.app';
 
-var coopSocket = null;
+var coopWS = null;
 var coopActive = false;
 var coopPlayerNum = 1;
 var coopRoomCode = '';
-var coopPartnerSkin = 'default';
-var partnerFly = { x:0, y:0, vy:0, alive:true, trail:[], skin:'default' };
+var partnerFly = { x:80, y:200, vy:0, alive:true, trail:[], skin:'default' };
 var coopPositionTimer = 0;
 var coopEmoteDisplay = null;
 var coopEmoteTimer = 0;
 
-// CSS for emote buttons
 var coopStyle = document.createElement('style');
-coopStyle.textContent = '.coop-emote{background:rgba(0,60,120,0.5);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;font-size:24px;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;} .coop-emote:active{transform:scale(0.9);}';
+coopStyle.textContent = '.coop-emote{background:rgba(0,60,120,0.5);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;font-size:24px;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}.coop-emote:active{transform:scale(0.9);}';
 document.head.appendChild(coopStyle);
 
-function initCoopSocket(){
-  if(coopSocket && coopSocket.connected) return;
-  try {
-    coopSocket = io(COOP_SERVER_URL, {
-      transports: ['websocket'],
-      timeout: 5000,
-      reconnection: true,
-      reconnectionAttempts: 3
-    });
-
-    coopSocket.on('connect', function(){
-      setCoopStatus('Connected to co-op server ✓');
-    });
-
-    coopSocket.on('connect_error', function(){
-      setCoopStatus('Could not connect to server. Check your connection.');
-    });
-
-    coopSocket.on('roomCreated', function(data){
-      coopRoomCode = data.code;
-      coopPlayerNum = 1;
-      document.getElementById('coopCodeText').textContent = data.code;
-      document.getElementById('coopRoomCode').style.display = 'block';
-      document.getElementById('btnCoopShare').style.display = 'block';
-      setCoopStatus('Waiting for your friend to join...');
-    });
-
-    coopSocket.on('roomJoined', function(data){
-      coopRoomCode = data.code;
-      coopPlayerNum = 2;
-      coopPartnerSkin = data.hostSkin;
-      var ps = document.getElementById('coopPartnerStatus');
-      var pn = document.getElementById('coopPartnerName');
-      if(ps) ps.style.display = 'block';
-      if(pn) pn.textContent = data.hostName;
-      setCoopStatus('Joined! Game starting...');
-    });
-
-    coopSocket.on('joinError', function(data){
-      setCoopStatus('❌ ' + data.message);
-    });
-
-    coopSocket.on('partnerJoined', function(data){
-      coopPartnerSkin = data.skin;
-      var ps = document.getElementById('coopPartnerStatus');
-      var pn = document.getElementById('coopPartnerName');
-      if(ps) ps.style.display = 'block';
-      if(pn) pn.textContent = data.name;
-      setCoopStatus('Friend joined! Starting soon...');
-    });
-
-    coopSocket.on('countdown', function(data){
-      var cd = document.getElementById('coopCountdown');
-      if(cd){ cd.style.display = 'block'; cd.textContent = data.count; }
-      try{ sfxMenuSelect(); }catch(e){}
-    });
-
-    coopSocket.on('gameStart', function(data){
-      var cd = document.getElementById('coopCountdown');
-      if(cd) cd.style.display = 'none';
-      coopActive = true;
-      showScreen(null);
-      // Start the level
-      var targetLevel = data.level || 'e1';
-      var targetWorld = data.worldId || 'earth';
-      // Find and load the level
-      var worlds = getWorldData ? getWorldData() : null;
-      if(worlds){
-        worlds.forEach(function(w){
-          if(w.id === targetWorld){
-            w.levels.forEach(function(lv){
-              if(lv.id === targetLevel){
-                currentWorldLevel = { worldId:w.id, levelIdx:w.levels.indexOf(lv), level:lv };
-              }
-            });
-          }
-        });
-      }
-      showToast('👥 Co-op started! Fly together!');
-      try{ sfxLevelStart(); }catch(e){}
-      state = 'playing';
-      resetGame();
-    });
-
-    coopSocket.on('partnerPosition', function(data){
-      partnerFly.x = data.x;
-      partnerFly.y = data.y;
-      partnerFly.vy = data.vy;
-      partnerFly.alive = data.alive;
-      partnerFly.trail = data.trail || [];
-      partnerFly.skin = data.skin || 'default';
-    });
-
-    coopSocket.on('partnerEvent', function(data){
-      if(data.type === 'mothCollect'){
-        // Show visual feedback that partner collected a moth
-        showToast('👥 Partner collected a moth!');
-      }
-      if(data.type === 'bossHit'){
-        // Partner hit the boss
-        if(boss && bossActive) hitBoss();
-      }
-    });
-
-    coopSocket.on('partnerDied', function(data){
-      showToast('👥 Partner lost a life!');
-    });
-
-    coopSocket.on('bothDead', function(){
-      showToast('💀 Both players died!');
-      coopActive = false;
-      die();
-    });
-
-    coopSocket.on('bothCleared', function(data){
-      showToast('🎉 Both players cleared the level!');
-    });
-
-    coopSocket.on('waitingForPartner', function(){
-      showToast('⏳ Waiting for your partner...');
-    });
-
-    coopSocket.on('partnerDisconnected', function(data){
-      showToast('⚠️ ' + data.message);
-      coopActive = false;
-    });
-
-    coopSocket.on('partnerReconnected', function(){
-      showToast('👥 Partner reconnected!');
-      coopActive = true;
-    });
-
-    coopSocket.on('partnerEmote', function(data){
-      coopEmoteDisplay = data.emote;
-      coopEmoteTimer = 120; // show for 2 seconds
-    });
-
-  } catch(e){
-    console.warn('[COOP] Socket.io not available:', e);
-  }
-}
-
 function setCoopStatus(msg){
-  var el = document.getElementById('coopStatus');
-  if(el) el.textContent = msg;
+  var el=document.getElementById('coopStatus');
+  if(el) el.textContent=msg;
 }
 
-// Send position to server every 2 frames (30fps sync)
-function updateCoopSync(){
-  if(!coopActive || !coopSocket || !coopSocket.connected) return;
-  coopPositionTimer++;
-  if(coopPositionTimer % 2 === 0){
-    coopSocket.emit('position', {
-      x: fly.x, y: fly.y, vy: fly.vy,
-      alive: lives > 0,
-      trail: fly.trail ? fly.trail.slice(-6) : []
-    });
+function coopSend(obj){
+  if(!coopWS||coopWS.readyState!==WebSocket.OPEN) return;
+  try{ coopWS.send(JSON.stringify(obj)); }catch(e){}
+}
+
+function initCoopSocket(){
+  if(coopWS&&(coopWS.readyState===1||coopWS.readyState===0)) return;
+  setCoopStatus('Connecting...');
+  try{
+    if(typeof WebSocket === 'undefined'){
+      setCoopStatus('WebSocket not available in this browser');
+      return;
+    }
+    coopWS = new WebSocket(COOP_SERVER_WS);
+    coopWS.onopen = function(){
+      setCoopStatus('Connected ✓');
+      console.log('[COOP] Connected');
+    };
+    coopWS.onclose = function(){
+      setCoopStatus('Disconnected — tap Create Room to reconnect');
+      coopActive = false;
+      console.log('[COOP] Disconnected');
+    };
+    coopWS.onerror = function(e){
+      setCoopStatus('⚠️ Co-op requires the installed app. Browser preview blocks external connections.');
+      console.warn('[COOP] Connection error — works in installed app only:', e);
+    };
+    coopWS.onmessage = function(e){
+      try{ handleCoopMessage(JSON.parse(e.data)); }catch(err){}
+    };
+  }catch(e){
+    setCoopStatus('WebSocket not supported');
+    console.warn('[COOP] Error:', e);
   }
-  // Show partner emote
-  if(coopEmoteTimer > 0) coopEmoteTimer--;
 }
 
-// Draw partner dragonfly on screen
+function handleCoopMessage(msg){
+  if(msg.type==='connected'){
+    console.log('[COOP] Server assigned id');
+  }
+  else if(msg.type==='roomCreated'){
+    coopRoomCode=msg.code; coopPlayerNum=1;
+    document.getElementById('coopCodeText').textContent=msg.code;
+    document.getElementById('coopRoomCode').style.display='block';
+    document.getElementById('btnCoopShare').style.display='block';
+    setCoopStatus('Waiting for your friend to join...');
+  }
+  else if(msg.type==='roomJoined'){
+    coopRoomCode=msg.code; coopPlayerNum=2;
+    var ps=document.getElementById('coopPartnerStatus');
+    var pn=document.getElementById('coopPartnerName');
+    if(ps) ps.style.display='block';
+    if(pn) pn.textContent=msg.hostName||'Player 1';
+    setCoopStatus('Joined! Starting soon...');
+  }
+  else if(msg.type==='joinError'){
+    setCoopStatus('❌ '+msg.message);
+  }
+  else if(msg.type==='partnerJoined'){
+    var ps=document.getElementById('coopPartnerStatus');
+    var pn=document.getElementById('coopPartnerName');
+    if(ps) ps.style.display='block';
+    if(pn) pn.textContent=msg.name||'Player 2';
+    setCoopStatus('Friend joined! Starting...');
+  }
+  else if(msg.type==='countdown'){
+    var cd=document.getElementById('coopCountdown');
+    if(cd){cd.style.display='block';cd.textContent=msg.count;}
+    try{sfxMenuSelect();}catch(e){}
+  }
+  else if(msg.type==='gameStart'){
+    var cd=document.getElementById('coopCountdown');
+    if(cd) cd.style.display='none';
+    coopActive=true;
+    showScreen(null);
+    state='playing';
+    resetGame();
+    showToast('👥 Co-op! Fly together!');
+  }
+  else if(msg.type==='partnerPosition'){
+    partnerFly.x=msg.x; partnerFly.y=msg.y;
+    partnerFly.vy=msg.vy; partnerFly.alive=msg.alive;
+    partnerFly.trail=msg.trail||[]; partnerFly.skin=msg.skin||'default';
+  }
+  else if(msg.type==='partnerEvent'){
+    if(msg.event==='bossHit'&&boss&&bossActive) hitBoss();
+  }
+  else if(msg.type==='bothDead'){
+    coopActive=false; die();
+  }
+  else if(msg.type==='partnerDisconnected'){
+    showToast('⚠️ Partner disconnected. Waiting 30s...');
+    coopActive=false;
+  }
+  else if(msg.type==='partnerEmote'){
+    coopEmoteDisplay=msg.emote; coopEmoteTimer=120;
+  }
+}
+
+function updateCoopSync(){
+  if(!coopActive||!coopWS||coopWS.readyState!==WebSocket.OPEN) return;
+  coopPositionTimer++;
+  if(coopPositionTimer%2===0){
+    coopSend({type:'position',x:fly.x,y:fly.y,vy:fly.vy,alive:lives>0,trail:fly.trail?fly.trail.slice(-6):[]});
+  }
+  if(coopEmoteTimer>0) coopEmoteTimer--;
+}
+
 function drawPartnerFly(){
-  if(!coopActive || !partnerFly) return;
+  if(!coopActive) return;
   ctx.save();
-  ctx.globalAlpha = partnerFly.alive ? 0.75 : 0.3;
-  // Draw partner trail
-  if(partnerFly.trail && partnerFly.trail.length > 1){
-    ctx.strokeStyle = 'rgba(64,160,255,0.4)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    partnerFly.trail.forEach(function(p,i){
-      i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y);
-    });
+  ctx.globalAlpha=partnerFly.alive?0.75:0.3;
+  if(partnerFly.trail&&partnerFly.trail.length>1){
+    ctx.strokeStyle='rgba(64,160,255,0.4)';ctx.lineWidth=3;ctx.beginPath();
+    partnerFly.trail.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});
     ctx.stroke();
   }
-  // Draw partner dragonfly (simplified blue version)
-  ctx.translate(partnerFly.x, partnerFly.y);
-  // Wings
-  ctx.fillStyle = 'rgba(64,160,255,0.5)';
-  ctx.beginPath(); ctx.ellipse(-8,-6,18,7,Math.PI*-0.2,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(8,-6,18,7,Math.PI*0.2,0,Math.PI*2); ctx.fill();
-  // Body
-  ctx.fillStyle = '#4080ff';
-  ctx.beginPath(); ctx.ellipse(0,0,6,10,0,0,Math.PI*2); ctx.fill();
-  // Eyes
-  ctx.fillStyle = '#80e0ff';
-  ctx.beginPath(); ctx.arc(-4,-8,3,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(4,-8,3,0,Math.PI*2); ctx.fill();
-  // Partner label
-  ctx.globalAlpha = 0.8;
-  ctx.font = '9px -apple-system,sans-serif';
-  ctx.fillStyle = '#80d0ff';
-  ctx.textAlign = 'center';
-  ctx.fillText('P2', 0, -18);
+  ctx.translate(partnerFly.x,partnerFly.y);
+  ctx.fillStyle='rgba(64,160,255,0.5)';
+  ctx.beginPath();ctx.ellipse(-8,-6,18,7,Math.PI*-0.2,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(8,-6,18,7,Math.PI*0.2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#4080ff';ctx.beginPath();ctx.ellipse(0,0,6,10,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#80e0ff';
+  ctx.beginPath();ctx.arc(-4,-8,3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(4,-8,3,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.8;ctx.font='9px -apple-system,sans-serif';ctx.fillStyle='#80d0ff';ctx.textAlign='center';
+  ctx.fillText('P'+(coopPlayerNum===1?2:1),0,-18);
   ctx.restore();
-
-  // Draw partner emote if active
-  if(coopEmoteTimer > 0 && coopEmoteDisplay){
-    ctx.save();
-    ctx.font = '24px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.globalAlpha = Math.min(1, coopEmoteTimer/30);
-    ctx.fillText(coopEmoteDisplay, partnerFly.x, partnerFly.y - 30);
-    ctx.restore();
+  if(coopEmoteTimer>0&&coopEmoteDisplay){
+    ctx.save();ctx.font='24px sans-serif';ctx.textAlign='center';
+    ctx.globalAlpha=Math.min(1,coopEmoteTimer/30);
+    ctx.fillText(coopEmoteDisplay,partnerFly.x,partnerFly.y-30);ctx.restore();
   }
 }
 
-// Wire co-op button
-var btnCoop = document.getElementById('btnCoop');
+// Wire buttons
+var btnCoop=document.getElementById('btnCoop');
 if(btnCoop){
   function openCoop(){
     sfxMenuTap();
-    // Add to showScreen list
-    var screens=['screenMain','screenOptions','screenShop','screenStory',
-      'screenLeaderboard','screenWorldMap','screenAchievements','screenCoop'];
-    screens.forEach(function(id){
+    ['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements','screenCoop'].forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.classList.add('hidden');el.style.display='none';}
     });
-    var sc = document.getElementById('screenCoop');
+    var sc=document.getElementById('screenCoop');
     if(sc){sc.classList.remove('hidden');sc.style.display='flex';}
     initCoopSocket();
   }
-  btnCoop.addEventListener('click', openCoop);
-  btnCoop.addEventListener('touchstart', function(e){ e.preventDefault(); openCoop(); },{passive:false});
+  btnCoop.addEventListener('click',openCoop);
+  btnCoop.addEventListener('touchstart',function(e){e.preventDefault();openCoop();},{passive:false});
 }
 
-// Co-op back button
-var coopBack = document.getElementById('coopBack');
+var coopBack=document.getElementById('coopBack');
 if(coopBack){
-  coopBack.addEventListener('click', function(){ sfxMenuBack(); showScreen('screenMain'); });
-  coopBack.addEventListener('touchstart', function(e){ e.preventDefault(); sfxMenuBack(); showScreen('screenMain'); },{passive:false});
+  coopBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
+  coopBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
 }
 
-// Create room button
-var btnCoopCreate = document.getElementById('btnCoopCreate');
+var btnCoopCreate=document.getElementById('btnCoopCreate');
 if(btnCoopCreate){
   function doCreateRoom(){
-    if(!coopSocket || !coopSocket.connected){ initCoopSocket(); setTimeout(doCreateRoom, 1000); return; }
-    coopSocket.emit('createRoom', {
-      name: 'Player 1',
-      skin: activeSkin || 'default',
-      level: currentWorldLevel ? currentWorldLevel.level.id : 'e1',
-      worldId: currentWorldLevel ? currentWorldLevel.worldId : 'earth'
-    });
+    if(!coopWS||coopWS.readyState!==WebSocket.OPEN){initCoopSocket();setTimeout(doCreateRoom,1500);return;}
+    coopSend({type:'createRoom',name:'Player 1',skin:activeSkin||'default'});
   }
-  btnCoopCreate.addEventListener('click', doCreateRoom);
-  btnCoopCreate.addEventListener('touchstart', function(e){ e.preventDefault(); doCreateRoom(); },{passive:false});
+  btnCoopCreate.addEventListener('click',doCreateRoom);
+  btnCoopCreate.addEventListener('touchstart',function(e){e.preventDefault();doCreateRoom();},{passive:false});
 }
 
-// Join room button
-var btnCoopJoin = document.getElementById('btnCoopJoin');
+var btnCoopJoin=document.getElementById('btnCoopJoin');
 if(btnCoopJoin){
   function doJoinRoom(){
-    var input = document.getElementById('coopJoinCode');
-    var code = input ? input.value.toUpperCase().trim() : '';
-    if(!code || code.length < 4){ setCoopStatus('Please enter a room code'); return; }
-    if(!coopSocket || !coopSocket.connected){ initCoopSocket(); setTimeout(doJoinRoom, 1000); return; }
-    coopSocket.emit('joinRoom', {
-      code: code,
-      name: 'Player 2',
-      skin: activeSkin || 'default'
-    });
+    var input=document.getElementById('coopJoinCode');
+    var code=input?input.value.toUpperCase().trim():'';
+    if(!code||code.length<4){setCoopStatus('Please enter a room code');return;}
+    if(!coopWS||coopWS.readyState!==WebSocket.OPEN){initCoopSocket();setTimeout(doJoinRoom,1500);return;}
+    coopSend({type:'joinRoom',code:code,name:'Player 2',skin:activeSkin||'default'});
   }
-  btnCoopJoin.addEventListener('click', doJoinRoom);
-  btnCoopJoin.addEventListener('touchstart', function(e){ e.preventDefault(); doJoinRoom(); },{passive:false});
+  btnCoopJoin.addEventListener('click',doJoinRoom);
+  btnCoopJoin.addEventListener('touchstart',function(e){e.preventDefault();doJoinRoom();},{passive:false});
 }
 
-// Share room link button
-var btnCoopShare = document.getElementById('btnCoopShare');
+var btnCoopShare=document.getElementById('btnCoopShare');
 if(btnCoopShare){
-  btnCoopShare.addEventListener('click', function(){
-    var url = 'https://dragonfly.game/join/' + coopRoomCode;
-    var msg = "Join my Dragonfly's Flight co-op game! Room code: " + coopRoomCode + "\n" + url;
-    if(navigator.share){
-      navigator.share({ title: "Dragonfly's Flight Co-op", text: msg, url: url });
-    } else {
-      navigator.clipboard.writeText(msg).then(function(){
-        showToast('Room link copied to clipboard!');
-      });
-    }
+  btnCoopShare.addEventListener('click',function(){
+    var msg="Join my Dragonfly's Flight co-op! Room: "+coopRoomCode;
+    if(navigator.share) navigator.share({title:"Dragonfly Co-op",text:msg});
+    else navigator.clipboard&&navigator.clipboard.writeText(msg).then(function(){showToast('Room code copied!');});
   });
 }
 
-// Emote buttons
 document.querySelectorAll('.coop-emote').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    if(!coopSocket || !coopActive) return;
-    coopSocket.emit('emote', { emote: this.dataset.emote });
-    // Show own emote briefly
-    coopEmoteDisplay = this.dataset.emote;
-    coopEmoteTimer = 60;
+  btn.addEventListener('click',function(){
+    if(!coopActive) return;
+    coopSend({type:'emote',emote:this.dataset.emote});
   });
 });
 
-// Hook co-op sync into game loop — add to update()
-var _origUpdate = update;
-update = function(){
-  _origUpdate();
-  updateCoopSync();
-};
-
-// Hook co-op drawing into draw() — add partner fly after main fly drawn
-var _origDraw = draw;
-draw = function(){
-  _origDraw();
-  if(coopActive) drawPartnerFly();
-};
-
-// Send game events to server
-var _origDie = die;
-die = function(){
-  if(coopActive && coopSocket){
-    coopSocket.emit('gameEvent', { type:'die', payload:{ playerNum:coopPlayerNum } });
-  }
+// Hook into game loop
+var _origUpdate=update;
+update=function(){_origUpdate();updateCoopSync();};
+var _origDraw=draw;
+draw=function(){_origDraw();if(coopActive)drawPartnerFly();};
+var _origDie=die;
+die=function(){
+  if(coopActive&&coopWS) coopSend({type:'gameEvent',event:'die',payload:{}});
   _origDie();
 };
 
-var _origTriggerLevelClear = triggerLevelClear;
-triggerLevelClear = function(){
-  if(coopActive && coopSocket){
-    coopSocket.emit('gameEvent', { type:'levelClear', payload:{} });
-  }
-  _origTriggerLevelClear();
-};
 </script>
-
-</body>
-</html>
