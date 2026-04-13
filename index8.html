@@ -151,7 +151,6 @@ canvas { display:block; width:100%; height:100%; }
 /* Menu screens */
 .menu-screen { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; background:linear-gradient(170deg,#04001a 0%,#0d0530 40%,#180a40 100%); pointer-events:all; overflow-y:auto; }
 .menu-screen.hidden { display:none; }
-#screenCoop.hidden { display:none !important; }
 .topband { width:100%; height:3px; flex-shrink:0; background:linear-gradient(90deg,transparent,#b06eff,#40c8ff,#b06eff,transparent); }
 .menu-logo { margin-top:28px; display:flex; flex-direction:column; align-items:center; gap:6px; }
 .menu-bug-icon { font-size:72px; filter:drop-shadow(0 0 22px #b06eff); animation:mFloat 3s ease-in-out infinite; }
@@ -403,6 +402,7 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Boss Victory -->
+
   <div id="bossVictoryOverlay">
     <div class="bv-icon">🏆</div>
     <div class="bv-title">GUARDIAN DEFEATED!</div>
@@ -433,6 +433,7 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Pause Screen -->
+
   <div id="pauseOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(2,0,12,0.88);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
     <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#e8d8ff;letter-spacing:4px;text-shadow:0 0 20px #b06eff80;">PAUSED</div>
     <div style="width:2px;height:30px;background:linear-gradient(180deg,transparent,#6a20aa,transparent);"></div>
@@ -455,38 +456,43 @@ canvas { display:block; width:100%; height:100%; }
       <div class="ov-score-val" id="finalScore">0</div>
     </div>
 
-    <!-- Out of lives panel -->
-    <div id="outOfLivesPanel" style="display:none;width:100%;max-width:280px;background:rgba(10,0,30,0.7);border:1.5px solid #5020a0;border-radius:14px;padding:16px;text-align:center;gap:10px;display:flex;flex-direction:column;align-items:center;">
-      <div style="font-family:'Cinzel',serif;font-size:11px;color:#b06eff;letter-spacing:2px;">OUT OF LIVES</div>
-      <div id="lifeTimerDisplay" style="font-size:13px;color:#e8d8ff;font-family:'Cinzel',serif;"></div>
-      <button id="btnWatchAd" style="
-        background:linear-gradient(135deg,#1a4a00,#2e8800);
-        border:2px solid #44ff44;border-radius:12px;
-        color:#ccffcc;font-family:'Cinzel',serif;font-size:11px;
-        letter-spacing:2px;padding:12px 0;cursor:pointer;
-        width:100%;-webkit-tap-highlight-color:transparent;">
-        📺 WATCH AD → PLAY NOW
-      </button>
-      <button id="btnBuyLife" style="
-        background:linear-gradient(135deg,#3a00a0,#7020d0);
-        border:1.5px solid #b06eff;border-radius:12px;
-        color:#e8d8ff;font-family:'Cinzel',serif;font-size:11px;
-        letter-spacing:2px;padding:10px 0;cursor:pointer;
-        width:100%;-webkit-tap-highlight-color:transparent;">
-        🦋 100 MOTHS → +1 LIFE
-      </button>
-      <div style="font-size:10px;color:#7755aa;font-family:'Crimson Text',serif;font-style:italic;">Or wait for the timer above</div>
-    </div>
+```
+<!-- Out of lives panel -->
+<div id="outOfLivesPanel" style="display:none;width:100%;max-width:280px;background:rgba(10,0,30,0.7);border:1.5px solid #5020a0;border-radius:14px;padding:16px;text-align:center;gap:10px;display:flex;flex-direction:column;align-items:center;">
+  <div style="font-family:'Cinzel',serif;font-size:11px;color:#b06eff;letter-spacing:2px;">OUT OF LIVES</div>
+  <div id="lifeTimerDisplay" style="font-size:13px;color:#e8d8ff;font-family:'Cinzel',serif;"></div>
+  <button id="btnWatchAd" style="
+    background:linear-gradient(135deg,#1a4a00,#2e8800);
+    border:2px solid #44ff44;border-radius:12px;
+    color:#ccffcc;font-family:'Cinzel',serif;font-size:11px;
+    letter-spacing:2px;padding:12px 0;cursor:pointer;
+    width:100%;-webkit-tap-highlight-color:transparent;">
+    📺 WATCH AD → PLAY NOW
+  </button>
+  <button id="btnBuyLife" style="
+    background:linear-gradient(135deg,#3a00a0,#7020d0);
+    border:1.5px solid #b06eff;border-radius:12px;
+    color:#e8d8ff;font-family:'Cinzel',serif;font-size:11px;
+    letter-spacing:2px;padding:10px 0;cursor:pointer;
+    width:100%;-webkit-tap-highlight-color:transparent;">
+    🦋 100 MOTHS → +1 LIFE
+  </button>
+  <div style="font-size:10px;color:#7755aa;font-family:'Crimson Text',serif;font-style:italic;">Or wait for the timer above</div>
+</div>
 
-    <button class="ov-btn" id="btnFlyAgain" style="font-size:13px;">FLY AGAIN</button>
-    <button class="mbtn mbtn-ghost" id="btnBackMenu" style="display:none;width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
-    <div id="newBestBanner"><div id="newBestText">⭐ NEW BEST! ⭐</div></div>
+<button class="ov-btn" id="btnFlyAgain" style="font-size:13px;">FLY AGAIN</button>
+<button class="mbtn mbtn-ghost" id="btnBackMenu" style="display:none;width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
+<div id="newBestBanner"><div id="newBestText">⭐ NEW BEST! ⭐</div></div>
+```
+
   </div>
 
   <!-- Powerup active indicators -->
+
   <div id="powerupBar"></div>
 
   <!-- Tutorial Overlay -->
+
   <div id="tutorialOverlay" style="display:none;"></div>
 
   <!-- PASSWORD GATE -->
@@ -625,118 +631,122 @@ canvas { display:block; width:100%; height:100%; }
     </div>
     <div class="shop-body">
 
-      <!-- IAP MOTH PACKS -->
-      <div class="shop-section" style="color:#ffd700;">💰 Buy Moths</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 4px 8px;">
-        <button class="iap-pack" data-iap="moths_small">
-          <div class="iap-icon">🦋</div>
-          <div class="iap-amount">500</div>
-          <div class="iap-label">Moths</div>
-          <div class="iap-price">$0.99</div>
-        </button>
-        <button class="iap-pack" data-iap="moths_medium">
-          <div class="iap-icon">🦋🦋</div>
-          <div class="iap-amount">1,200</div>
-          <div class="iap-label">Moths</div>
-          <div class="iap-price">$1.99</div>
-        </button>
-        <button class="iap-pack" data-iap="moths_large" style="border-color:#ffd700;">
-          <div class="iap-icon">🦋🦋🦋</div>
-          <div class="iap-amount">3,000</div>
-          <div class="iap-label">Moths <span style="color:#ffd700;font-size:9px;">BEST VALUE</span></div>
-          <div class="iap-price">$2.99</div>
-        </button>
-        <button class="iap-pack" data-iap="moths_mega">
-          <div class="iap-icon">✨🦋✨</div>
-          <div class="iap-amount">8,000</div>
-          <div class="iap-label">Moths</div>
-          <div class="iap-price">$3.99</div>
-        </button>
-      </div>
+```
+  <!-- IAP MOTH PACKS -->
+  <div class="shop-section" style="color:#ffd700;">💰 Buy Moths</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 4px 8px;">
+    <button class="iap-pack" data-iap="moths_small">
+      <div class="iap-icon">🦋</div>
+      <div class="iap-amount">500</div>
+      <div class="iap-label">Moths</div>
+      <div class="iap-price">$0.99</div>
+    </button>
+    <button class="iap-pack" data-iap="moths_medium">
+      <div class="iap-icon">🦋🦋</div>
+      <div class="iap-amount">1,200</div>
+      <div class="iap-label">Moths</div>
+      <div class="iap-price">$1.99</div>
+    </button>
+    <button class="iap-pack" data-iap="moths_large" style="border-color:#ffd700;">
+      <div class="iap-icon">🦋🦋🦋</div>
+      <div class="iap-amount">3,000</div>
+      <div class="iap-label">Moths <span style="color:#ffd700;font-size:9px;">BEST VALUE</span></div>
+      <div class="iap-price">$2.99</div>
+    </button>
+    <button class="iap-pack" data-iap="moths_mega">
+      <div class="iap-icon">✨🦋✨</div>
+      <div class="iap-amount">8,000</div>
+      <div class="iap-label">Moths</div>
+      <div class="iap-price">$3.99</div>
+    </button>
+  </div>
 
-      <!-- PREMIUM BUNDLES -->
-      <div class="shop-section" style="color:#ffd700;">👑 Premium</div>
-      <div class="shop-card" style="border:1.5px solid #cc44ff;background:rgba(40,0,60,0.4);">
-        <div class="shop-card-icon" style="font-size:28px;">👑</div>
-        <div style="flex:1">
-          <div class="shop-card-name" style="color:#cc44ff;">Royal Bundle</div>
-          <div class="shop-card-desc">All skins + 5,000 moths + no ads</div>
-        </div>
-        <button class="shop-buy iap-btn" data-iap="royal_bundle" style="border-color:#cc44ff;background:linear-gradient(135deg,#2a005a,#7000c0);">
-          <span class="bp" style="color:#cc44ff;">$9.99</span>
-        </button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">🚫</div>
-        <div style="flex:1"><div class="shop-card-name">Remove Ads</div><div class="shop-card-desc">Clean experience, forever</div></div>
-        <button class="shop-buy iap-btn" data-iap="remove_ads"><span class="bp">$0.99</span><span class="bc">one-time</span></button>
-      </div>
-
-      <div class="shop-section">⚡ Infinite Dragonfly</div>
-      <div class="shop-card" style="border:1px solid #ffd700;background:rgba(60,40,0,0.35);">
-        <div class="shop-card-icon" style="font-size:32px;filter:drop-shadow(0 0 10px #ffd700)">⚡</div>
-        <div style="flex:1">
-          <div class="shop-card-name" style="color:#ffd700;font-size:13px;">Infinite Dragonfly</div>
-          <div class="shop-card-desc">Become golden &amp; invincible for the level. Tap ⚡ icon to activate!</div>
-        </div>
-        <button class="shop-buy" id="buyInfiniteBtn" data-action="moths-infinite" style="border-color:#ffd700;background:linear-gradient(135deg,#5a3a00,#c08000);">
-          <span class="bp" style="color:#ffd700;">🦋 500</span>
-        </button>
-      </div>
-
-      <div class="shop-section">🦋 Dragonfly Skins</div>
-      <div class="skin-row" id="skinRow"></div>
-
-      <div class="shop-section">✨ Powerups</div>
-      <div class="shop-card">
-        <div class="shop-card-icon">🛡️</div>
-        <div style="flex:1"><div class="shop-card-name">Shield Charm</div><div class="shop-card-desc">Absorbs your next collision</div></div>
-        <button class="shop-buy" data-action="moths-shield"><span class="bp">🦋 150</span></button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">⏱️</div>
-        <div style="flex:1"><div class="shop-card-name">Slow-Mo Bubble</div><div class="shop-card-desc">Time slows for 8 seconds</div></div>
-        <button class="shop-buy" data-action="moths-slowmo"><span class="bp">🦋 120</span></button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">👻</div>
-        <div style="flex:1"><div class="shop-card-name">Ghost Mode</div><div class="shop-card-desc">Pass through one obstacle</div></div>
-        <button class="shop-buy" data-action="moths-ghost"><span class="bp">🦋 200</span></button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">✨</div>
-        <div style="flex:1"><div class="shop-card-name">Wing Trail Boost</div><div class="shop-card-desc">Rainbow sparkle trail for 3 runs</div></div>
-        <button class="shop-buy" data-action="moths-trail"><span class="bp">🦋 80</span></button>
-      </div>
-
-      <div class="shop-section">❤️ Extra Lives</div>
-      <div class="shop-card">
-        <div class="shop-card-icon">❤️</div>
-        <div style="flex:1"><div class="shop-card-name">Bonus Life</div><div class="shop-card-desc">+1 life right now</div></div>
-        <button class="shop-buy" data-action="moths-life"><span class="bp">🦋 100</span></button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">💖</div>
-        <div style="flex:1"><div class="shop-card-name">5 Lives Pack</div><div class="shop-card-desc">+5 lives — save 100 moths</div></div>
-        <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 400</span></button>
-      </div>
-      <div class="shop-card">
-        <div class="shop-card-icon">💝</div>
-        <div style="flex:1"><div class="shop-card-name">10 Lives Pack</div><div class="shop-card-desc">+10 lives — save 300 moths</div></div>
-        <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 700</span></button>
-      </div>
-
-      <!-- Restore + legal -->
-      <div style="text-align:center;padding:12px 0 4px;">
-        <button id="restorePurchasesBtn" style="background:none;border:1px solid rgba(180,140,255,0.3);color:rgba(180,140,255,0.7);font-size:11px;padding:8px 20px;border-radius:8px;cursor:pointer;">Restore Purchases</button>
-      </div>
-      <div style="text-align:center;padding:4px 16px 20px;font-size:9px;color:rgba(180,140,255,0.4);line-height:1.5;">
-        Purchases are processed securely. Subscriptions auto-renew unless cancelled.<br>Terms of Service &amp; Privacy Policy apply.
-      </div>
+  <!-- PREMIUM BUNDLES -->
+  <div class="shop-section" style="color:#ffd700;">👑 Premium</div>
+  <div class="shop-card" style="border:1.5px solid #cc44ff;background:rgba(40,0,60,0.4);">
+    <div class="shop-card-icon" style="font-size:28px;">👑</div>
+    <div style="flex:1">
+      <div class="shop-card-name" style="color:#cc44ff;">Royal Bundle</div>
+      <div class="shop-card-desc">All skins + 5,000 moths + no ads</div>
     </div>
+    <button class="shop-buy iap-btn" data-iap="royal_bundle" style="border-color:#cc44ff;background:linear-gradient(135deg,#2a005a,#7000c0);">
+      <span class="bp" style="color:#cc44ff;">$9.99</span>
+    </button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">🚫</div>
+    <div style="flex:1"><div class="shop-card-name">Remove Ads</div><div class="shop-card-desc">Clean experience, forever</div></div>
+    <button class="shop-buy iap-btn" data-iap="remove_ads"><span class="bp">$0.99</span><span class="bc">one-time</span></button>
+  </div>
+
+  <div class="shop-section">⚡ Infinite Dragonfly</div>
+  <div class="shop-card" style="border:1px solid #ffd700;background:rgba(60,40,0,0.35);">
+    <div class="shop-card-icon" style="font-size:32px;filter:drop-shadow(0 0 10px #ffd700)">⚡</div>
+    <div style="flex:1">
+      <div class="shop-card-name" style="color:#ffd700;font-size:13px;">Infinite Dragonfly</div>
+      <div class="shop-card-desc">Become golden &amp; invincible for the level. Tap ⚡ icon to activate!</div>
+    </div>
+    <button class="shop-buy" id="buyInfiniteBtn" data-action="moths-infinite" style="border-color:#ffd700;background:linear-gradient(135deg,#5a3a00,#c08000);">
+      <span class="bp" style="color:#ffd700;">🦋 500</span>
+    </button>
+  </div>
+
+  <div class="shop-section">🦋 Dragonfly Skins</div>
+  <div class="skin-row" id="skinRow"></div>
+
+  <div class="shop-section">✨ Powerups</div>
+  <div class="shop-card">
+    <div class="shop-card-icon">🛡️</div>
+    <div style="flex:1"><div class="shop-card-name">Shield Charm</div><div class="shop-card-desc">Absorbs your next collision</div></div>
+    <button class="shop-buy" data-action="moths-shield"><span class="bp">🦋 150</span></button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">⏱️</div>
+    <div style="flex:1"><div class="shop-card-name">Slow-Mo Bubble</div><div class="shop-card-desc">Time slows for 8 seconds</div></div>
+    <button class="shop-buy" data-action="moths-slowmo"><span class="bp">🦋 120</span></button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">👻</div>
+    <div style="flex:1"><div class="shop-card-name">Ghost Mode</div><div class="shop-card-desc">Pass through one obstacle</div></div>
+    <button class="shop-buy" data-action="moths-ghost"><span class="bp">🦋 200</span></button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">✨</div>
+    <div style="flex:1"><div class="shop-card-name">Wing Trail Boost</div><div class="shop-card-desc">Rainbow sparkle trail for 3 runs</div></div>
+    <button class="shop-buy" data-action="moths-trail"><span class="bp">🦋 80</span></button>
+  </div>
+
+  <div class="shop-section">❤️ Extra Lives</div>
+  <div class="shop-card">
+    <div class="shop-card-icon">❤️</div>
+    <div style="flex:1"><div class="shop-card-name">Bonus Life</div><div class="shop-card-desc">+1 life right now</div></div>
+    <button class="shop-buy" data-action="moths-life"><span class="bp">🦋 100</span></button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">💖</div>
+    <div style="flex:1"><div class="shop-card-name">5 Lives Pack</div><div class="shop-card-desc">+5 lives — save 100 moths</div></div>
+    <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 400</span></button>
+  </div>
+  <div class="shop-card">
+    <div class="shop-card-icon">💝</div>
+    <div style="flex:1"><div class="shop-card-name">10 Lives Pack</div><div class="shop-card-desc">+10 lives — save 300 moths</div></div>
+    <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 700</span></button>
+  </div>
+
+  <!-- Restore + legal -->
+  <div style="text-align:center;padding:12px 0 4px;">
+    <button id="restorePurchasesBtn" style="background:none;border:1px solid rgba(180,140,255,0.3);color:rgba(180,140,255,0.7);font-size:11px;padding:8px 20px;border-radius:8px;cursor:pointer;">Restore Purchases</button>
+  </div>
+  <div style="text-align:center;padding:4px 16px 20px;font-size:9px;color:rgba(180,140,255,0.4);line-height:1.5;">
+    Purchases are processed securely. Subscriptions auto-renew unless cancelled.<br>Terms of Service &amp; Privacy Policy apply.
+  </div>
+</div>
+```
+
   </div>
 
   <!-- Co-op Screen -->
+
   <div class="menu-screen hidden" id="screenCoop">
     <div class="topband"></div>
     <div class="sub-header">
@@ -747,72 +757,74 @@ canvas { display:block; width:100%; height:100%; }
       <!-- Status display -->
       <div id="coopStatus" style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:13px;text-align:center;min-height:20px;"></div>
 
-      <!-- Room code display -->
-      <div id="coopRoomCode" style="display:none;background:rgba(0,60,120,0.3);border:2px solid #40a0ff;border-radius:16px;padding:16px 32px;text-align:center;">
-        <div style="font-size:10px;color:#4080cc;letter-spacing:3px;margin-bottom:6px;">YOUR ROOM CODE</div>
-        <div id="coopCodeText" style="font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:#80d0ff;letter-spacing:6px;">----</div>
-        <div style="font-size:10px;color:#4080cc;margin-top:6px;">Share this with your friend</div>
-      </div>
+```
+  <!-- Room code display -->
+  <div id="coopRoomCode" style="display:none;background:rgba(0,60,120,0.3);border:2px solid #40a0ff;border-radius:16px;padding:16px 32px;text-align:center;">
+    <div style="font-size:10px;color:#4080cc;letter-spacing:3px;margin-bottom:6px;">YOUR ROOM CODE</div>
+    <div id="coopCodeText" style="font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:#80d0ff;letter-spacing:6px;">----</div>
+    <div style="font-size:10px;color:#4080cc;margin-top:6px;">Share this with your friend</div>
+  </div>
 
-      <!-- Countdown display -->
-      <div id="coopCountdown" style="display:none;font-family:'Cinzel',serif;font-size:64px;font-weight:900;color:#40c0ff;text-shadow:0 0 40px #40c0ff;">3</div>
+  <!-- Countdown display -->
+  <div id="coopCountdown" style="display:none;font-family:'Cinzel',serif;font-size:64px;font-weight:900;color:#40c0ff;text-shadow:0 0 40px #40c0ff;">3</div>
 
-      <!-- Partner status -->
-      <div id="coopPartnerStatus" style="display:none;background:rgba(0,40,80,0.4);border:1px solid rgba(64,160,255,0.3);border-radius:12px;padding:12px 20px;text-align:center;width:100%;">
-        <div style="font-size:10px;color:#4080cc;letter-spacing:2px;">PARTNER</div>
-        <div id="coopPartnerName" style="font-family:'Cinzel',serif;font-size:16px;color:#80d0ff;margin-top:4px;">Waiting...</div>
-      </div>
+  <!-- Partner status -->
+  <div id="coopPartnerStatus" style="display:none;background:rgba(0,40,80,0.4);border:1px solid rgba(64,160,255,0.3);border-radius:12px;padding:12px 20px;text-align:center;width:100%;">
+    <div style="font-size:10px;color:#4080cc;letter-spacing:2px;">PARTNER</div>
+    <div id="coopPartnerName" style="font-family:'Cinzel',serif;font-size:16px;color:#80d0ff;margin-top:4px;">Waiting...</div>
+  </div>
 
-      <!-- Buttons -->
-      <div id="coopButtons" style="display:flex;flex-direction:column;gap:12px;width:100%;">
-        <!-- Mode selection — shown first -->
-        <div id="coopModeSelect" style="display:flex;flex-direction:column;gap:10px;width:100%;">
-          <div style="font-family:'Cinzel',serif;font-size:10px;color:#4080cc;letter-spacing:2px;text-align:center;margin-bottom:4px;">SELECT MODE</div>
-          <button class="mbtn mbtn-primary" id="btnCoopWorldMap" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
-            🌍 &nbsp;WORLD MAP
-          </button>
-          <button class="mbtn mbtn-primary" id="btnCoopInfinite" style="background:linear-gradient(135deg,#200040,#5000a0,#200040);border-color:#a040ff;">
-            ♾️ &nbsp;INFINITE MODE
-          </button>
-        </div>
-        <!-- Create room button — shown after mode/level selected -->
-        <button class="mbtn mbtn-primary" id="btnCoopCreate" style="display:none;background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
-          ➕ &nbsp;CREATE ROOM
-        </button>
-        <!-- Join input — hidden until mode selected -->
-        <div id="coopJoinRow" style="display:none;flex-direction:row;gap:10px;align-items:center;">
-          <input id="coopJoinCode" placeholder="Enter room code" maxlength="9"
-            style="flex:1;background:rgba(0,40,80,0.4);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;
-            padding:12px 16px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
-            text-transform:uppercase;outline:none;text-align:center;"/>
-          <button class="mbtn mbtn-primary" id="btnCoopJoin" style="background:linear-gradient(135deg,#003060,#0060c0);border-color:#40a0ff;white-space:nowrap;padding:12px 20px;">
-            JOIN
-          </button>
-        </div>
-      </div>
-
-      <!-- Share button (shown after room created) -->
-      <button id="btnCoopShare" style="display:none;background:linear-gradient(135deg,#004020,#008040);border:1.5px solid #40ff80;border-radius:10px;color:#a0ffcc;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;width:100%;cursor:pointer;">
-        📤 &nbsp;SHARE ROOM LINK
+  <!-- Buttons -->
+  <div id="coopButtons" style="display:flex;flex-direction:column;gap:12px;width:100%;">
+    <!-- Mode selection — shown first -->
+    <div id="coopModeSelect" style="display:flex;flex-direction:column;gap:10px;width:100%;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:#4080cc;letter-spacing:2px;text-align:center;margin-bottom:4px;">SELECT MODE</div>
+      <button class="mbtn mbtn-primary" id="btnCoopWorldMap" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
+        🌍 &nbsp;WORLD MAP
       </button>
-
-      <!-- Emotes (shown during game) -->
-      <div id="coopEmotes" style="display:none;gap:12px;justify-content:center;">
-        <button class="coop-emote" data-emote="👍">👍</button>
-        <button class="coop-emote" data-emote="❤️">❤️</button>
-        <button class="coop-emote" data-emote="😂">😂</button>
-        <button class="coop-emote" data-emote="🔥">🔥</button>
-        <button class="coop-emote" data-emote="💀">💀</button>
-      </div>
-
-      <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:#4a3070;text-align:center;margin-top:8px;">
-        Both players fly together on the same level.<br>Both must survive to clear it!
-      </div>
+      <button class="mbtn mbtn-primary" id="btnCoopInfinite" style="background:linear-gradient(135deg,#200040,#5000a0,#200040);border-color:#a040ff;">
+        ♾️ &nbsp;INFINITE MODE
+      </button>
+    </div>
+    <!-- Create room button — shown after mode/level selected -->
+    <button class="mbtn mbtn-primary" id="btnCoopCreate" style="display:none;background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
+      ➕ &nbsp;CREATE ROOM
+    </button>
+    <!-- Join input — hidden until mode selected -->
+    <div id="coopJoinRow" style="display:none;flex-direction:row;gap:10px;align-items:center;">
+      <input id="coopJoinCode" placeholder="Enter room code" maxlength="9"
+        style="flex:1;background:rgba(0,40,80,0.4);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;
+        padding:12px 16px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
+        text-transform:uppercase;outline:none;text-align:center;"/>
+      <button class="mbtn mbtn-primary" id="btnCoopJoin" style="background:linear-gradient(135deg,#003060,#0060c0);border-color:#40a0ff;white-space:nowrap;padding:12px 20px;">
+        JOIN
+      </button>
     </div>
   </div>
 
-  <!-- Story Mode Screen -->
+  <!-- Share button (shown after room created) -->
+  <button id="btnCoopShare" style="display:none;background:linear-gradient(135deg,#004020,#008040);border:1.5px solid #40ff80;border-radius:10px;color:#a0ffcc;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;width:100%;cursor:pointer;">
+    📤 &nbsp;SHARE ROOM LINK
+  </button>
 
+  <!-- Emotes (shown during game) -->
+  <div id="coopEmotes" style="display:none;gap:12px;justify-content:center;">
+    <button class="coop-emote" data-emote="👍">👍</button>
+    <button class="coop-emote" data-emote="❤️">❤️</button>
+    <button class="coop-emote" data-emote="😂">😂</button>
+    <button class="coop-emote" data-emote="🔥">🔥</button>
+    <button class="coop-emote" data-emote="💀">💀</button>
+  </div>
+
+  <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:#4a3070;text-align:center;margin-top:8px;">
+    Both players fly together on the same level.<br>Both must survive to clear it!
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Story Mode Screen -->
 
   <div class="menu-screen hidden" id="screenStory">
     <div class="topband"></div>
@@ -831,6 +843,7 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Achievements Screen -->
+
   <div class="menu-screen hidden" id="screenAchievements">
     <div class="topband"></div>
     <div class="sub-header">
@@ -894,21 +907,6 @@ canvas { display:block; width:100%; height:100%; }
     <div class="coop-hud-dot"></div>
     <div class="coop-hud-text">CO-OP LIVE</div>
   </div>
-  <!-- Co-op In-Game Emote Bar -->
-  <div id="coopEmoteBar">
-    <button class="coop-emote-btn" data-emote="👍">👍</button>
-    <button class="coop-emote-btn" data-emote="❤️">❤️</button>
-    <button class="coop-emote-btn" data-emote="😂">😂</button>
-    <button class="coop-emote-btn" data-emote="🔥">🔥</button>
-    <button class="coop-emote-btn" data-emote="💀">💀</button>
-  </div>
-
-  <!-- Co-op Game HUD pill -->
-  <div id="coopGameHud">
-    <div class="coop-hud-dot"></div>
-    <div class="coop-hud-text">CO-OP LIVE</div>
-  </div>
-
   <div id="toast"></div>
 </div>
 
@@ -1090,7 +1088,7 @@ var obstacles=[], obstTimer=0, obstInterval=160;
 var movingObst=[], frogs=[], branches=[];
 
 var moths=[], mothTimer=0, mothInterval=480, mothsTotal=0;
-var comboCount=0, comboTimer=0, COMBO_WINDOW=120, comboMult=1;
+var comboCount=0, comboTimer=0, COMBO_WINDOW=180, comboMult=1;
 
 // --- SKIN AURA & TRANSFORM ---
 var skinTransformTimer=0, SKIN_TRANSFORM_DURATION=90;
@@ -2906,7 +2904,7 @@ function updateBoss(){
     b.x=W+120-(W+120-W*0.72)*ep;
     if(bossEntryTimer===0){
       // Dramatic entrance effects
-      shakeFrames=25; shakeIntensity=10;
+      shakeFrames=18; shakeIntensity=8;
       sfxBossEnter();
       var sf=document.getElementById('screenFlash');
       if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},300);}
@@ -2924,7 +2922,7 @@ function updateBoss(){
     bossPhase=2;
     showToast('\uD83D\uDD25 THE OWL ENRAGES!');
     sfxBossEnrage();
-    shakeFrames=30; shakeIntensity=12;
+    shakeFrames=20; shakeIntensity=9;
   }
 
   // CHARGE ATTACK — owl dives close to player, giving them a chance to tap
@@ -2994,32 +2992,7 @@ function updateBoss(){
   }
   bossFeathers=newF;
 
-  // Jean Jacket — invisibility cycles + star projectiles
-  if(getBossType()==='jeanjacket'&&boss){
-    boss.phase+=0.04;
-    boss.invisTimer=(boss.invisTimer||0)+1;
-    var invisInterval=bossPhase>=2?180:260;
-    var invisDur=bossPhase>=2?100:70;
-    if(boss.invisTimer%invisInterval===0){
-      boss.invisActive=true;
-      showToast('\uD83D\uDEF8 IT DISAPPEARED!');
-    }
-    if(boss.invisActive){
-      boss.visibility=Math.max(0,(boss.visibility||1)-0.04);
-      if(boss.visibility<=0&&boss.invisTimer%(invisInterval+invisDur)===0){
-        boss.invisActive=false;
-        // Reappear at new position
-        boss.ty=H*(0.2+Math.random()*0.55);
-        if(bossPhase>=2) fireFeathers(); // burst on reappear
-        showToast('\uD83D\uDEF8 IT REAPPEARED!');
-      }
-    } else {
-      boss.visibility=Math.min(1,(boss.visibility||0)+0.05);
-    }
-    // Periodic star volleys
-    if(bossPhase>=2&&frameN%70===0&&boss.visibility>0.5) fireFeathers();
-    else if(bossPhase<2&&frameN%110===0&&boss.visibility>0.5) fireFeathers();
-  }
+  // (Jean Jacket update handled below with full teleport + star burst logic)
 
   // Grey — tractor beam + plasma orbs
   if(getBossType()==='grey'&&boss){
@@ -3144,29 +3117,6 @@ function updateBoss(){
     else if(bossPhase<2&&frameN%110===0) fireFeathers();
   }
 
-  // Grey — tractor beam + plasma orbs
-  if(getBossType()==='grey'&&boss){
-    boss.phase=(boss.phase||0)+0.03;
-    boss.beamTimer=(boss.beamTimer||0)+1;
-    var beamInterval=bossPhase>=2?160:240;
-    if(boss.beamTimer%beamInterval===0){
-      boss.beamActive=true;
-      showToast('\uD83D\uDC7D TRACTOR BEAM!');
-      setTimeout(function(){if(boss) boss.beamActive=false;},2200);
-    }
-    if(boss.beamActive){
-      var pdx=boss.x-fly.x, pdy=(boss.y+30)-fly.y;
-      var pdist=Math.sqrt(pdx*pdx+pdy*pdy)||1;
-      fly.x+=pdx/pdist*1.8; fly.y+=pdy/pdist*1.8;
-    }
-    if(bossPhase>=2&&boss.beamTimer%280===0){
-      boss.beamActive=true;
-      showToast('\uD83D\uDC7D DOUBLE BEAM!');
-      setTimeout(function(){if(boss) boss.beamActive=false;},1800);
-    }
-    if(bossPhase>=2&&frameN%55===0) fireFeathers();
-    else if(bossPhase<2&&frameN%85===0) fireFeathers();
-  }
   var dx=fly.x-b.x, dy=fly.y-b.y;
   if(!infiniteActive&&Math.sqrt(dx*dx+dy*dy)<44){
     loseLife();
@@ -3236,7 +3186,7 @@ function hitBoss(){
   bossHP--;
   boss.hurtTimer=20;
   sfxBossHurt();
-  shakeFrames=8; shakeIntensity=5;
+  shakeFrames=4; shakeIntensity=3;
   var pct=bossHP/bossMaxHP;
   var fill=document.getElementById('bossHpFill');
   if(fill) fill.style.width=(Math.max(0,pct)*100)+'%';
@@ -3333,9 +3283,9 @@ var TUT_STEPS = [
 
   // 10 — Infinite dragonfly — spawn obstacles so player can smash through them
   { icon:'⚡', title:'INFINITE DRAGONFLY',
-    lines:['Collect 2000 total moths to unlock!','A glowing gold moth appears — collect','it to smash ALL obstacles that level!'],
-    hint:'⚡ Collect the glowing moth then smash through!',
-    action:'time', need:420, spawn:'infMothDemo' },
+    lines:['Your ULTIMATE power! Grab the golden','moth to become INVINCIBLE — smash','through everything in your path!'],
+    hint:'⚡ Grab the golden moth and DESTROY!',
+    action:'time', need:600, spawn:'infMothDemo' },
 
   // 11 — Boss info
   { icon:'👑', title:'BOSS BATTLES',
@@ -3481,13 +3431,15 @@ function updateTutorial(){
         infMoth=spawnInfMoth();
         infiniteMothSpawned=true;
       }
-      // Spawn obstacles after delay so player can collect inf moth first then smash them
+      // Spawn obstacles quickly so player can experience the smash-through
       setTimeout(function(){
-        if(tutActive&&tutStep===9){
+        if(tutActive&&tutStep===10){
           spawnTutObstacle();
-          setTimeout(function(){if(tutActive&&tutStep===9)spawnTutObstacle();},2500);
+          setTimeout(function(){if(tutActive&&tutStep===10)spawnTutObstacle();},1200);
+          setTimeout(function(){if(tutActive&&tutStep===10)spawnTutObstacle();},2400);
+          setTimeout(function(){if(tutActive&&tutStep===10)spawnTutObstacle();},3600);
         }
-      },3000);
+      },1500);
     }
   }
 
@@ -3736,7 +3688,7 @@ function showBossVictory(){
   document.getElementById('bvReward').textContent='+'+bonus+' \uD83E\uDD8B MOTHS EARNED';
   var sf=document.getElementById('screenFlash');
   if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},400);}
-  shakeFrames=40; shakeIntensity=14;
+  shakeFrames=28; shakeIntensity=10;
   var victoryInterval=setInterval(function(){
     if(!bossDefeated) return;
     for(var i=0;i<6;i++){
@@ -3808,6 +3760,7 @@ var shakeFrames=0, shakeIntensity=0;
 var nearMissActive=false, nearMissTimer=0, NEAR_MISS_DURATION=18;
 var nearMissCooldown=0;
 var shieldActive=false, wingTrailRuns=0;
+var invincibleTimer=0; // brief invincibility after losing a life
 
 var bgStars=[],bgClouds=[],bgMtnFar=[],bgMtnNear=[],bgRuins=[];
 var farOff=0,nearOff=0,ruinOff=0;
@@ -3998,12 +3951,12 @@ function initBoss(){
     document.getElementById('bossHpText').textContent='TAP NEAR OWL TO ATTACK';
     showToast('\uD83E\uDD89 FLY CLOSE & TAP TO ATTACK!');
   }
-  shakeFrames=20; shakeIntensity=8;
+  shakeFrames=10; shakeIntensity=5;
 }
 
 var BIOMES=[
  {name:'Ruined Kingdom',skyTop:'#04001a',skyMid:'#0d0530',skyBot:'#200848',moonCol:'#c8b0ff',moonShadow:'#04001a',hasSun:false,starCol:'200,160,255',auroraCol:'176,110,255',cloudCol:'80,40,140',mtnFar:'#1a0840',mtnNear0:'#280c50',mtnNear1:'#180630',iceCap:'200,160,255',groundTop:'#200840',groundBot:'#100420',glowR:176,glowG:80,glowB:255,ruinCol:'#280c50',ruinWin:'160,100,255',treeCol:['#1a0840','#240c50','#100428'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'default',obstStyle:'default',groundStyle:'cobble',fogCol:'80,40,160'},
- {name:'Volcanic Hellscape',skyTop:'#100200',skyMid:'#280800',skyBot:'#501400',moonCol:'#ff8844',moonShadow:'#100200',hasSun:false,starCol:'255,150,80',auroraCol:'220,60,10',cloudCol:'100,30,10',mtnFar:'#200400',mtnNear0:'#380800',mtnNear1:'#200400',iceCap:'255,120,40',groundTop:'#1a0400',groundBot:'#0c0200',glowR:255,glowG:80,glowB:10,ruinCol:'#280600',ruinWin:'255,100,20',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'volcano',obstStyle:'lava',groundStyle:'lava',fogCol:'200,50,10'},
+ {name:'Volcanic Hellscape',skyTop:'#080002',skyMid:'#1a0408',skyBot:'#380a10',moonCol:'#ff6622',moonShadow:'#080002',hasSun:false,starCol:'255,120,40',auroraCol:'255,60,10',cloudCol:'80,20,10',mtnFar:'#180306',mtnNear0:'#2a0608',mtnNear1:'#140204',iceCap:'255,100,30',groundTop:'#1a0404',groundBot:'#0c0202',glowR:255,glowG:60,glowB:5,ruinCol:'#200408',ruinWin:'255,80,10',treeCol:['#140204','#200408','#0a0102'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'volcano',obstStyle:'lava',groundStyle:'lava',fogCol:'200,40,10'},
  {name:'Frozen Tundra',skyTop:'#000510',skyMid:'#001a30',skyBot:'#003050',moonCol:'#c8eeff',moonShadow:'#000510',hasSun:false,starCol:'180,220,255',auroraCol:'80,220,180',cloudCol:'60,120,160',mtnFar:'#001828',mtnNear0:'#c8dcf0',mtnNear1:'#a0c0dc',iceCap:'220,240,255',groundTop:'#c0d8ee',groundBot:'#90b8d8',glowR:100,glowG:180,glowB:255,ruinCol:'#b0cce0',ruinWin:'200,240,255',treeCol:['#c0ddf0','#a0c0e0','#e0eeff'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'ice',obstStyle:'ice',groundStyle:'snow',fogCol:'120,180,240'},
  {name:'Ice Cavern',skyTop:'#000208',skyMid:'#000510',skyBot:'#000c18',moonCol:'#88ccff',moonShadow:'#000208',hasSun:false,starCol:'140,200,255',auroraCol:'60,180,255',cloudCol:'40,100,160',mtnFar:'#000818',mtnNear0:'#001428',mtnNear1:'#000c20',iceCap:'180,230,255',groundTop:'#0a1828',groundBot:'#060e18',glowR:60,glowG:160,glowB:255,ruinCol:'#0a1828',ruinWin:'100,200,255',treeCol:['#0a1828','#0c2030','#060e18'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'icecavern',obstStyle:'ice',groundStyle:'icefloor',fogCol:'60,140,220'},
  {name:'Ancient Forest',skyTop:'#020c00',skyMid:'#061800',skyBot:'#0c2800',moonCol:'#b0ff90',moonShadow:'#020c00',hasSun:false,starCol:'160,255,120',auroraCol:'60,200,40',cloudCol:'20,80,10',mtnFar:'#0a2000',mtnNear0:'#1a4010',mtnNear1:'#0c2808',iceCap:'180,255,150',groundTop:'#183008',groundBot:'#0a1c04',glowR:60,glowG:200,glowB:40,ruinCol:'#0a2808',ruinWin:'100,200,60',treeCol:['#0d1830','#121f3a','#0a1525'],hasMoving:false,hasFrogs:true,hasForest:true,bgStyle:'forest',obstStyle:'root',groundStyle:'grass',fogCol:'40,120,20'},
@@ -4016,7 +3969,7 @@ var BIOMES=[
  {name:'City Skyline',skyTop:'#000814',skyMid:'#001428',skyBot:'#002040',moonCol:'#ddeeff',moonShadow:'#000814',hasSun:false,starCol:'200,220,255',auroraCol:'60,120,200',cloudCol:'30,50,80',mtnFar:'#001028',mtnNear0:'#001a38',mtnNear1:'#000c20',iceCap:'180,220,255',groundTop:'#0a0c14',groundBot:'#050608',glowR:60,glowG:120,glowB:255,ruinCol:'#0c1428',ruinWin:'80,180,255',treeCol:['#0a1020','#081828','#060e18'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'city',obstStyle:'building',groundStyle:'asphalt',fogCol:'40,80,160'},
  {name:'Burning City',skyTop:'#100200',skyMid:'#280800',skyBot:'#501400',moonCol:'#ff8844',moonShadow:'#100200',hasSun:false,starCol:'255,150,80',auroraCol:'220,60,10',cloudCol:'100,30,10',mtnFar:'#200400',mtnNear0:'#380800',mtnNear1:'#200400',iceCap:'255,120,40',groundTop:'#1a0400',groundBot:'#0c0200',glowR:255,glowG:80,glowB:10,ruinCol:'#280600',ruinWin:'255,100,20',treeCol:['#1a0400','#280800','#100200'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'burningcity',obstStyle:'rubble',groundStyle:'ash',fogCol:'200,50,10'},
  {name:'Desert Sands',skyTop:'#1a0a00',skyMid:'#4a2000',skyBot:'#c05010',moonCol:'#fff4c0',moonShadow:'#1a0a00',hasSun:true,sunCol:'#ffee80',sunGlowCol:'255,230,100',starCol:'255,220,150',auroraCol:'255,160,60',cloudCol:'200,150,80',mtnFar:'#8a4820',mtnNear0:'#c06820',mtnNear1:'#8a4810',iceCap:'255,240,180',groundTop:'#d89040',groundBot:'#a06020',glowR:255,glowG:160,glowB:40,ruinCol:'#b07030',ruinWin:'255,200,80',treeCol:['#4a2a08','#603810','#382008'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'desert',obstStyle:'sandstone',groundStyle:'sand',fogCol:'200,140,40'},
- {name:'Lava Cavern',skyTop:'#120100',skyMid:'#200300',skyBot:'#380600',moonCol:'#ff4400',moonShadow:'#050000',hasSun:false,starCol:'255,80,10',auroraCol:'255,60,0',cloudCol:'120,20,0',mtnFar:'#1f0300',mtnNear0:'#2d0500',mtnNear1:'#1a0200',iceCap:'255,80,10',groundTop:'#ff4400',groundBot:'#cc1100',glowR:255,glowG:50,glowB:0,ruinCol:'#1a0100',ruinWin:'255,60,0',treeCol:['#180100','#200200','#0f0100'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'lavacavern',obstStyle:'lava',groundStyle:'lava',fogCol:'200,30,0'},
+ {name:'Lava Cavern',skyTop:'#0a0008',skyMid:'#180210',skyBot:'#2a0618',moonCol:'#ff6622',moonShadow:'#050004',hasSun:false,starCol:'255,100,30',auroraCol:'255,80,10',cloudCol:'80,15,30',mtnFar:'#150210',mtnNear0:'#220418',mtnNear1:'#120108',iceCap:'255,100,30',groundTop:'#ff6600',groundBot:'#cc2200',glowR:255,glowG:80,glowB:10,ruinCol:'#150110',ruinWin:'255,80,10',treeCol:['#120010','#1a0218','#0a0008'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'lavacave2',obstStyle:'lava',groundStyle:'lava',fogCol:'180,40,20'},
  {name:'Tropical Beach',skyTop:'#006090',skyMid:'#0090c0',skyBot:'#40c0e0',moonCol:'#fffce0',moonShadow:'#006090',hasSun:true,sunCol:'#ffee60',sunGlowCol:'255,240,80',starCol:'200,240,255',auroraCol:'255,255,200',cloudCol:'255,255,255',mtnFar:'#007050',mtnNear0:'#00904a',mtnNear1:'#005a30',iceCap:'255,255,255',groundTop:'#f0d878',groundBot:'#d8b848',glowR:255,glowG:220,glowB:80,ruinCol:'#a09040',ruinWin:'255,240,100',treeCol:['#1a5010','#206018','#143808'],hasMoving:false,hasFrogs:true,hasForest:false,bgStyle:'beach',obstStyle:'beach',groundStyle:'sand',fogCol:'200,240,100'},
  {name:'Mountain Lake',skyTop:'#001830',skyMid:'#003060',skyBot:'#006090',moonCol:'#c0e8ff',moonShadow:'#001830',hasSun:true,sunCol:'#ffe880',sunGlowCol:'255,230,100',starCol:'180,220,255',auroraCol:'80,180,255',cloudCol:'255,255,255',mtnFar:'#004060',mtnNear0:'#005a80',mtnNear1:'#003050',iceCap:'220,240,255',groundTop:'#1a8040',groundBot:'#0c5028',glowR:80,glowG:180,glowB:255,ruinCol:'#006090',ruinWin:'100,200,255',treeCol:['#0a3018','#144020','#082010'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'lake',obstStyle:'lake',groundStyle:'water',fogCol:'60,140,200'},
  {name:'Jungle Canopy',skyTop:'#004400',skyMid:'#006600',skyBot:'#228800',moonCol:'#a0ff80',moonShadow:'#011200',hasSun:true,sunCol:'#ffee40',sunGlowCol:'255,230,60',starCol:'140,255,100',auroraCol:'60,220,40',cloudCol:'200,255,160',mtnFar:'#022800',mtnNear0:'#064010',mtnNear1:'#033000',iceCap:'180,255,140',groundTop:'#264010',groundBot:'#142808',glowR:40,glowG:220,glowB:40,ruinCol:'#084018',ruinWin:'120,255,80',treeCol:['#062800','#0a4000','#042000'],hasMoving:true,hasFrogs:false,hasForest:false,bgStyle:'jungle',obstStyle:'jungle',groundStyle:'jungle',fogCol:'60,180,30'},
@@ -4033,7 +3986,8 @@ var BIOMES=[
  {name:'Deep Abyss',skyTop:'#000008',skyMid:'#000510',skyBot:'#000a18',moonCol:'#00ffee',moonShadow:'#000008',hasSun:false,starCol:'0,255,220',auroraCol:'0,200,255',cloudCol:'0,60,80',mtnFar:'#000a18',mtnNear0:'#000d20',mtnNear1:'#000810',iceCap:'0,255,220',groundTop:'#000d20',groundBot:'#000508',glowR:0,glowG:180,glowB:255,ruinCol:'#000d20',ruinWin:'0,200,255',treeCol:['#000810','#000d20','#000508'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'deepabyss',obstStyle:'deepabyss',groundStyle:'abyss',fogCol:'0,150,200'},
  {name:'Storm Eye',skyTop:'#050510',skyMid:'#08081a',skyBot:'#0a0a20',moonCol:'#e0e8ff',moonShadow:'#050510',hasSun:false,starCol:'200,210,255',auroraCol:'150,160,255',cloudCol:'60,70,120',mtnFar:'#0a0a25',mtnNear0:'#12122e',mtnNear1:'#0a0a22',iceCap:'200,210,255',groundTop:'#0a0a20',groundBot:'#050510',glowR:150,glowG:160,glowB:255,ruinCol:'#12122e',ruinWin:'180,190,255',treeCol:['#0a0a22','#12122e','#080818'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'stormeye',obstStyle:'stormeye',groundStyle:'storm',fogCol:'120,130,255'},
  {name:'Upper Atmosphere',skyTop:'#000000',skyMid:'#000008',skyBot:'#000510',moonCol:'#ffffff',moonShadow:'#000000',hasSun:false,starCol:'255,255,255',auroraCol:'200,220,255',cloudCol:'20,20,40',mtnFar:'#000508',mtnNear0:'#000810',mtnNear1:'#000508',iceCap:'255,255,255',groundTop:'#000508',groundBot:'#000000',glowR:220,glowG:220,glowB:255,ruinCol:'#000810',ruinWin:'200,210,255',treeCol:['#000508','#000810','#000304'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'upperatmo',obstStyle:'space',groundStyle:'void',fogCol:'180,190,255'},
- {name:'Alien World',skyTop:'#080018',skyMid:'#100028',skyBot:'#180038',moonCol:'#00ffaa',moonShadow:'#080018',hasSun:false,starCol:'180,100,255',auroraCol:'100,255,180',cloudCol:'60,20,100',mtnFar:'#100028',mtnNear0:'#180038',mtnNear1:'#100025',iceCap:'180,100,255',groundTop:'#0a0020',groundBot:'#050010',glowR:100,glowG:255,glowB:180,ruinCol:'#180038',ruinWin:'100,255,180',treeCol:['#100028','#180038','#080018'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'alienworld',obstStyle:'alien',groundStyle:'void',fogCol:'80,255,160'}
+ {name:'Alien World',skyTop:'#080018',skyMid:'#100028',skyBot:'#180038',moonCol:'#00ffaa',moonShadow:'#080018',hasSun:false,starCol:'180,100,255',auroraCol:'100,255,180',cloudCol:'60,20,100',mtnFar:'#100028',mtnNear0:'#180038',mtnNear1:'#100025',iceCap:'180,100,255',groundTop:'#0a0020',groundBot:'#050010',glowR:100,glowG:255,glowB:180,ruinCol:'#180038',ruinWin:'100,255,180',treeCol:['#100028','#180038','#080018'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'alienworld',obstStyle:'alien',groundStyle:'void',fogCol:'80,255,160'},
+ {name:'Celestial Ruins',skyTop:'#02000e',skyMid:'#080428',skyBot:'#100840',moonCol:'#c0b0ff',moonShadow:'#02000e',hasSun:false,starCol:'200,180,255',auroraCol:'140,100,255',cloudCol:'40,20,80',mtnFar:'#0c0430',mtnNear0:'#180848',mtnNear1:'#0c0430',iceCap:'180,160,255',groundTop:'#140838',groundBot:'#0a0420',glowR:140,glowG:80,glowB:255,ruinCol:'#200c50',ruinWin:'160,120,255',treeCol:['#0c0430','#180848','#080220'],hasMoving:false,hasFrogs:false,hasForest:false,bgStyle:'celestial',obstStyle:'default',groundStyle:'cobble',fogCol:'80,50,180'}
 ];
 
 function getBiome(level){
@@ -4301,7 +4255,7 @@ function showMothPop(x,y,val,golden,mult){
 }
 
 function showScreen(id){
-  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements','screenCoop'];
+  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements'];
   for(var i=0;i<screens.length;i++){
     var el=document.getElementById(screens[i]);
     if(!el) continue;
@@ -4316,6 +4270,7 @@ function showScreen(id){
 }
 
 function drawSky(){
+  if(isTutorialLevel()) return; // tutorial draws its own sky
   var bm=getBiome(currentLevel)||BIOMES[0];
   var nbm=getNextBiome(currentLevel)||BIOMES[0];
   var tb=transBlend();
@@ -4394,25 +4349,24 @@ function drawTutCloud(cx,cy,scale){
 }
 function drawTutorialBg(){
   if(state==='playing') farOff+=speed*0.18;
-  // Full-screen sky gradient
-  var skyG=ctx.createLinearGradient(0,0,0,H);
-  skyG.addColorStop(0,'#0848c0');skyG.addColorStop(0.45,'#2e8ae0');
-  skyG.addColorStop(0.78,'#72c4f4');skyG.addColorStop(1,'#b8e8ff');
-  ctx.fillStyle=skyG;ctx.fillRect(0,0,W,H);
-  // Rainbow - arcs from bottom center
+  var gameH=H-20;
+
+  // Full-screen sky gradient — bright welcoming blue
+  var skyG=ctx.createLinearGradient(0,0,0,gameH);
+  skyG.addColorStop(0,'#0848c0');skyG.addColorStop(0.35,'#2e8ae0');
+  skyG.addColorStop(0.65,'#72c4f4');skyG.addColorStop(1,'#a0ddff');
+  ctx.fillStyle=skyG;ctx.fillRect(0,0,W,gameH);
+
+  // Rainbow — arcs from bottom center
   ctx.save();
   var rcx=W*0.5,rbase=H+80;
-  ['rgba(255,30,30,0.52)','rgba(255,145,0,0.52)','rgba(255,228,0,0.52)','rgba(30,205,30,0.52)','rgba(30,100,255,0.52)','rgba(170,0,230,0.52)'].forEach(function(col,i){
+  ['rgba(255,30,30,0.40)','rgba(255,145,0,0.40)','rgba(255,228,0,0.40)','rgba(30,205,30,0.40)','rgba(30,100,255,0.40)','rgba(170,0,230,0.40)'].forEach(function(col,i){
     ctx.beginPath();ctx.arc(rcx,rbase,H*0.72-i*17,Math.PI,0);
     ctx.strokeStyle=col;ctx.lineWidth=17;ctx.stroke();
   });
   ctx.restore();
-  // Moving clouds
-  TUT_CLOUD_DATA.forEach(function(c){
-    var x=((c.bx*(W+240)+farOff*c.spd))%(W+240)-120;
-    drawTutCloud(x,H*c.by,c.s);
-  });
-  // Sun
+
+  // Sun — warm glow
   ctx.save();
   var sx=W*0.83,sy=H*0.09;
   var sg=ctx.createRadialGradient(sx,sy,8,sx,sy,85);
@@ -4427,6 +4381,100 @@ function drawTutorialBg(){
     ctx.lineTo(sx+Math.cos(a)*58,sy+Math.sin(a)*58);ctx.stroke();
   }
   ctx.restore();
+
+  // Moving clouds
+  TUT_CLOUD_DATA.forEach(function(c){
+    var x=((c.bx*(W+240)+farOff*c.spd))%(W+240)-120;
+    drawTutCloud(x,H*c.by,c.s);
+  });
+
+  // === DISTANT ROLLING HILLS — soft blue-green layers ===
+  ctx.save();
+  // Far hills — misty blue
+  ctx.globalAlpha=0.4;
+  ctx.fillStyle='#4a9a5a';
+  ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(0,gameH*0.68);
+  ctx.bezierCurveTo(W*0.12,gameH*0.60,W*0.25,gameH*0.64,W*0.38,gameH*0.58);
+  ctx.bezierCurveTo(W*0.52,gameH*0.52,W*0.65,gameH*0.56,W*0.78,gameH*0.50);
+  ctx.bezierCurveTo(W*0.88,gameH*0.46,W*0.95,gameH*0.52,W,gameH*0.55);
+  ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
+
+  // Mid hills — richer green
+  ctx.globalAlpha=0.55;
+  ctx.fillStyle='#3a8840';
+  ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(0,gameH*0.76);
+  ctx.bezierCurveTo(W*0.10,gameH*0.70,W*0.22,gameH*0.74,W*0.35,gameH*0.68);
+  ctx.bezierCurveTo(W*0.48,gameH*0.62,W*0.60,gameH*0.66,W*0.72,gameH*0.64);
+  ctx.bezierCurveTo(W*0.85,gameH*0.60,W*0.93,gameH*0.65,W,gameH*0.68);
+  ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
+
+  // Near hills — vivid green
+  ctx.globalAlpha=0.7;
+  ctx.fillStyle='#2a7a30';
+  ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(0,gameH*0.82);
+  ctx.bezierCurveTo(W*0.08,gameH*0.78,W*0.18,gameH*0.80,W*0.30,gameH*0.76);
+  ctx.bezierCurveTo(W*0.42,gameH*0.72,W*0.55,gameH*0.75,W*0.68,gameH*0.73);
+  ctx.bezierCurveTo(W*0.80,gameH*0.70,W*0.90,gameH*0.74,W,gameH*0.78);
+  ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // === TREES on hills — soft rounded silhouettes ===
+  ctx.save();ctx.globalAlpha=0.5;
+  var treePositions=[
+    {x:0.08,y:0.77,s:0.9},{x:0.22,y:0.73,s:1.1},{x:0.40,y:0.70,s:0.8},
+    {x:0.55,y:0.72,s:1.0},{x:0.72,y:0.69,s:1.2},{x:0.88,y:0.74,s:0.85}
+  ];
+  for(var ti=0;ti<treePositions.length;ti++){
+    var tp=treePositions[ti];
+    var tx=tp.x*W, ty=gameH*tp.y, ts=tp.s;
+    // Trunk
+    ctx.fillStyle='#3a2010';
+    ctx.fillRect(tx-3*ts,ty,6*ts,gameH-ty);
+    // Canopy
+    ctx.fillStyle='#1a6020';
+    ctx.beginPath();ctx.arc(tx,ty-5*ts,18*ts,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(tx-10*ts,ty+2*ts,14*ts,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(tx+10*ts,ty+2*ts,14*ts,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+
+  // === GROUND — lush green meadow at the bottom ===
+  var gndY=gameH;
+  // Main grass fill
+  var grassG=ctx.createLinearGradient(0,gndY-28,0,H);
+  grassG.addColorStop(0,'#2a8830');grassG.addColorStop(0.4,'#1e7028');grassG.addColorStop(1,'#145820');
+  ctx.fillStyle=grassG;ctx.fillRect(0,gndY-28,W,H-gndY+28);
+  // Grass edge — soft wavy top
+  ctx.fillStyle='#32a038';
+  ctx.beginPath();ctx.moveTo(0,gndY);
+  for(var gx=0;gx<=W;gx+=12){
+    ctx.lineTo(gx,gndY-4+Math.sin(gx*0.08+farOff*0.05)*3);
+  }
+  ctx.lineTo(W,gndY+4);ctx.lineTo(0,gndY+4);ctx.closePath();ctx.fill();
+  // Tiny flowers
+  ctx.save();
+  var flowerCols=['#ff6688','#ffee44','#ff88cc','#88ccff','#ffaa44'];
+  for(var fi=0;fi<10;fi++){
+    var fx=((fi*W/9+farOff*0.4)%W+W)%W;
+    var fy=gndY-6+Math.sin(fi*2.1)*2;
+    ctx.fillStyle=flowerCols[fi%flowerCols.length];
+    ctx.globalAlpha=0.7;
+    ctx.beginPath();ctx.arc(fx,fy,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#44aa30';
+    ctx.fillRect(fx-0.5,fy,1,6);
+  }
+  ctx.restore();
+
+  // === BIRDS — small V shapes drifting across ===
+  ctx.save();ctx.strokeStyle='rgba(40,40,60,0.35)';ctx.lineWidth=1.5;ctx.lineCap='round';
+  for(var bi=0;bi<3;bi++){
+    var bx=((bi*W/2.5+farOff*0.6+bi*80)%(W+100))-50;
+    var by=gameH*(0.15+bi*0.08)+Math.sin(frameN*0.02+bi*2)*8;
+    ctx.beginPath();ctx.moveTo(bx-8,by+3);ctx.quadraticCurveTo(bx-3,by-3,bx,by);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(bx,by);ctx.quadraticCurveTo(bx+3,by-3,bx+8,by+3);ctx.stroke();
+  }
+  ctx.restore();
+
   // Shooting stars
   if(Math.random()<0.012) tutShootStars.push({x:W+20,y:Math.random()*H*0.28,life:1.0});
   ctx.save();
@@ -4440,355 +4488,6 @@ function drawTutorialBg(){
     return true;
   });
   ctx.restore();
-}
-
-function drawLavaCavernBg(gameH){
-
-    // Lava Cavern — VibrantCrow-style deep cave with central lava fall
-    ctx.globalAlpha=1;
-    var gameH2=gameH;
-    var wfX=W*0.5; // waterfall X — used later for floor glow
-
-    // === 1. DEEP BACKGROUND — pitch black cave void with warm ember glow ===
-    ctx.save();
-    var bgBase=ctx.createLinearGradient(0,0,0,gameH2);
-    bgBase.addColorStop(0,'#050000');
-    bgBase.addColorStop(0.35,'#100200');
-    bgBase.addColorStop(0.7,'#1a0400');
-    bgBase.addColorStop(1,'#0a0100');
-    ctx.fillStyle=bgBase; ctx.fillRect(0,0,W,gameH2);
-
-    // Distant warm glow emanating from below the fall — like in the painting
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.022)*0.06;
-    var deepGlow=ctx.createRadialGradient(W*0.5,gameH2*0.55,gameH2*0.05,W*0.5,gameH2*0.55,W*0.9);
-    deepGlow.addColorStop(0,'rgba(255,160,30,0.55)');
-    deepGlow.addColorStop(0.35,'rgba(220,80,10,0.22)');
-    deepGlow.addColorStop(0.7,'rgba(160,30,0,0.08)');
-    deepGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=deepGlow; ctx.fillRect(0,0,W,gameH2);
-    ctx.restore();
-
-    // === 2. BACKGROUND CAVE ARCH — the lit opening far behind ===
-    ctx.save();
-    // Bright tunnel portal glow center-top — like the painting's glowing far arch
-    ctx.globalAlpha=0.55+Math.sin(frameN*0.025)*0.08;
-    var archGlow=ctx.createRadialGradient(W*0.5,gameH2*0.18,gameH2*0.02,W*0.5,gameH2*0.18,W*0.38);
-    archGlow.addColorStop(0,'rgba(255,210,80,0.9)');
-    archGlow.addColorStop(0.2,'rgba(255,140,20,0.55)');
-    archGlow.addColorStop(0.5,'rgba(200,60,0,0.2)');
-    archGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=archGlow; ctx.fillRect(0,0,W,gameH2*0.45);
-
-    // Arch silhouette — dark rock framing the bright portal
-    ctx.globalAlpha=1;
-    ctx.fillStyle='#0a0100';
-    ctx.beginPath();
-    ctx.moveTo(0,0);ctx.lineTo(0,gameH2*0.45);
-    ctx.quadraticCurveTo(W*0.15,gameH2*0.12,W*0.32,gameH2*0.06);
-    ctx.quadraticCurveTo(W*0.42,gameH2*0.02,W*0.5,gameH2*0.01);
-    ctx.quadraticCurveTo(W*0.58,gameH2*0.02,W*0.68,gameH2*0.06);
-    ctx.quadraticCurveTo(W*0.85,gameH2*0.12,W,gameH2*0.45);
-    ctx.lineTo(W,0);
-    ctx.closePath();ctx.fill();
-    ctx.restore();
-
-    // === 3. CAVE WALLS — sweeping dark rock masses left and right ===
-    ctx.save();
-    // Left wall — deep, layered, reddish-brown rock
-    var lwG=ctx.createLinearGradient(0,0,W*0.52,gameH2*0.5);
-    lwG.addColorStop(0,'#08020a');
-    lwG.addColorStop(0.3,'#1c0802');
-    lwG.addColorStop(0.6,'#2a0e04');
-    lwG.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=lwG;
-    ctx.beginPath();
-    ctx.moveTo(0,0); ctx.lineTo(W*0.38,0);
-    ctx.bezierCurveTo(W*0.3,gameH2*0.18,W*0.22,gameH2*0.38,W*0.14,gameH2*0.62);
-    ctx.bezierCurveTo(W*0.1,gameH2*0.75,W*0.06,gameH2*0.88,W*0.02,gameH2);
-    ctx.lineTo(0,gameH2);
-    ctx.closePath(); ctx.fill();
-
-    // Left wall secondary facets for rocky texture
-    ctx.globalAlpha=0.55;
-    ctx.fillStyle='#140401';
-    ctx.beginPath();
-    ctx.moveTo(0,0); ctx.lineTo(W*0.22,0);
-    ctx.bezierCurveTo(W*0.18,gameH2*0.2,W*0.12,gameH2*0.45,W*0.07,gameH2*0.75);
-    ctx.lineTo(0,gameH2); ctx.closePath(); ctx.fill();
-
-    ctx.globalAlpha=0.35;
-    ctx.fillStyle='#0a0100';
-    ctx.beginPath();
-    ctx.moveTo(0,0); ctx.lineTo(W*0.1,0);
-    ctx.lineTo(W*0.04,gameH2*0.5); ctx.lineTo(0,gameH2*0.6);
-    ctx.closePath(); ctx.fill();
-
-    // Right wall — mirror
-    ctx.globalAlpha=1;
-    var rwG=ctx.createLinearGradient(W,0,W*0.48,gameH2*0.5);
-    rwG.addColorStop(0,'#08020a');
-    rwG.addColorStop(0.3,'#1c0802');
-    rwG.addColorStop(0.6,'#2a0e04');
-    rwG.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=rwG;
-    ctx.beginPath();
-    ctx.moveTo(W,0); ctx.lineTo(W*0.62,0);
-    ctx.bezierCurveTo(W*0.7,gameH2*0.18,W*0.78,gameH2*0.38,W*0.86,gameH2*0.62);
-    ctx.bezierCurveTo(W*0.9,gameH2*0.75,W*0.94,gameH2*0.88,W*0.98,gameH2);
-    ctx.lineTo(W,gameH2);
-    ctx.closePath(); ctx.fill();
-
-    ctx.globalAlpha=0.55;
-    ctx.fillStyle='#140401';
-    ctx.beginPath();
-    ctx.moveTo(W,0); ctx.lineTo(W*0.78,0);
-    ctx.bezierCurveTo(W*0.82,gameH2*0.2,W*0.88,gameH2*0.45,W*0.93,gameH2*0.75);
-    ctx.lineTo(W,gameH2); ctx.closePath(); ctx.fill();
-
-    ctx.globalAlpha=0.35;
-    ctx.fillStyle='#0a0100';
-    ctx.beginPath();
-    ctx.moveTo(W,0); ctx.lineTo(W*0.9,0);
-    ctx.lineTo(W*0.96,gameH2*0.5); ctx.lineTo(W,gameH2*0.6);
-    ctx.closePath(); ctx.fill();
-    ctx.restore();
-
-    // === 4. LAVA GLOW ON WALLS — warm orange light cast from waterfall ===
-    ctx.save();
-    // Left wall glow
-    ctx.globalAlpha=0.2+Math.sin(frameN*0.035)*0.06;
-    var lwGlow=ctx.createRadialGradient(W*0.2,gameH2*0.5,0,W*0.2,gameH2*0.5,W*0.5);
-    lwGlow.addColorStop(0,'rgba(255,120,20,0.4)');
-    lwGlow.addColorStop(0.5,'rgba(200,60,0,0.15)');
-    lwGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=lwGlow; ctx.fillRect(0,0,W*0.4,gameH2);
-    // Right wall glow
-    var rwGlow=ctx.createRadialGradient(W*0.8,gameH2*0.5,0,W*0.8,gameH2*0.5,W*0.5);
-    rwGlow.addColorStop(0,'rgba(255,120,20,0.4)');
-    rwGlow.addColorStop(0.5,'rgba(200,60,0,0.15)');
-    rwGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=rwGlow; ctx.fillRect(W*0.6,0,W*0.4,gameH2);
-    ctx.restore();
-
-    // === 5. STALACTITES — jagged volcanic rock hanging from ceiling ===
-    ctx.save();
-    var stalDefs=[
-      {p:0.06,l:0.13,w:0.030,g:true},{p:0.15,l:0.09,w:0.022,g:false},{p:0.25,l:0.16,w:0.035,g:true},
-      {p:0.35,l:0.10,w:0.018,g:false},{p:0.44,l:0.14,w:0.028,g:true},{p:0.56,l:0.14,w:0.028,g:true},
-      {p:0.65,l:0.10,w:0.018,g:false},{p:0.74,l:0.16,w:0.035,g:true},{p:0.84,l:0.09,w:0.022,g:false},
-      {p:0.93,l:0.13,w:0.030,g:true}
-    ];
-    for(var si=0;si<stalDefs.length;si++){
-      var sd=stalDefs[si];
-      var sx=sd.p*W; var sLen=sd.l*gameH2; var sW=sd.w*W;
-      // Rock body gradient — deep dark with subtle warm edge
-      var stG=ctx.createLinearGradient(sx-sW,0,sx+sW,0);
-      stG.addColorStop(0,'#0a0100'); stG.addColorStop(0.4,'#1a0500'); stG.addColorStop(1,'#0a0100');
-      ctx.globalAlpha=0.95; ctx.fillStyle=stG;
-      ctx.beginPath();
-      ctx.moveTo(sx-sW,0);
-      ctx.bezierCurveTo(sx-sW*0.9,sLen*0.3,sx-sW*0.4,sLen*0.75,sx,sLen);
-      ctx.bezierCurveTo(sx+sW*0.4,sLen*0.75,sx+sW*0.9,sLen*0.3,sx+sW,0);
-      ctx.closePath(); ctx.fill();
-      // Subtle crack highlight on left face
-      ctx.globalAlpha=0.18;
-      ctx.fillStyle='rgba(80,20,5,0.6)';
-      ctx.beginPath();
-      ctx.moveTo(sx-sW*0.6,0); ctx.lineTo(sx-sW*0.2,sLen*0.6); ctx.lineTo(sx-sW*0.4,0);
-      ctx.closePath(); ctx.fill();
-      // Glowing lava drip at tip
-      if(sd.g){
-        ctx.globalAlpha=0.45+Math.sin(frameN*0.05+si*1.3)*0.2;
-        var tipG=ctx.createRadialGradient(sx,sLen,0,sx,sLen,sW*2.5);
-        tipG.addColorStop(0,'rgba(255,180,30,1)');
-        tipG.addColorStop(0.3,'rgba(255,90,10,0.6)');
-        tipG.addColorStop(1,'rgba(200,30,0,0)');
-        ctx.fillStyle=tipG; ctx.beginPath(); ctx.arc(sx,sLen,sW*2.5,0,Math.PI*2); ctx.fill();
-        // Tiny drip drop below tip
-        ctx.globalAlpha=0.6+Math.sin(frameN*0.08+si)*0.25;
-        ctx.fillStyle='rgba(255,160,20,0.9)';
-        var dropY=sLen+sW*0.8+Math.sin(frameN*0.1+si*0.7)*sW*0.5;
-        ctx.beginPath(); ctx.arc(sx,dropY,sW*0.35,0,Math.PI*2); ctx.fill();
-      }
-      ctx.globalAlpha=1;
-    }
-    ctx.restore();
-
-    // === 6. LAVA WATERFALL — bright golden column, tapers slightly ===
-    ctx.save();
-    var wfW=W*0.055+Math.sin(frameN*0.04)*1.5;
-    var wfTop=gameH2*0.04; // starts just below ceiling arch
-    var wfBot=gameH2*0.70;
-    var wave=Math.sin(frameN*0.055)*2.5;
-    var wave2=Math.sin(frameN*0.07+1.2)*1.5;
-
-    // Outer glow column
-    ctx.globalAlpha=0.3+Math.sin(frameN*0.04)*0.07;
-    var wfOuterGlow=ctx.createRadialGradient(wfX,wfBot*0.5,wfW,wfX,wfBot*0.5,W*0.28);
-    wfOuterGlow.addColorStop(0,'rgba(255,140,20,0.5)');
-    wfOuterGlow.addColorStop(0.4,'rgba(220,70,0,0.2)');
-    wfOuterGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=wfOuterGlow; ctx.fillRect(0,0,W,wfBot*1.1);
-
-    // Main lava column — warm orange-to-gold gradient
-    ctx.globalAlpha=1;
-    var wfG=ctx.createLinearGradient(wfX,wfTop,wfX,wfBot);
-    wfG.addColorStop(0,'rgba(255,240,100,1)');
-    wfG.addColorStop(0.15,'rgba(255,190,40,0.97)');
-    wfG.addColorStop(0.5,'rgba(240,120,15,0.93)');
-    wfG.addColorStop(0.8,'rgba(210,70,5,0.88)');
-    wfG.addColorStop(1,'rgba(180,40,0,0.75)');
-    ctx.fillStyle=wfG;
-    ctx.beginPath();
-    ctx.moveTo(wfX-wfW+wave,wfTop);
-    ctx.bezierCurveTo(wfX-wfW*0.85+wave,wfBot*0.25,wfX-wfW*0.7-wave2,wfBot*0.55,wfX-wfW*0.55,wfBot);
-    ctx.lineTo(wfX+wfW*0.55,wfBot);
-    ctx.bezierCurveTo(wfX+wfW*0.7-wave2,wfBot*0.55,wfX+wfW*0.85+wave,wfBot*0.25,wfX+wfW-wave,wfTop);
-    ctx.closePath(); ctx.fill();
-
-    // Bright white-yellow core center
-    ctx.globalAlpha=0.55+Math.sin(frameN*0.06)*0.1;
-    var coreG=ctx.createLinearGradient(wfX-wfW*0.25,0,wfX+wfW*0.25,0);
-    coreG.addColorStop(0,'rgba(255,250,200,0)');
-    coreG.addColorStop(0.5,'rgba(255,255,220,0.75)');
-    coreG.addColorStop(1,'rgba(255,250,200,0)');
-    ctx.fillStyle=coreG; ctx.fillRect(wfX-wfW*0.25,wfTop,wfW*0.5,wfBot-wfTop);
-
-    // Edge crack lines — dark veins running down the fall
-    ctx.globalAlpha=0.18;
-    ctx.strokeStyle='rgba(100,30,0,0.7)'; ctx.lineWidth=1;
-    for(var vi=0;vi<3;vi++){
-      var vx=wfX-wfW*0.3+vi*wfW*0.3;
-      ctx.beginPath(); ctx.moveTo(vx+wave*0.5,wfTop);
-      ctx.bezierCurveTo(vx-2,wfBot*0.35,vx+3,wfBot*0.65,vx+wave*0.3,wfBot);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // === 7. LAVA FLOOR — glowing cracked molten surface ===
-    ctx.save();
-    var floorH=gameH2*0.32;
-    var floorY=gameH2-floorH;
-
-    // Base floor gradient
-    var floorG=ctx.createLinearGradient(0,floorY,0,gameH2);
-    floorG.addColorStop(0,'rgba(160,40,0,0.7)');
-    floorG.addColorStop(0.15,'rgba(210,70,5,0.88)');
-    floorG.addColorStop(0.4,'rgba(240,110,15,0.95)');
-    floorG.addColorStop(0.7,'rgba(255,150,20,1)');
-    floorG.addColorStop(1,'rgba(200,70,0,1)');
-    ctx.fillStyle=floorG; ctx.fillRect(0,floorY,W,floorH);
-
-    // Bright impact zone where waterfall hits
-    ctx.globalAlpha=0.85+Math.sin(frameN*0.055)*0.1;
-    var impactG=ctx.createRadialGradient(wfX,gameH2*0.78,4,wfX,gameH2*0.78,W*0.32);
-    impactG.addColorStop(0,'rgba(255,240,120,0.95)');
-    impactG.addColorStop(0.15,'rgba(255,180,40,0.75)');
-    impactG.addColorStop(0.4,'rgba(240,100,10,0.4)');
-    impactG.addColorStop(1,'rgba(180,30,0,0)');
-    ctx.fillStyle=impactG; ctx.fillRect(0,floorY,W,floorH);
-
-    // Flowing lava ripple lines radiating from impact
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.04)*0.06;
-    ctx.strokeStyle='rgba(255,200,50,0.6)'; ctx.lineWidth=1.5;
-    for(var ri=0;ri<4;ri++){
-      var rOff=(ri*0.18+frameN*0.004)%0.7;
-      var rRad=W*(0.1+rOff*0.55);
-      ctx.beginPath();
-      ctx.ellipse(wfX,gameH2*0.78,rRad,rRad*0.22,0,0,Math.PI*2);
-      ctx.stroke();
-    }
-
-    // Dark rock islands / cooling crust on lava surface
-    ctx.globalAlpha=1;
-    var rockDefs=[
-      {x:0.08,y:0.88,rx:0.09,ry:0.04,a:-0.3},
-      {x:0.28,y:0.82,rx:0.06,ry:0.025,a:0.2},
-      {x:0.68,y:0.84,rx:0.07,ry:0.03,a:-0.15},
-      {x:0.88,y:0.9,rx:0.08,ry:0.035,a:0.35},
-      {x:0.5,y:0.95,rx:0.05,ry:0.02,a:0.0},
-      {x:0.4,y:0.79,rx:0.04,ry:0.015,a:0.4}
-    ];
-    for(var rki=0;rki<rockDefs.length;rki++){
-      var rd=rockDefs[rki];
-      ctx.globalAlpha=0.62;
-      ctx.fillStyle='#180400';
-      ctx.beginPath();
-      ctx.ellipse(rd.x*W,rd.y*gameH2,rd.rx*W,rd.ry*gameH2,rd.a,0,Math.PI*2);
-      ctx.fill();
-      // Glowing orange edge on rock — lava creeping around it
-      ctx.globalAlpha=0.28;
-      var rkGlow=ctx.createRadialGradient(rd.x*W,rd.y*gameH2,0,rd.x*W,rd.y*gameH2,rd.rx*W*1.4);
-      rkGlow.addColorStop(0,'rgba(0,0,0,0)');
-      rkGlow.addColorStop(0.7,'rgba(255,100,10,0.0)');
-      rkGlow.addColorStop(0.85,'rgba(255,120,20,0.5)');
-      rkGlow.addColorStop(1,'rgba(255,80,0,0)');
-      ctx.fillStyle=rkGlow;
-      ctx.beginPath(); ctx.ellipse(rd.x*W,rd.y*gameH2,rd.rx*W*1.4,rd.ry*gameH2*1.4,rd.a,0,Math.PI*2); ctx.fill();
-    }
-
-    // Rising heat shimmer / glow from floor surface
-    ctx.globalAlpha=0.1+Math.sin(frameN*0.035)*0.04;
-    var heatG=ctx.createLinearGradient(0,floorY-gameH2*0.15,0,floorY);
-    heatG.addColorStop(0,'rgba(255,80,0,0)');
-    heatG.addColorStop(1,'rgba(255,110,20,0.35)');
-    ctx.fillStyle=heatG; ctx.fillRect(0,floorY-gameH2*0.15,W,gameH2*0.15);
-    ctx.restore();
-
-    // === 8. DARK FOREGROUND CAVE ROCKS — massive silhouettes framing bottom ===
-    ctx.save();
-    ctx.globalAlpha=1;
-
-    // Left foreground boulder — large angular mass
-    var lfG=ctx.createLinearGradient(0,gameH2*0.55,W*0.32,gameH2);
-    lfG.addColorStop(0,'#100200'); lfG.addColorStop(0.5,'#1e0500'); lfG.addColorStop(1,'#080100');
-    ctx.fillStyle=lfG;
-    ctx.beginPath();
-    ctx.moveTo(0,gameH2); ctx.lineTo(0,gameH2*0.58);
-    ctx.bezierCurveTo(W*0.03,gameH2*0.52,W*0.08,gameH2*0.55,W*0.13,gameH2*0.6);
-    ctx.bezierCurveTo(W*0.19,gameH2*0.66,W*0.24,gameH2*0.72,W*0.28,gameH2*0.82);
-    ctx.bezierCurveTo(W*0.31,gameH2*0.9,W*0.3,gameH2*0.96,W*0.28,gameH2);
-    ctx.closePath(); ctx.fill();
-    // Left inner shadow for depth
-    ctx.globalAlpha=0.5;
-    ctx.fillStyle='#070100';
-    ctx.beginPath();
-    ctx.moveTo(0,gameH2); ctx.lineTo(0,gameH2*0.65);
-    ctx.bezierCurveTo(W*0.04,gameH2*0.6,W*0.09,gameH2*0.65,W*0.1,gameH2*0.75);
-    ctx.lineTo(W*0.12,gameH2); ctx.closePath(); ctx.fill();
-    // Lava glow edge on left rock top
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.04)*0.08;
-    var lrGlow=ctx.createLinearGradient(0,gameH2*0.55,W*0.15,gameH2*0.7);
-    lrGlow.addColorStop(0,'rgba(255,100,15,0.5)');
-    lrGlow.addColorStop(1,'rgba(255,60,0,0)');
-    ctx.fillStyle=lrGlow; ctx.fillRect(0,gameH2*0.55,W*0.15,gameH2*0.15);
-
-    // Right foreground boulder
-    ctx.globalAlpha=1;
-    var rfG=ctx.createLinearGradient(W,gameH2*0.55,W*0.68,gameH2);
-    rfG.addColorStop(0,'#100200'); rfG.addColorStop(0.5,'#1e0500'); rfG.addColorStop(1,'#080100');
-    ctx.fillStyle=rfG;
-    ctx.beginPath();
-    ctx.moveTo(W,gameH2); ctx.lineTo(W,gameH2*0.60);
-    ctx.bezierCurveTo(W*0.97,gameH2*0.53,W*0.92,gameH2*0.56,W*0.87,gameH2*0.62);
-    ctx.bezierCurveTo(W*0.81,gameH2*0.68,W*0.76,gameH2*0.74,W*0.72,gameH2*0.84);
-    ctx.bezierCurveTo(W*0.69,gameH2*0.91,W*0.70,gameH2*0.96,W*0.72,gameH2);
-    ctx.closePath(); ctx.fill();
-    ctx.globalAlpha=0.5;
-    ctx.fillStyle='#070100';
-    ctx.beginPath();
-    ctx.moveTo(W,gameH2); ctx.lineTo(W,gameH2*0.66);
-    ctx.bezierCurveTo(W*0.96,gameH2*0.61,W*0.91,gameH2*0.66,W*0.9,gameH2*0.76);
-    ctx.lineTo(W*0.88,gameH2); ctx.closePath(); ctx.fill();
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.04)*0.08;
-    var rrGlow=ctx.createLinearGradient(W,gameH2*0.55,W*0.85,gameH2*0.7);
-    rrGlow.addColorStop(0,'rgba(255,100,15,0.5)');
-    rrGlow.addColorStop(1,'rgba(255,60,0,0)');
-    ctx.fillStyle=rrGlow; ctx.fillRect(W*0.85,gameH2*0.55,W*0.15,gameH2*0.15);
-
-    ctx.restore();
-    ctx.globalAlpha=1;
-
 }
 
 function drawBg(){
@@ -4808,10 +4507,6 @@ function drawBg(){
   var glG=Math.round(bm.glowG+(nbm.glowG-bm.glowG)*tb);
   var glB=Math.round(bm.glowB+(nbm.glowB-bm.glowB)*tb);
   var style=tb>0.5?(nbm.bgStyle||'default'):(bm.bgStyle||'default');
-
-  // LAVACAVERN: fully custom — skip default far/near/ground layers
-  if(style==='lavacavern'){drawLavaCavernBg(gameH);return;}
-
   ctx.save(); ctx.globalAlpha=0.45;
   drawFarLayer(mfC,gameH);
   ctx.restore();
@@ -5363,24 +5058,81 @@ function drawFarLayer(mfC,gameH){
     ctx.globalAlpha=1;
 
   } else if(style==='volcano'){
-    // ── VOLCANIC LANDSCAPE — wide smooth hills, glowing calderas ──
-    ctx.globalAlpha=0.5;
-    var horizG=ctx.createLinearGradient(0,gameH*0.4,0,gameH*0.7);
-    horizG.addColorStop(0,'rgba(255,60,0,0)');horizG.addColorStop(0.5,'rgba(200,30,0,0.3)');horizG.addColorStop(1,'rgba(255,80,0,0)');
-    ctx.fillStyle=horizG;ctx.fillRect(0,gameH*0.4,W,gameH*0.3);
-    ctx.globalAlpha=0.7;
-    ctx.fillStyle='#2a0600';
-    ctx.beginPath();ctx.moveTo(0,gameH);ctx.bezierCurveTo(W*0.05,gameH,W*0.1,gameH*0.65,W*0.18,gameH*0.42);ctx.bezierCurveTo(W*0.22,gameH*0.32,W*0.28,gameH*0.28,W*0.34,gameH*0.32);ctx.bezierCurveTo(W*0.42,gameH*0.38,W*0.46,gameH*0.55,W*0.5,gameH);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#220500';
-    ctx.beginPath();ctx.moveTo(W*0.42,gameH);ctx.bezierCurveTo(W*0.5,gameH,W*0.55,gameH*0.6,W*0.62,gameH*0.38);ctx.bezierCurveTo(W*0.66,gameH*0.28,W*0.74,gameH*0.26,W*0.8,gameH*0.32);ctx.bezierCurveTo(W*0.88,gameH*0.4,W*0.94,gameH*0.6,W,gameH*0.65);ctx.lineTo(W,gameH);ctx.closePath();ctx.fill();
-    [{x:W*0.28,y:gameH*0.30},{x:W*0.72,y:gameH*0.29}].forEach(function(c){
-      ctx.save();ctx.globalAlpha=0.5+Math.sin(frameN*0.04)*0.15;
-      var cg=ctx.createRadialGradient(c.x,c.y,4,c.x,c.y,W*0.1);cg.addColorStop(0,'rgba(255,120,10,0.8)');cg.addColorStop(0.4,'rgba(255,50,0,0.4)');cg.addColorStop(1,'rgba(200,20,0,0)');
-      ctx.fillStyle=cg;ctx.beginPath();ctx.arc(c.x,c.y,W*0.1,0,Math.PI*2);ctx.fill();ctx.restore();
-    });
-    ctx.globalAlpha=0.25;
-    ['#1a0400','#280800','#200500'].forEach(function(ac,ai){var ax=((ai*W/3+farOff*0.05)%W+W)%W,ay=gameH*(0.15+Math.sin(ai*1.3)*0.08);ctx.fillStyle=ac;ctx.beginPath();ctx.ellipse(ax,ay,W*0.12+ai*8,gameH*0.06+ai*3,0,0,Math.PI*2);ctx.fill();});
+    // ── VOLCANIC HELLSCAPE — erupting volcanoes, soft lava glow, ash-filled sky ──
     ctx.globalAlpha=1;
+    var gh2=gameH;
+
+    // Distant ash haze across horizon
+    ctx.save();ctx.globalAlpha=0.15+Math.sin(frameN*0.015)*0.04;
+    var hazeG=ctx.createLinearGradient(0,gh2*0.2,0,gh2*0.6);
+    hazeG.addColorStop(0,'rgba(200,40,0,0)');hazeG.addColorStop(0.5,'rgba(180,30,5,0.4)');hazeG.addColorStop(1,'rgba(120,15,0,0)');
+    ctx.fillStyle=hazeG;ctx.fillRect(0,gh2*0.2,W,gh2*0.4);ctx.restore();
+
+    // === FAR VOLCANO LEFT — smooth dark silhouette with glowing caldera ===
+    ctx.save();ctx.globalAlpha=0.7;
+    var vG1=ctx.createLinearGradient(0,gh2*0.2,0,gh2);
+    vG1.addColorStop(0,'#120204');vG1.addColorStop(1,'#0a0102');
+    ctx.fillStyle=vG1;
+    ctx.beginPath();ctx.moveTo(-W*0.1,gh2);
+    ctx.bezierCurveTo(-W*0.08,gh2*0.8,-W*0.02,gh2*0.5,W*0.08,gh2*0.30);
+    ctx.bezierCurveTo(W*0.14,gh2*0.20,W*0.20,gh2*0.18,W*0.24,gh2*0.20);
+    ctx.bezierCurveTo(W*0.28,gh2*0.18,W*0.32,gh2*0.20,W*0.36,gh2*0.28);
+    ctx.bezierCurveTo(W*0.42,gh2*0.45,W*0.48,gh2*0.70,W*0.52,gh2);
+    ctx.closePath();ctx.fill();
+    // Caldera glow
+    ctx.globalAlpha=0.55+Math.sin(frameN*0.03)*0.2;
+    var cg1=ctx.createRadialGradient(W*0.24,gh2*0.20,3,W*0.24,gh2*0.22,W*0.08);
+    cg1.addColorStop(0,'rgba(255,200,60,0.9)');cg1.addColorStop(0.3,'rgba(255,100,10,0.7)');
+    cg1.addColorStop(0.7,'rgba(200,30,0,0.3)');cg1.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=cg1;ctx.beginPath();ctx.arc(W*0.24,gh2*0.22,W*0.08,0,Math.PI*2);ctx.fill();
+    // Eruption plume — soft smoke column rising
+    ctx.globalAlpha=0.20+Math.sin(frameN*0.025)*0.06;
+    var plumeG=ctx.createRadialGradient(W*0.24,gh2*0.10,10,W*0.24,gh2*0.10,W*0.12);
+    plumeG.addColorStop(0,'rgba(80,20,8,0.5)');plumeG.addColorStop(0.6,'rgba(40,10,5,0.2)');
+    plumeG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=plumeG;ctx.beginPath();ctx.ellipse(W*0.24,gh2*0.10,W*0.12,gh2*0.12,0,0,Math.PI*2);ctx.fill();
+    // Lava glow on slopes — soft radial, no lines
+    ctx.globalAlpha=0.15+Math.sin(frameN*0.035)*0.06;
+    var slopeG1=ctx.createRadialGradient(W*0.32,gh2*0.5,5,W*0.32,gh2*0.5,W*0.15);
+    slopeG1.addColorStop(0,'rgba(255,120,20,0.6)');slopeG1.addColorStop(1,'rgba(200,40,0,0)');
+    ctx.fillStyle=slopeG1;ctx.beginPath();ctx.ellipse(W*0.32,gh2*0.5,W*0.15,gh2*0.25,0.3,0,Math.PI*2);ctx.fill();
+    var slopeG2=ctx.createRadialGradient(W*0.12,gh2*0.5,5,W*0.12,gh2*0.5,W*0.12);
+    slopeG2.addColorStop(0,'rgba(255,100,10,0.5)');slopeG2.addColorStop(1,'rgba(200,30,0,0)');
+    ctx.fillStyle=slopeG2;ctx.beginPath();ctx.ellipse(W*0.12,gh2*0.5,W*0.12,gh2*0.2,-0.3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+
+    // === FAR VOLCANO RIGHT — smooth, slightly smaller ===
+    ctx.save();ctx.globalAlpha=0.6;
+    ctx.fillStyle='#100204';
+    ctx.beginPath();ctx.moveTo(W*0.5,gh2);
+    ctx.bezierCurveTo(W*0.54,gh2*0.75,W*0.60,gh2*0.45,W*0.68,gh2*0.28);
+    ctx.bezierCurveTo(W*0.73,gh2*0.22,W*0.78,gh2*0.22,W*0.82,gh2*0.24);
+    ctx.bezierCurveTo(W*0.86,gh2*0.28,W*0.92,gh2*0.40,W*0.96,gh2*0.55);
+    ctx.bezierCurveTo(W*1.0,gh2*0.70,W*1.05,gh2*0.85,W*1.1,gh2);
+    ctx.closePath();ctx.fill();
+    // Caldera glow
+    ctx.globalAlpha=0.45+Math.sin(frameN*0.04+1)*0.15;
+    var cg2=ctx.createRadialGradient(W*0.78,gh2*0.24,2,W*0.78,gh2*0.26,W*0.06);
+    cg2.addColorStop(0,'rgba(255,180,40,0.85)');cg2.addColorStop(0.4,'rgba(255,80,5,0.5)');
+    cg2.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=cg2;ctx.beginPath();ctx.arc(W*0.78,gh2*0.26,W*0.06,0,Math.PI*2);ctx.fill();
+    // Soft slope glow
+    ctx.globalAlpha=0.12+Math.sin(frameN*0.04+1)*0.04;
+    var slopeG3=ctx.createRadialGradient(W*0.85,gh2*0.5,5,W*0.85,gh2*0.5,W*0.12);
+    slopeG3.addColorStop(0,'rgba(255,100,10,0.5)');slopeG3.addColorStop(1,'rgba(200,30,0,0)');
+    ctx.fillStyle=slopeG3;ctx.beginPath();ctx.ellipse(W*0.85,gh2*0.5,W*0.12,gh2*0.2,0.2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+
+    // === ASH CLOUDS — dark drifting ellipses ===
+    ctx.save();ctx.globalAlpha=0.2;
+    for(var aci=0;aci<5;aci++){
+      var acx=((aci*W/4+farOff*0.06)%W+W)%W;
+      var acy=gh2*(0.08+Math.sin(aci*1.7+0.3)*0.06);
+      var acr=W*0.08+aci*5;
+      ctx.fillStyle='rgba(30,8,4,0.6)';
+      ctx.beginPath();ctx.ellipse(acx,acy,acr,acr*0.3,Math.sin(aci)*0.2,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;ctx.restore();
 
   } else if(style==='burningcity'){
     // ── BURNING CITY — ruined skyline, fire glow, smoke clouds ──
@@ -5791,31 +5543,61 @@ function drawNearLayer(mn0,gameH){
     ctx.globalAlpha=1;
 
   } else if(style==='volcano'){
-    // Volcano only — wide flat-topped rocky mounds, no pointed tips
-    ctx.globalAlpha=0.85;
-    for(var smi=0;smi<7;smi++){
-      var smx=((smi*W/6+nearOff*0.55)%W+W)%W;
-      var smh=gameH*0.18+Math.sin(smi*2.1)*gameH*0.06;
-      var smw=80+Math.sin(smi*1.4)*25;
-      ctx.fillStyle='#1e0300';
-      // Completely flat top — rectangle base with rounded shoulders only
-      ctx.beginPath();
-      ctx.moveTo(smx-smw*0.5,gameH);
-      ctx.lineTo(smx-smw*0.5,gameH-smh*0.6);
-      ctx.bezierCurveTo(smx-smw*0.5,gameH-smh*0.9,smx-smw*0.3,gameH-smh,smx-smw*0.15,gameH-smh);
-      ctx.lineTo(smx+smw*0.15,gameH-smh);
-      ctx.bezierCurveTo(smx+smw*0.3,gameH-smh,smx+smw*0.5,gameH-smh*0.9,smx+smw*0.5,gameH-smh*0.6);
-      ctx.lineTo(smx+smw*0.5,gameH);
+    // Volcanic Hellscape near — smooth dark rock mounds, lava channels, glowing ground
+    ctx.globalAlpha=1;
+    var gh3=gameH;
+
+    // === ROCK FORMATIONS — smooth rounded volcanic mounds ===
+    for(var vi=0;vi<7;vi++){
+      var vx=((vi*W/6+nearOff*0.55)%W+W)%W;
+      var vh=gh3*(0.10+Math.abs(Math.sin(vi*2.3))*0.10);
+      var vw=40+Math.sin(vi*1.7)*12;
+      var vG=ctx.createLinearGradient(vx,gh3-vh,vx,gh3);
+      vG.addColorStop(0,'#180308');vG.addColorStop(0.5,'#100206');vG.addColorStop(1,'#0a0104');
+      ctx.fillStyle=vG;
+      // Smooth rounded shape
+      ctx.beginPath();ctx.moveTo(vx-vw*0.5,gh3);
+      ctx.bezierCurveTo(vx-vw*0.5,gh3-vh*0.6,vx-vw*0.25,gh3-vh,vx,gh3-vh);
+      ctx.bezierCurveTo(vx+vw*0.25,gh3-vh,vx+vw*0.5,gh3-vh*0.6,vx+vw*0.5,gh3);
       ctx.closePath();ctx.fill();
+      // Subtle warm rim on top
+      ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.04+vi*0.9)*0.08;
+      ctx.strokeStyle='rgba(255,80,10,0.4)';ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(vx-vw*0.25,gh3-vh*0.9);
+      ctx.bezierCurveTo(vx-vw*0.1,gh3-vh*1.02,vx+vw*0.1,gh3-vh*1.02,vx+vw*0.25,gh3-vh*0.9);
+      ctx.stroke();ctx.restore();
     }
-    // Lava river at ground
-    ctx.globalAlpha=0.75;
-    var lrG=ctx.createLinearGradient(0,gameH-18,0,gameH);
-    lrG.addColorStop(0,'rgba(255,140,0,0.8)');lrG.addColorStop(1,'rgba(160,10,0,0.4)');
+
+    // === GROUND LAVA CHANNELS — glowing rivers ===
+    ctx.save();
+    // Base dark ground
+    var gndG=ctx.createLinearGradient(0,gh3-22,0,gh3);
+    gndG.addColorStop(0,'rgba(12,2,2,0.9)');gndG.addColorStop(1,'rgba(8,1,1,0.95)');
+    ctx.fillStyle=gndG;ctx.fillRect(0,gh3-22,W,22);
+    // Lava river — undulating bright line
+    ctx.globalAlpha=0.8+Math.sin(frameN*0.05)*0.15;
+    var lrG=ctx.createLinearGradient(0,gh3-16,0,gh3);
+    lrG.addColorStop(0,'rgba(255,160,20,0.9)');lrG.addColorStop(0.4,'rgba(255,100,5,0.7)');
+    lrG.addColorStop(1,'rgba(200,40,0,0.5)');
     ctx.fillStyle=lrG;
-    ctx.beginPath();ctx.moveTo(0,gameH);ctx.lineTo(W,gameH);
-    for(var lrx=W;lrx>=0;lrx-=20){ctx.lineTo(lrx,gameH-12+Math.sin((lrx+nearOff*0.8)*0.06)*5);}
+    ctx.beginPath();ctx.moveTo(0,gh3);ctx.lineTo(W,gh3);
+    for(var lx=W;lx>=0;lx-=15){ctx.lineTo(lx,gh3-10+Math.sin((lx+nearOff*0.9)*0.07)*4);}
     ctx.closePath();ctx.fill();
+    // Bright center highlight
+    ctx.globalAlpha=0.35+Math.sin(frameN*0.06)*0.1;
+    var lcG=ctx.createLinearGradient(0,gh3-10,0,gh3);
+    lcG.addColorStop(0,'rgba(255,220,80,0.6)');lcG.addColorStop(1,'rgba(255,120,10,0)');
+    ctx.fillStyle=lcG;
+    ctx.beginPath();ctx.moveTo(0,gh3);ctx.lineTo(W,gh3);
+    for(var lx2=W;lx2>=0;lx2-=20){ctx.lineTo(lx2,gh3-6+Math.sin((lx2+nearOff*0.9)*0.07+0.5)*3);}
+    ctx.closePath();ctx.fill();
+    // Ground glow upward
+    ctx.globalAlpha=0.10+Math.sin(frameN*0.03)*0.03;
+    var ugG=ctx.createLinearGradient(0,gh3-50,0,gh3-14);
+    ugG.addColorStop(0,'rgba(255,60,0,0)');ugG.addColorStop(1,'rgba(255,80,10,0.35)');
+    ctx.fillStyle=ugG;ctx.fillRect(0,gh3-50,W,36);
+    ctx.restore();
     ctx.globalAlpha=1;
 
   } else if(style==='burningcity'){
@@ -5860,150 +5642,376 @@ function drawNearLayer(mn0,gameH){
     }
     ctx.globalAlpha=1;
 
-
-  } else if(style==='lavacave2'){
-    // Lava Cavern — VibrantCrow-style deep cave with central lava fall
+  } else if(style==='lavacavern'){
+    // Lava Cavern — deep volcanic cave with central lava fall (reference: VibrantCrow)
     ctx.globalAlpha=1;
-    var gh=gameH;
-    var wfX=W*0.5;
+    var gameH2=gameH;
 
-    // 1. DEEP BACKGROUND — pitch black void with ember glow
+    // === CAVE WALLS — dark curved tunnel walls left and right ===
+    // Left wall — dark brown/purple rock
     ctx.save();
-    var bgBase=ctx.createLinearGradient(0,0,0,gh);
-    bgBase.addColorStop(0,'#050000');bgBase.addColorStop(0.35,'#100200');bgBase.addColorStop(0.7,'#1a0400');bgBase.addColorStop(1,'#0a0100');
-    ctx.fillStyle=bgBase;ctx.fillRect(0,0,W,gh);
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.022)*0.06;
-    var deepGlow=ctx.createRadialGradient(W*0.5,gh*0.55,gh*0.05,W*0.5,gh*0.55,W*0.9);
-    deepGlow.addColorStop(0,'rgba(255,160,30,0.55)');deepGlow.addColorStop(0.35,'rgba(220,80,10,0.22)');deepGlow.addColorStop(0.7,'rgba(160,30,0,0.08)');deepGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=deepGlow;ctx.fillRect(0,0,W,gh);
+    var lwG=ctx.createLinearGradient(0,0,W*0.45,0);
+    lwG.addColorStop(0,'rgba(18,6,2,1)');
+    lwG.addColorStop(0.4,'rgba(35,12,4,0.85)');
+    lwG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=lwG;
+    ctx.beginPath();
+    ctx.moveTo(0,0);ctx.lineTo(W*0.42,0);
+    ctx.quadraticCurveTo(W*0.28,gameH2*0.35,W*0.18,gameH2*0.7);
+    ctx.lineTo(W*0.05,gameH2);ctx.lineTo(0,gameH2);
+    ctx.closePath();ctx.fill();
+
+    // Right wall
+    var rwG=ctx.createLinearGradient(W,0,W*0.55,0);
+    rwG.addColorStop(0,'rgba(18,6,2,1)');
+    rwG.addColorStop(0.4,'rgba(35,12,4,0.85)');
+    rwG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rwG;
+    ctx.beginPath();
+    ctx.moveTo(W,0);ctx.lineTo(W*0.58,0);
+    ctx.quadraticCurveTo(W*0.72,gameH2*0.35,W*0.82,gameH2*0.7);
+    ctx.lineTo(W*0.95,gameH2);ctx.lineTo(W,gameH2);
+    ctx.closePath();ctx.fill();
     ctx.restore();
 
-    // 2. BACKGROUND CAVE ARCH — glowing tunnel portal far behind
+    // === CAVE CEILING — dark rocky top ===
     ctx.save();
-    ctx.globalAlpha=0.55+Math.sin(frameN*0.025)*0.08;
-    var archGlow=ctx.createRadialGradient(W*0.5,gh*0.18,gh*0.02,W*0.5,gh*0.18,W*0.38);
-    archGlow.addColorStop(0,'rgba(255,210,80,0.9)');archGlow.addColorStop(0.2,'rgba(255,140,20,0.55)');archGlow.addColorStop(0.5,'rgba(200,60,0,0.2)');archGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=archGlow;ctx.fillRect(0,0,W,gh*0.45);
-    ctx.globalAlpha=1;ctx.fillStyle='#0a0100';
-    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,gh*0.45);
-    ctx.quadraticCurveTo(W*0.15,gh*0.12,W*0.32,gh*0.06);ctx.quadraticCurveTo(W*0.42,gh*0.02,W*0.5,gh*0.01);
-    ctx.quadraticCurveTo(W*0.58,gh*0.02,W*0.68,gh*0.06);ctx.quadraticCurveTo(W*0.85,gh*0.12,W,gh*0.45);
-    ctx.lineTo(W,0);ctx.closePath();ctx.fill();
-    ctx.restore();
+    var ceilG=ctx.createLinearGradient(0,0,0,gameH2*0.3);
+    ceilG.addColorStop(0,'rgba(8,2,1,1)');
+    ceilG.addColorStop(0.6,'rgba(15,5,2,0.7)');
+    ceilG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ceilG;ctx.fillRect(0,0,W,gameH2*0.3);
 
-    // 3. CAVE WALLS — sweeping dark layered rock masses
-    ctx.save();
-    var lwG=ctx.createLinearGradient(0,0,W*0.52,gh*0.5);
-    lwG.addColorStop(0,'#08020a');lwG.addColorStop(0.3,'#1c0802');lwG.addColorStop(0.6,'#2a0e04');lwG.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=lwG;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W*0.38,0);
-    ctx.bezierCurveTo(W*0.3,gh*0.18,W*0.22,gh*0.38,W*0.14,gh*0.62);ctx.bezierCurveTo(W*0.1,gh*0.75,W*0.06,gh*0.88,W*0.02,gh);
-    ctx.lineTo(0,gh);ctx.closePath();ctx.fill();
-    ctx.globalAlpha=0.55;ctx.fillStyle='#140401';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W*0.22,0);
-    ctx.bezierCurveTo(W*0.18,gh*0.2,W*0.12,gh*0.45,W*0.07,gh*0.75);ctx.lineTo(0,gh);ctx.closePath();ctx.fill();
-    ctx.globalAlpha=1;
-    var rwG=ctx.createLinearGradient(W,0,W*0.48,gh*0.5);
-    rwG.addColorStop(0,'#08020a');rwG.addColorStop(0.3,'#1c0802');rwG.addColorStop(0.6,'#2a0e04');rwG.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=rwG;ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W*0.62,0);
-    ctx.bezierCurveTo(W*0.7,gh*0.18,W*0.78,gh*0.38,W*0.86,gh*0.62);ctx.bezierCurveTo(W*0.9,gh*0.75,W*0.94,gh*0.88,W*0.98,gh);
-    ctx.lineTo(W,gh);ctx.closePath();ctx.fill();
-    ctx.globalAlpha=0.55;ctx.fillStyle='#140401';ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W*0.78,0);
-    ctx.bezierCurveTo(W*0.82,gh*0.2,W*0.88,gh*0.45,W*0.93,gh*0.75);ctx.lineTo(W,gh);ctx.closePath();ctx.fill();
-    ctx.restore();
-
-    // 4. WALL GLOW — warm orange light cast from waterfall
-    ctx.save();
-    ctx.globalAlpha=0.2+Math.sin(frameN*0.035)*0.06;
-    var lwGlow=ctx.createRadialGradient(W*0.2,gh*0.5,0,W*0.2,gh*0.5,W*0.5);
-    lwGlow.addColorStop(0,'rgba(255,120,20,0.4)');lwGlow.addColorStop(0.5,'rgba(200,60,0,0.15)');lwGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=lwGlow;ctx.fillRect(0,0,W*0.4,gh);
-    var rwGlow=ctx.createRadialGradient(W*0.8,gh*0.5,0,W*0.8,gh*0.5,W*0.5);
-    rwGlow.addColorStop(0,'rgba(255,120,20,0.4)');rwGlow.addColorStop(0.5,'rgba(200,60,0,0.15)');rwGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=rwGlow;ctx.fillRect(W*0.6,0,W*0.4,gh);
-    ctx.restore();
-
-    // 5. STALACTITES — jagged rock with glowing drip tips
-    ctx.save();
-    var stalDefs=[{p:0.06,l:0.13,w:0.030,g:true},{p:0.15,l:0.09,w:0.022,g:false},{p:0.25,l:0.16,w:0.035,g:true},{p:0.35,l:0.10,w:0.018,g:false},{p:0.44,l:0.14,w:0.028,g:true},{p:0.56,l:0.14,w:0.028,g:true},{p:0.65,l:0.10,w:0.018,g:false},{p:0.74,l:0.16,w:0.035,g:true},{p:0.84,l:0.09,w:0.022,g:false},{p:0.93,l:0.13,w:0.030,g:true}];
-    for(var si=0;si<stalDefs.length;si++){
-      var sd=stalDefs[si],sx=sd.p*W,sLen=sd.l*gh,sW=sd.w*W;
-      var stG=ctx.createLinearGradient(sx-sW,0,sx+sW,0);
-      stG.addColorStop(0,'#0a0100');stG.addColorStop(0.4,'#1a0500');stG.addColorStop(1,'#0a0100');
-      ctx.globalAlpha=0.95;ctx.fillStyle=stG;
-      ctx.beginPath();ctx.moveTo(sx-sW,0);ctx.bezierCurveTo(sx-sW*0.9,sLen*0.3,sx-sW*0.4,sLen*0.75,sx,sLen);ctx.bezierCurveTo(sx+sW*0.4,sLen*0.75,sx+sW*0.9,sLen*0.3,sx+sW,0);ctx.closePath();ctx.fill();
-      if(sd.g){
-        ctx.globalAlpha=0.45+Math.sin(frameN*0.05+si*1.3)*0.2;
-        var tipG=ctx.createRadialGradient(sx,sLen,0,sx,sLen,sW*2.5);
-        tipG.addColorStop(0,'rgba(255,180,30,1)');tipG.addColorStop(0.3,'rgba(255,90,10,0.6)');tipG.addColorStop(1,'rgba(200,30,0,0)');
-        ctx.fillStyle=tipG;ctx.beginPath();ctx.arc(sx,sLen,sW*2.5,0,Math.PI*2);ctx.fill();
-        ctx.globalAlpha=0.6+Math.sin(frameN*0.08+si)*0.25;
-        ctx.fillStyle='rgba(255,160,20,0.9)';
-        var dropY=sLen+sW*0.8+Math.sin(frameN*0.1+si*0.7)*sW*0.5;
-        ctx.beginPath();ctx.arc(sx,dropY,sW*0.35,0,Math.PI*2);ctx.fill();
-      }
+    // Stalactites — jagged rocky hanging shapes
+    var stalPos=[0.1,0.22,0.32,0.42,0.58,0.68,0.78,0.88,0.95];
+    for(var si=0;si<stalPos.length;si++){
+      var sx=stalPos[si]*W;
+      var sLen=gameH2*(0.08+Math.sin(si*1.7)*0.06+0.04);
+      var sW=W*(0.04+si%3*0.015);
+      ctx.fillStyle='#120400';
+      ctx.beginPath();
+      ctx.moveTo(sx-sW,0);
+      ctx.lineTo(sx+sW,0);
+      ctx.lineTo(sx+sW*0.3,sLen*0.7);
+      ctx.lineTo(sx,sLen);
+      ctx.lineTo(sx-sW*0.3,sLen*0.7);
+      ctx.closePath();ctx.fill();
+      // Lava glow drip at tip
+      ctx.globalAlpha=0.3+Math.sin(frameN*0.04+si)*0.15;
+      var tipG=ctx.createRadialGradient(sx,sLen,0,sx,sLen,sW*2);
+      tipG.addColorStop(0,'rgba(255,140,20,0.8)');tipG.addColorStop(1,'rgba(255,60,0,0)');
+      ctx.fillStyle=tipG;ctx.beginPath();ctx.arc(sx,sLen,sW*2,0,Math.PI*2);ctx.fill();
       ctx.globalAlpha=1;
     }
     ctx.restore();
 
-    // 6. LAVA WATERFALL — bright golden column
+    // === AMBIENT LAVA GLOW — warm orange light filling the cave ===
     ctx.save();
-    var wfW=W*0.055+Math.sin(frameN*0.04)*1.5,wfTop=gh*0.04,wfBot=gh*0.70;
-    var wave=Math.sin(frameN*0.055)*2.5,wave2=Math.sin(frameN*0.07+1.2)*1.5;
-    ctx.globalAlpha=0.3+Math.sin(frameN*0.04)*0.07;
-    var wfOuterGlow=ctx.createRadialGradient(wfX,wfBot*0.5,wfW,wfX,wfBot*0.5,W*0.28);
-    wfOuterGlow.addColorStop(0,'rgba(255,140,20,0.5)');wfOuterGlow.addColorStop(0.4,'rgba(220,70,0,0.2)');wfOuterGlow.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=wfOuterGlow;ctx.fillRect(0,0,W,wfBot*1.1);
-    ctx.globalAlpha=1;
+    ctx.globalAlpha=0.18+Math.sin(frameN*0.03)*0.05;
+    var ambG=ctx.createRadialGradient(W*0.5,gameH2*0.6,20,W*0.5,gameH2*0.6,W*0.8);
+    ambG.addColorStop(0,'rgba(255,120,20,0.6)');
+    ambG.addColorStop(0.5,'rgba(200,60,0,0.2)');
+    ambG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ambG;ctx.fillRect(0,0,W,gameH2);
+    ctx.restore();
+
+    // === LAVA WATERFALL — central column of lava pouring from ceiling ===
+    ctx.save();
+    var wfX=W*0.5;
+    var wfW=W*0.06+Math.sin(frameN*0.04)*2;
+    var wfTop=0;
+    var wfBot=gameH2*0.72;
+    // Main lava column
     var wfG=ctx.createLinearGradient(wfX,wfTop,wfX,wfBot);
-    wfG.addColorStop(0,'rgba(255,240,100,1)');wfG.addColorStop(0.15,'rgba(255,190,40,0.97)');wfG.addColorStop(0.5,'rgba(240,120,15,0.93)');wfG.addColorStop(0.8,'rgba(210,70,5,0.88)');wfG.addColorStop(1,'rgba(180,40,0,0.75)');
-    ctx.fillStyle=wfG;ctx.beginPath();
-    ctx.moveTo(wfX-wfW+wave,wfTop);ctx.bezierCurveTo(wfX-wfW*0.85+wave,wfBot*0.25,wfX-wfW*0.7-wave2,wfBot*0.55,wfX-wfW*0.55,wfBot);
-    ctx.lineTo(wfX+wfW*0.55,wfBot);ctx.bezierCurveTo(wfX+wfW*0.7-wave2,wfBot*0.55,wfX+wfW*0.85+wave,wfBot*0.25,wfX+wfW-wave,wfTop);
+    wfG.addColorStop(0,'rgba(255,220,60,0.95)');
+    wfG.addColorStop(0.3,'rgba(255,140,20,0.9)');
+    wfG.addColorStop(0.7,'rgba(220,80,10,0.85)');
+    wfG.addColorStop(1,'rgba(200,60,0,0.7)');
+    ctx.fillStyle=wfG;
+    ctx.beginPath();
+    // Slight waviness
+    var wave=Math.sin(frameN*0.06)*3;
+    ctx.moveTo(wfX-wfW+wave,wfTop);
+    ctx.bezierCurveTo(wfX-wfW*0.8+wave,wfBot*0.3,wfX-wfW*0.6-wave,wfBot*0.6,wfX-wfW*0.5,wfBot);
+    ctx.lineTo(wfX+wfW*0.5,wfBot);
+    ctx.bezierCurveTo(wfX+wfW*0.6-wave,wfBot*0.6,wfX+wfW*0.8+wave,wfBot*0.3,wfX+wfW-wave,wfTop);
     ctx.closePath();ctx.fill();
-    ctx.globalAlpha=0.55+Math.sin(frameN*0.06)*0.1;
-    var coreG=ctx.createLinearGradient(wfX-wfW*0.25,0,wfX+wfW*0.25,0);
-    coreG.addColorStop(0,'rgba(255,250,200,0)');coreG.addColorStop(0.5,'rgba(255,255,220,0.75)');coreG.addColorStop(1,'rgba(255,250,200,0)');
-    ctx.fillStyle=coreG;ctx.fillRect(wfX-wfW*0.25,wfTop,wfW*0.5,wfBot-wfTop);
+    // Bright center highlight
+    var wfHL=ctx.createLinearGradient(wfX-wfW*0.3,0,wfX+wfW*0.3,0);
+    wfHL.addColorStop(0,'rgba(255,240,100,0)');
+    wfHL.addColorStop(0.5,'rgba(255,255,180,0.6)');
+    wfHL.addColorStop(1,'rgba(255,240,100,0)');
+    ctx.fillStyle=wfHL;
+    ctx.fillRect(wfX-wfW*0.3,wfTop,wfW*0.6,wfBot);
+    // Glow around waterfall
+    ctx.globalAlpha=0.25+Math.sin(frameN*0.05)*0.08;
+    var wfGlow=ctx.createRadialGradient(wfX,wfBot*0.4,wfW,wfX,wfBot*0.4,W*0.3);
+    wfGlow.addColorStop(0,'rgba(255,160,30,0.5)');wfGlow.addColorStop(1,'rgba(255,60,0,0)');
+    ctx.fillStyle=wfGlow;ctx.beginPath();ctx.ellipse(wfX,wfBot*0.4,W*0.3,wfBot*0.4,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
 
-    // 7. LAVA FLOOR — glowing cracked molten surface
+    // === LAVA FLOOR — glowing molten river at bottom ===
     ctx.save();
-    var floorH=gh*0.32,floorY=gh-floorH;
-    var floorG=ctx.createLinearGradient(0,floorY,0,gh);
-    floorG.addColorStop(0,'rgba(160,40,0,0.7)');floorG.addColorStop(0.15,'rgba(210,70,5,0.88)');floorG.addColorStop(0.4,'rgba(240,110,15,0.95)');floorG.addColorStop(0.7,'rgba(255,150,20,1)');floorG.addColorStop(1,'rgba(200,70,0,1)');
+    var floorH=gameH2*0.28;
+    var floorY=gameH2-floorH;
+    // Base lava
+    var floorG=ctx.createLinearGradient(0,floorY,0,gameH2);
+    floorG.addColorStop(0,'rgba(200,60,0,0.5)');
+    floorG.addColorStop(0.2,'rgba(220,80,10,0.85)');
+    floorG.addColorStop(0.5,'rgba(240,100,20,0.95)');
+    floorG.addColorStop(1,'rgba(180,40,0,1)');
     ctx.fillStyle=floorG;ctx.fillRect(0,floorY,W,floorH);
-    ctx.globalAlpha=0.85+Math.sin(frameN*0.055)*0.1;
-    var impactG=ctx.createRadialGradient(wfX,gh*0.78,4,wfX,gh*0.78,W*0.32);
-    impactG.addColorStop(0,'rgba(255,240,120,0.95)');impactG.addColorStop(0.15,'rgba(255,180,40,0.75)');impactG.addColorStop(0.4,'rgba(240,100,10,0.4)');impactG.addColorStop(1,'rgba(180,30,0,0)');
-    ctx.fillStyle=impactG;ctx.fillRect(0,floorY,W,floorH);
-    ctx.globalAlpha=0.22+Math.sin(frameN*0.04)*0.06;
-    ctx.strokeStyle='rgba(255,200,50,0.6)';ctx.lineWidth=1.5;
-    for(var ri=0;ri<4;ri++){var rOff=(ri*0.18+frameN*0.004)%0.7;ctx.beginPath();ctx.ellipse(wfX,gh*0.78,W*(0.1+rOff*0.55),W*(0.1+rOff*0.55)*0.22,0,0,Math.PI*2);ctx.stroke();}
-    ctx.globalAlpha=1;
-    var rockDefs=[{x:0.08,y:0.88,rx:0.09,ry:0.04,a:-0.3},{x:0.28,y:0.82,rx:0.06,ry:0.025,a:0.2},{x:0.68,y:0.84,rx:0.07,ry:0.03,a:-0.15},{x:0.88,y:0.9,rx:0.08,ry:0.035,a:0.35},{x:0.5,y:0.95,rx:0.05,ry:0.02,a:0.0}];
-    for(var rki=0;rki<rockDefs.length;rki++){var rd=rockDefs[rki];ctx.globalAlpha=0.62;ctx.fillStyle='#180400';ctx.beginPath();ctx.ellipse(rd.x*W,rd.y*gh,rd.rx*W,rd.ry*gh,rd.a,0,Math.PI*2);ctx.fill();}
-    ctx.globalAlpha=0.1+Math.sin(frameN*0.035)*0.04;
-    var heatG=ctx.createLinearGradient(0,floorY-gh*0.15,0,floorY);
-    heatG.addColorStop(0,'rgba(255,80,0,0)');heatG.addColorStop(1,'rgba(255,110,20,0.35)');
-    ctx.fillStyle=heatG;ctx.fillRect(0,floorY-gh*0.15,W,gh*0.15);
+    // Bright center channel — where lava waterfall hits
+    var chanG=ctx.createRadialGradient(wfX,gameH2*0.85,5,wfX,gameH2*0.85,W*0.35);
+    chanG.addColorStop(0,'rgba(255,220,80,0.9)');
+    chanG.addColorStop(0.3,'rgba(255,140,20,0.5)');
+    chanG.addColorStop(1,'rgba(200,50,0,0)');
+    ctx.globalAlpha=0.8+Math.sin(frameN*0.06)*0.1;
+    ctx.fillStyle=chanG;ctx.fillRect(0,floorY,W,floorH);
+    // Lava surface cracks — dark rock islands
+    for(var ci=0;ci<5;ci++){
+      var cx2=W*(0.1+ci*0.18+Math.sin(ci*2.3)*0.05);
+      var cy2=gameH2-floorH*0.3-ci%2*floorH*0.15;
+      var cr=W*0.04+ci%2*W*0.02;
+      ctx.globalAlpha=0.5;
+      ctx.fillStyle='#1a0500';
+      ctx.beginPath();ctx.ellipse(cx2,cy2,cr*1.5,cr*0.5,Math.sin(ci)*0.4,0,Math.PI*2);ctx.fill();
+    }
+    // Rising lava glow
+    ctx.globalAlpha=0.12+Math.sin(frameN*0.04)*0.04;
+    var riseG=ctx.createLinearGradient(0,floorY-floorH,0,floorY);
+    riseG.addColorStop(0,'rgba(255,80,0,0)');riseG.addColorStop(1,'rgba(255,100,20,0.4)');
+    ctx.fillStyle=riseG;ctx.fillRect(0,floorY-floorH,W,floorH);
     ctx.restore();
 
-    // 8. FOREGROUND BOULDERS — massive dark silhouettes framing bottom
-    ctx.save();ctx.globalAlpha=1;
-    var lfG=ctx.createLinearGradient(0,gh*0.55,W*0.32,gh);
-    lfG.addColorStop(0,'#100200');lfG.addColorStop(0.5,'#1e0500');lfG.addColorStop(1,'#080100');
-    ctx.fillStyle=lfG;ctx.beginPath();ctx.moveTo(0,gh);ctx.lineTo(0,gh*0.58);
-    ctx.bezierCurveTo(W*0.03,gh*0.52,W*0.08,gh*0.55,W*0.13,gh*0.6);ctx.bezierCurveTo(W*0.19,gh*0.66,W*0.24,gh*0.72,W*0.28,gh*0.82);ctx.bezierCurveTo(W*0.31,gh*0.9,W*0.3,gh*0.96,W*0.28,gh);
+    // === FOREGROUND ROCKS — dark jagged boulders at bottom corners ===
+    ctx.save();
+    ctx.globalAlpha=0.9;
+    // Left foreground rock
+    ctx.fillStyle='#0e0300';
+    ctx.beginPath();
+    ctx.moveTo(0,gameH2);ctx.lineTo(0,gameH2*0.72);
+    ctx.bezierCurveTo(W*0.04,gameH2*0.65,W*0.1,gameH2*0.68,W*0.14,gameH2*0.75);
+    ctx.bezierCurveTo(W*0.18,gameH2*0.8,W*0.2,gameH2*0.88,W*0.22,gameH2);
     ctx.closePath();ctx.fill();
-    ctx.globalAlpha=0.5;ctx.fillStyle='#070100';ctx.beginPath();ctx.moveTo(0,gh);ctx.lineTo(0,gh*0.65);
-    ctx.bezierCurveTo(W*0.04,gh*0.6,W*0.09,gh*0.65,W*0.1,gh*0.75);ctx.lineTo(W*0.12,gh);ctx.closePath();ctx.fill();
+    // Right foreground rock
+    ctx.beginPath();
+    ctx.moveTo(W,gameH2);ctx.lineTo(W,gameH2*0.75);
+    ctx.bezierCurveTo(W*0.96,gameH2*0.68,W*0.9,gameH2*0.65,W*0.85,gameH2*0.72);
+    ctx.bezierCurveTo(W*0.8,gameH2*0.8,W*0.78,gameH2*0.88,W*0.76,gameH2);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+
     ctx.globalAlpha=1;
-    var rfG=ctx.createLinearGradient(W,gh*0.55,W*0.68,gh);
-    rfG.addColorStop(0,'#100200');rfG.addColorStop(0.5,'#1e0500');rfG.addColorStop(1,'#080100');
-    ctx.fillStyle=rfG;ctx.beginPath();ctx.moveTo(W,gh);ctx.lineTo(W,gh*0.60);
-    ctx.bezierCurveTo(W*0.97,gh*0.53,W*0.92,gh*0.56,W*0.87,gh*0.62);ctx.bezierCurveTo(W*0.81,gh*0.68,W*0.76,gh*0.74,W*0.72,gh*0.84);ctx.bezierCurveTo(W*0.69,gh*0.91,W*0.70,gh*0.96,W*0.72,gh);
+
+  } else if(style==='lavacave2'){
+    // Lava Cavern — VibrantCrow reference: purple-maroon cave, central lava waterfall, angular rocks
+    ctx.globalAlpha=1;
+    var gh=gameH;
+    var wfX=W*0.5; // waterfall center x
+
+    // === BASE CAVERN — deep purple-maroon darkness ===
+    var skyF=ctx.createLinearGradient(0,0,0,gh);
+    skyF.addColorStop(0,'#06000a');skyF.addColorStop(0.3,'#10020c');skyF.addColorStop(0.6,'#1a0412');skyF.addColorStop(1,'#200818');
+    ctx.fillStyle=skyF;ctx.fillRect(0,0,W,gh);
+
+    // === DEEP CAVE ARCH — dark opening behind the waterfall ===
+    ctx.save();
+    ctx.fillStyle='#040006';
+    ctx.beginPath();
+    ctx.moveTo(W*0.22,0);
+    ctx.bezierCurveTo(W*0.24,gh*0.15,W*0.30,gh*0.38,W*0.36,gh*0.48);
+    ctx.bezierCurveTo(W*0.42,gh*0.55,W*0.48,gh*0.58,wfX,gh*0.58);
+    ctx.bezierCurveTo(W*0.52,gh*0.58,W*0.58,gh*0.55,W*0.64,gh*0.48);
+    ctx.bezierCurveTo(W*0.70,gh*0.38,W*0.76,gh*0.15,W*0.78,0);
     ctx.closePath();ctx.fill();
-    ctx.globalAlpha=0.5;ctx.fillStyle='#070100';ctx.beginPath();ctx.moveTo(W,gh);ctx.lineTo(W,gh*0.66);
-    ctx.bezierCurveTo(W*0.96,gh*0.61,W*0.91,gh*0.66,W*0.9,gh*0.76);ctx.lineTo(W*0.88,gh);ctx.closePath();ctx.fill();
+    // Subtle warm glow inside the arch
+    ctx.globalAlpha=0.12+Math.sin(frameN*0.02)*0.04;
+    var archG=ctx.createRadialGradient(wfX,gh*0.32,10,wfX,gh*0.38,W*0.28);
+    archG.addColorStop(0,'rgba(255,100,20,0.5)');archG.addColorStop(0.6,'rgba(180,40,10,0.2)');archG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=archG;ctx.fillRect(W*0.2,0,W*0.6,gh*0.6);
+    ctx.restore();
+
+    // === CAVE CEILING — heavy dark rock overhang ===
+    ctx.save();
+    ctx.fillStyle='#08000c';ctx.fillRect(0,0,W,gh*0.04);
+    var ceilG=ctx.createLinearGradient(0,gh*0.04,0,gh*0.20);
+    ceilG.addColorStop(0,'rgba(8,0,10,0.95)');ceilG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ceilG;ctx.fillRect(0,gh*0.04,W,gh*0.16);
+    ctx.restore();
+
+    // === STALACTITES — thick rocky columns hanging from ceiling ===
+    ctx.save();
+    var stalData=[
+      {x:0.06,len:0.14,w:0.035},{x:0.16,len:0.18,w:0.04},{x:0.28,len:0.10,w:0.025},
+      {x:0.38,len:0.22,w:0.045},{x:0.62,len:0.22,w:0.045},{x:0.72,len:0.10,w:0.025},
+      {x:0.84,len:0.18,w:0.04},{x:0.94,len:0.14,w:0.035}
+    ];
+    for(var si=0;si<stalData.length;si++){
+      var sd=stalData[si],sx=sd.x*W,sLen=gh*sd.len,sW=W*sd.w;
+      // Rock body — purple-brown
+      var stG=ctx.createLinearGradient(sx-sW,0,sx+sW,0);
+      stG.addColorStop(0,'#120010');stG.addColorStop(0.3,'#1e0418');stG.addColorStop(0.5,'#280820');stG.addColorStop(0.7,'#1e0418');stG.addColorStop(1,'#120010');
+      ctx.fillStyle=stG;
+      ctx.beginPath();ctx.moveTo(sx-sW,0);ctx.lineTo(sx+sW,0);
+      ctx.lineTo(sx+sW*0.5,sLen*0.6);ctx.lineTo(sx+sW*0.25,sLen*0.85);
+      ctx.lineTo(sx,sLen);ctx.lineTo(sx-sW*0.25,sLen*0.85);
+      ctx.lineTo(sx-sW*0.5,sLen*0.6);ctx.closePath();ctx.fill();
+      // Warm rim light on stalactite edge
+      ctx.globalAlpha=0.25+Math.sin(frameN*0.04+si)*0.1;
+      ctx.strokeStyle='rgba(255,120,40,0.4)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(sx+sW*0.5,sLen*0.6);ctx.lineTo(sx+sW*0.25,sLen*0.85);ctx.lineTo(sx,sLen);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+
+    // === LEFT CAVE WALL — massive curving rock, purple-maroon ===
+    ctx.save();
+    var lwG=ctx.createLinearGradient(0,0,W*0.42,0);
+    lwG.addColorStop(0,'rgba(14,2,12,1)');lwG.addColorStop(0.35,'rgba(28,6,20,0.9)');
+    lwG.addColorStop(0.65,'rgba(22,4,16,0.5)');lwG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=lwG;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W*0.40,0);
+    ctx.bezierCurveTo(W*0.32,gh*0.12,W*0.26,gh*0.28,W*0.22,gh*0.42);
+    ctx.bezierCurveTo(W*0.18,gh*0.56,W*0.12,gh*0.68,W*0.06,gh*0.80);
+    ctx.lineTo(0,gh);ctx.closePath();ctx.fill();
+    // Warm light on inner wall edge
+    ctx.globalAlpha=0.15+Math.sin(frameN*0.03)*0.05;
+    ctx.strokeStyle='rgba(255,100,30,0.5)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(W*0.22,gh*0.42);
+    ctx.bezierCurveTo(W*0.18,gh*0.56,W*0.12,gh*0.68,W*0.06,gh*0.80);ctx.stroke();
+    ctx.globalAlpha=1;ctx.restore();
+
+    // === RIGHT CAVE WALL — mirror of left ===
+    ctx.save();
+    var rwG=ctx.createLinearGradient(W,0,W*0.58,0);
+    rwG.addColorStop(0,'rgba(14,2,12,1)');rwG.addColorStop(0.35,'rgba(28,6,20,0.9)');
+    rwG.addColorStop(0.65,'rgba(22,4,16,0.5)');rwG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rwG;
+    ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W*0.60,0);
+    ctx.bezierCurveTo(W*0.68,gh*0.12,W*0.74,gh*0.28,W*0.78,gh*0.42);
+    ctx.bezierCurveTo(W*0.82,gh*0.56,W*0.88,gh*0.68,W*0.94,gh*0.80);
+    ctx.lineTo(W,gh);ctx.closePath();ctx.fill();
+    // Warm light on inner wall edge
+    ctx.globalAlpha=0.12+Math.sin(frameN*0.035+1)*0.04;
+    ctx.strokeStyle='rgba(255,90,20,0.4)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(W*0.78,gh*0.42);
+    ctx.bezierCurveTo(W*0.82,gh*0.56,W*0.88,gh*0.68,W*0.94,gh*0.80);ctx.stroke();
+    ctx.globalAlpha=1;ctx.restore();
+
+    // === AMBIENT LAVA GLOW — warm orange light filling the cave center ===
+    ctx.save();
+    ctx.globalAlpha=0.14+Math.sin(frameN*0.025)*0.04;
+    var ambG=ctx.createRadialGradient(wfX,gh*0.55,20,wfX,gh*0.55,W*0.6);
+    ambG.addColorStop(0,'rgba(255,130,30,0.5)');ambG.addColorStop(0.4,'rgba(200,60,10,0.2)');
+    ambG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ambG;ctx.fillRect(0,0,W,gh);ctx.restore();
+
+    // === LAVA WATERFALL — bright central column pouring from ceiling ===
+    ctx.save();
+    var wfW=W*0.065+Math.sin(frameN*0.04)*2.5;
+    var wfBot=gh*0.70;
+    var wave=Math.sin(frameN*0.055)*4;
+    // Outer glow
+    ctx.globalAlpha=0.20+Math.sin(frameN*0.045)*0.06;
+    var wfGlow=ctx.createRadialGradient(wfX,wfBot*0.45,wfW*2,wfX,wfBot*0.45,W*0.22);
+    wfGlow.addColorStop(0,'rgba(255,140,30,0.6)');wfGlow.addColorStop(1,'rgba(200,50,0,0)');
+    ctx.fillStyle=wfGlow;ctx.beginPath();ctx.ellipse(wfX,wfBot*0.45,W*0.22,wfBot*0.5,0,0,Math.PI*2);ctx.fill();
+    // Main lava column
+    ctx.globalAlpha=1;
+    var wfG=ctx.createLinearGradient(0,0,0,wfBot);
+    wfG.addColorStop(0,'rgba(255,230,100,1)');wfG.addColorStop(0.15,'rgba(255,190,50,0.95)');
+    wfG.addColorStop(0.4,'rgba(255,140,20,0.92)');wfG.addColorStop(0.7,'rgba(230,90,10,0.88)');
+    wfG.addColorStop(1,'rgba(210,70,5,0.82)');
+    ctx.fillStyle=wfG;
+    ctx.beginPath();
+    ctx.moveTo(wfX-wfW+wave,0);
+    ctx.bezierCurveTo(wfX-wfW*0.9+wave*0.5,wfBot*0.3,wfX-wfW*0.7-wave*0.3,wfBot*0.6,wfX-wfW*0.55,wfBot);
+    ctx.lineTo(wfX+wfW*0.55,wfBot);
+    ctx.bezierCurveTo(wfX+wfW*0.7-wave*0.3,wfBot*0.6,wfX+wfW*0.9+wave*0.5,wfBot*0.3,wfX+wfW-wave,0);
+    ctx.closePath();ctx.fill();
+    // Bright hot center streak
+    ctx.globalAlpha=0.55;
+    var ctrG=ctx.createLinearGradient(wfX-wfW*0.25,0,wfX+wfW*0.25,0);
+    ctrG.addColorStop(0,'rgba(255,240,120,0)');ctrG.addColorStop(0.5,'rgba(255,255,200,0.8)');
+    ctrG.addColorStop(1,'rgba(255,240,120,0)');
+    ctx.fillStyle=ctrG;ctx.fillRect(wfX-wfW*0.25,0,wfW*0.5,wfBot);
+    // Splash glow where waterfall hits floor
+    ctx.globalAlpha=0.6+Math.sin(frameN*0.06)*0.15;
+    var splG=ctx.createRadialGradient(wfX,wfBot,5,wfX,wfBot,W*0.18);
+    splG.addColorStop(0,'rgba(255,220,80,0.9)');splG.addColorStop(0.4,'rgba(255,140,20,0.4)');
+    splG.addColorStop(1,'rgba(200,50,0,0)');
+    ctx.fillStyle=splG;ctx.beginPath();ctx.ellipse(wfX,wfBot,W*0.18,gh*0.08,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+
+    // === LAVA FLOOR — glowing amber river with dark rock plates ===
+    ctx.save();
+    var flH=gh*0.30,flY=gh-flH;
+    // Base lava gradient
+    var flG=ctx.createLinearGradient(0,flY,0,gh);
+    flG.addColorStop(0,'rgba(160,30,0,0.3)');flG.addColorStop(0.12,'rgba(200,60,5,0.7)');
+    flG.addColorStop(0.35,'rgba(240,110,20,0.9)');flG.addColorStop(0.6,'rgba(255,150,30,1)');
+    flG.addColorStop(0.85,'rgba(230,100,15,1)');flG.addColorStop(1,'rgba(180,50,0,1)');
+    ctx.fillStyle=flG;ctx.fillRect(0,flY,W,flH);
+    // Bright channel from waterfall impact
+    ctx.globalAlpha=0.65+Math.sin(frameN*0.055)*0.12;
+    var chanG=ctx.createRadialGradient(wfX,flY+flH*0.2,8,wfX,flY+flH*0.3,W*0.30);
+    chanG.addColorStop(0,'rgba(255,220,80,0.9)');chanG.addColorStop(0.35,'rgba(255,150,30,0.5)');
+    chanG.addColorStop(1,'rgba(200,50,0,0)');
+    ctx.fillStyle=chanG;ctx.fillRect(0,flY,W,flH);
+    // Angular dark rock plates floating on lava surface
+    ctx.globalAlpha=0.85;
+    var rocks=[
+      {x:0.05,y:0.08,pts:[[-0.05,0],[0.02,-0.04],[0.06,-0.02],[0.07,0.02],[0.03,0.03],[-0.03,0.02]]},
+      {x:0.18,y:0.18,pts:[[-0.04,-0.01],[0.01,-0.03],[0.05,-0.01],[0.06,0.02],[0.02,0.04],[-0.03,0.03]]},
+      {x:0.32,y:0.06,pts:[[-0.06,0],[0,-0.03],[0.04,-0.01],[0.05,0.02],[0.01,0.03],[-0.04,0.02]]},
+      {x:0.55,y:0.14,pts:[[-0.03,-0.01],[0.02,-0.03],[0.06,0],[0.04,0.03],[-0.01,0.03],[-0.04,0.01]]},
+      {x:0.72,y:0.05,pts:[[-0.05,0.01],[0,-0.03],[0.05,-0.02],[0.07,0.01],[0.03,0.03],[-0.02,0.03]]},
+      {x:0.85,y:0.16,pts:[[-0.04,0],[0.01,-0.04],[0.05,-0.02],[0.06,0.02],[0.02,0.04],[-0.03,0.02]]}
+    ];
+    for(var ri=0;ri<rocks.length;ri++){
+      var rk=rocks[ri],rx=rk.x*W,ry=flY+rk.y*flH;
+      ctx.fillStyle='#120210';
+      ctx.beginPath();ctx.moveTo(rx+rk.pts[0][0]*W,ry+rk.pts[0][1]*gh);
+      for(var pi=1;pi<rk.pts.length;pi++) ctx.lineTo(rx+rk.pts[pi][0]*W,ry+rk.pts[pi][1]*gh);
+      ctx.closePath();ctx.fill();
+      // Orange rim light on top edges
+      ctx.strokeStyle='rgba(255,120,30,0.35)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(rx+rk.pts[0][0]*W,ry+rk.pts[0][1]*gh);
+      ctx.lineTo(rx+rk.pts[1][0]*W,ry+rk.pts[1][1]*gh);
+      ctx.lineTo(rx+rk.pts[2][0]*W,ry+rk.pts[2][1]*gh);ctx.stroke();
+    }
+    // Rising heat haze
+    ctx.globalAlpha=0.10+Math.sin(frameN*0.035)*0.03;
+    var hzG=ctx.createLinearGradient(0,flY-flH*0.5,0,flY);
+    hzG.addColorStop(0,'rgba(255,80,0,0)');hzG.addColorStop(1,'rgba(255,100,20,0.4)');
+    ctx.fillStyle=hzG;ctx.fillRect(0,flY-flH*0.5,W,flH*0.5);
+    ctx.restore();
+
+    // === FOREGROUND ROCKS — large angular dark boulders at bottom edges ===
+    ctx.save();ctx.globalAlpha=0.95;
+    // Left foreground — jagged angular shapes
+    ctx.fillStyle='#0a0010';
+    ctx.beginPath();ctx.moveTo(0,gh);ctx.lineTo(0,gh*0.68);
+    ctx.lineTo(W*0.03,gh*0.62);ctx.lineTo(W*0.08,gh*0.65);
+    ctx.lineTo(W*0.12,gh*0.70);ctx.lineTo(W*0.16,gh*0.74);
+    ctx.lineTo(W*0.20,gh*0.80);ctx.lineTo(W*0.24,gh*0.88);
+    ctx.lineTo(W*0.26,gh);ctx.closePath();ctx.fill();
+    // Warm rim light
+    ctx.strokeStyle='rgba(255,100,20,0.3)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,gh*0.68);ctx.lineTo(W*0.03,gh*0.62);
+    ctx.lineTo(W*0.08,gh*0.65);ctx.lineTo(W*0.12,gh*0.70);ctx.stroke();
+    // Right foreground
+    ctx.fillStyle='#0c0012';
+    ctx.beginPath();ctx.moveTo(W,gh);ctx.lineTo(W,gh*0.70);
+    ctx.lineTo(W*0.97,gh*0.64);ctx.lineTo(W*0.92,gh*0.62);
+    ctx.lineTo(W*0.87,gh*0.67);ctx.lineTo(W*0.83,gh*0.72);
+    ctx.lineTo(W*0.80,gh*0.78);ctx.lineTo(W*0.76,gh*0.86);
+    ctx.lineTo(W*0.74,gh);ctx.closePath();ctx.fill();
+    // Warm rim light
+    ctx.strokeStyle='rgba(255,90,15,0.25)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W,gh*0.70);ctx.lineTo(W*0.97,gh*0.64);
+    ctx.lineTo(W*0.92,gh*0.62);ctx.lineTo(W*0.87,gh*0.67);ctx.stroke();
     ctx.restore();
     ctx.globalAlpha=1;
 
@@ -6743,6 +6751,8 @@ function drawBossSkin(sk){
 }
 
 function drawFly(){
+  // Blink during invincibility — skip drawing every other 4 frames
+  if(invincibleTimer>0 && Math.floor(invincibleTimer/4)%2===0) return;
   var d=fly,t=frameN*0.10;
   var buzzSpeed=4.0;
   var sk=getSkin(), fx=sk.fx||'';
@@ -8981,10 +8991,10 @@ function updateInfinite(){
   if(infiniteOwned && !infiniteActive && !infiniteMothSpawned && !infMoth){
     infMothSpawnTimer++;
 
-    // Mercy spawn — died 12+ times on same level: spawn after 180 frames (3s)
+    // Mercy spawn — died 5+ times on same level: spawn after 90 frames (1.5s)
     var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
-    var mercySpawn=curLid&&curLid===lastDeathLevelId&&deathStreakOnLevel>=12;
-    if(mercySpawn&&infMothSpawnTimer>=180){
+    var mercySpawn=curLid&&curLid===lastDeathLevelId&&deathStreakOnLevel>=5;
+    if(mercySpawn&&infMothSpawnTimer>=90){
       infMoth=spawnInfMoth();infiniteMothSpawned=true;return;
     }
 
@@ -9247,7 +9257,7 @@ function checkCollision(){
       var nearY=hy<oy?oy-(hy+hh):hy>(oy+oh)?hy-(oy+oh):0;
       // Must be past obstacle, close horizontally, and no vertical gap (flew through gap cleanly)
       if(nearX>0&&nearX<10&&nearY===0){
-        nearMissActive=true; nearMissTimer=NEAR_MISS_DURATION; nearMissCooldown=240;
+        nearMissActive=true; nearMissTimer=NEAR_MISS_DURATION; nearMissCooldown=150;
         try{sfxNearMiss();}catch(e){}
         totalNearMisses++;
         showToast('😅 CLOSE!');
@@ -9343,6 +9353,7 @@ document.addEventListener('mousedown',function(e){
 document.addEventListener('mouseup',function(e){ holdDive=false; holdDiveTimer=0; });
 
 function loseLife(){
+  if(invincibleTimer>0) return; // still invincible from last hit
   if(shieldActive){
     shieldActive=false;
     sfxShieldBlock();
@@ -9361,6 +9372,7 @@ function loseLife(){
   magnetItems=[]; magnetActive=false;
   comboCount=0; comboTimer=0; comboMult=1;
   starlightParticles=[];
+  invincibleTimer=45; // brief invincibility to reorient
   if(lives<=0) die();
 }
 
@@ -9372,6 +9384,15 @@ function triggerLevelClear(){
     var prevStars=getStars(lid);
     var prevScore=typeof levelProgress[lid]==='object'?levelProgress[lid].score:(levelProgress[lid]||0);
     levelProgress[lid]={score:Math.max(sc,prevScore), stars:Math.max(earnedStars,prevStars)};
+    // First-clear and first-3-star bonuses
+    if(!prevScore && sc>0){
+      mothsTotal+=50; updateMothUI();
+      showToast('🌟 First clear! +50 🦋');
+    }
+    if(prevStars<3 && earnedStars>=3){
+      mothsTotal+=25; updateMothUI();
+      setTimeout(function(){showToast('⭐ First 3-star! +25 🦋');},2400);
+    }
   }
   try{sfxLevelClear();}catch(e){}
   state='levelclear';
@@ -9543,6 +9564,7 @@ function update(){
   if(state!=='playing') return;
   // Near-miss slow-mo
   if(nearMissCooldown>0) nearMissCooldown--;
+  if(invincibleTimer>0) invincibleTimer--;
   if(nearMissActive){
     nearMissTimer--;
     if(nearMissTimer<=0) nearMissActive=false;
@@ -9560,7 +9582,7 @@ function update(){
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
   fly.vy += 0.38;
-  fly.vy *= 0.90;
+  fly.vy *= (fly.vy < 0 ? 0.94 : 0.88); // asymmetric: crisp taps up, controlled fall down
   // Hold-to-dive: sustained press after threshold dives straight down
   if(holdDive&&state==='playing'){
     holdDiveTimer++;
@@ -9574,7 +9596,7 @@ function update(){
   if(fly.trail.length>12) fly.trail.shift();
 
   obstTimer++;
-  if(!isBossLevel()&&!isTutorialLevel()){    if(obstTimer>=obstInterval){spawnObstacle();obstTimer=0;obstInterval=Math.max(55,obstInterval-2.5);}
+  if(!isBossLevel()&&!isTutorialLevel()){    if(obstTimer>=obstInterval){spawnObstacle();obstTimer=0;obstInterval=Math.max(70,obstInterval-1.0);}
   } else if(bossActive&&!bossDefeated&&getBossType()==='owl'){
     var bossObstInterval=bossPhase>=2?110:150;
     if(obstTimer>=bossObstInterval){
@@ -9613,8 +9635,8 @@ function update(){
     obstInterval=Math.max(85,170-Math.floor(score/320));
   } else if(currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
     var prog=levelTimer/((levelDuration||80)*60);
-    speed=1.8+prog*prog*2.4;
-    obstInterval=Math.max(90, prog<0.7 ? Math.floor(220-prog*100) : Math.floor(160-prog*50));
+    speed=1.8+Math.pow(prog,1.5)*2.4;
+    obstInterval=Math.max(95, prog<0.7 ? Math.floor(220-prog*90) : Math.floor(170-prog*50));
     if(prog>0.44&&prog<0.46&&windItems.length===0&&!windActive){
       spawnWind();
       showToast('\ud83c\udf2c\ufe0f Grab the wind to attract moths!');
@@ -9625,10 +9647,10 @@ function update(){
     // Speed and difficulty scale by world and level within world
     var worldSpeeds={earth:2.0,fire:2.4,water:2.2,ice:2.3,galaxy:2.6};
     var baseSpd=worldSpeeds[currentWorldLevel.worldId]||2.0;
-    speed=baseSpd+prog*prog*2.0;
+    speed=baseSpd+Math.pow(prog,1.5)*2.0;
     var baseInterval=lid2==='f5'||lid2==='i5'||lid2==='g5'?160:
                      lid2==='f4'||lid2==='i4'||lid2==='g4'?170:180;
-    obstInterval=Math.max(75, Math.floor(baseInterval-prog*90));
+    obstInterval=Math.max(80, Math.floor(baseInterval-prog*80));
     if(prog>0.44&&prog<0.46&&windItems.length===0&&!windActive) spawnWind();
   } else if(!currentWorldLevel){
     speed=getLevelSpeed(currentLevel);
@@ -9645,7 +9667,7 @@ function update(){
   if(isBossLevel()&&colorP>=1) colorP=0.99; // freeze timer during boss
   if(isTutorialLevel()){colorP=0;speed=2.2;} // freeze timer, keep flying speed
   var hit=checkCollision();
-  if(hit && !infiniteActive) loseLife();
+  if(hit && !infiniteActive && invincibleTimer<=0) loseLife();
 }
 
 function draw(){
@@ -9856,10 +9878,15 @@ function sfxSlowMoActivate(){
 function sfxNearMiss(){
   if(!AC||!sfxEnabled) return;
   var t=AC.currentTime;
-  // Whoosh + heartbeat skip
-  S(600,200,t,0.12,0.3);
-  N(t,0.05,0.2,1000);
-  O(60,'sine',t+0.08,0.25,0.15);
+  // Dramatic whoosh sweep
+  S(800,150,t,0.15,0.35);
+  // Bright rewarding zing
+  O(1200,'sine',t+0.02,0.08,0.12);
+  O(1600,'sine',t+0.05,0.06,0.08);
+  // Satisfying low thump
+  O(55,'sine',t+0.06,0.2,0.18);
+  // Quick noise burst for texture
+  N(t,0.06,0.22,1200);
 }
 function sfxLevelClear(){
   if(!AC||!sfxEnabled) return;
@@ -11187,11 +11214,11 @@ var WORLDS = [
     skinReqName: 'Ember, Volcanic, or Crimson skin',
     unlocked: false,
     levels: [
-      { id:'f1', name:'Volcanic Hellscape', icon:'\ud83c\udf0b', biomeIdx:1,  desc:'Lava flows and molten boulders',        duration:80 },
-      { id:'f2', name:'Desert Sands',       icon:'\ud83c\udfdc', biomeIdx:13, desc:'Scorching dunes under a blazing sun',    duration:83 },
-      { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:12, desc:'Crumbling buildings engulfed in fire',   duration:86 },
-      { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:14, desc:'Deep underground rivers of magma',       duration:89 },
-      { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:10,  desc:'The eye of an eternal firestorm',        duration:92 },
+      { id:'f1', name:'Volcanic Hellscape', icon:'\ud83c\udf0b', biomeIdx:2,  desc:'Lava flows and molten boulders',        duration:80 },
+      { id:'f2', name:'Desert Sands',       icon:'\ud83c\udfdc', biomeIdx:14, desc:'Scorching dunes under a blazing sun',    duration:83 },
+      { id:'f3', name:'Burning City',       icon:'\ud83c\udfd9', biomeIdx:13, desc:'Crumbling buildings engulfed in fire',   duration:86 },
+      { id:'f4', name:'Lava Cavern',        icon:'\ud83e\udde8', biomeIdx:15, desc:'Deep underground rivers of magma',       duration:89 },
+      { id:'f5', name:'Firestorm',          icon:'\u2604\ufe0f', biomeIdx:11,  desc:'The eye of an eternal firestorm',        duration:92 },
       { id:'f6', name:'The Inferno Drake',  icon:'\uD83D\uDC09', biomeIdx:28,  desc:'Face the lord of fire and destruction',  duration:120, isBoss:true, bossType:'dragon' }
     ]
   },
@@ -11208,10 +11235,10 @@ var WORLDS = [
     unlocked: false,
     levels: [
       { id:'w1', name:'Crystal Void',    icon:'\ud83d\udc8e', biomeIdx:6,  desc:'Floating crystals in deep space',   duration:80 },
-      { id:'w2', name:'Ice Cavern',      icon:'\ud83e\udde0', biomeIdx:3, desc:'Ancient ice deep underground',      duration:83 },
+      { id:'w2', name:'Ice Cavern',      icon:'\ud83e\udde0', biomeIdx:4, desc:'Ancient ice deep underground',      duration:83 },
       { id:'w3', name:'Mountain Lake',   icon:'\ud83d\udca7', biomeIdx:17, desc:'Leaping fish in crystal waters',    duration:86 },
       { id:'w4', name:'Storm Front',     icon:'\u26c8\ufe0f', biomeIdx:10,  desc:'Thunder and lightning rage above',  duration:89 },
-      { id:'w5', name:'Celestial Ruins', icon:'\ud83c\udf0c', biomeIdx:11, desc:'Ancient temple beneath the stars',  duration:92 },
+      { id:'w5', name:'Celestial Ruins', icon:'\ud83c\udf0c', biomeIdx:33, desc:'Ancient temple beneath the stars',  duration:92 },
       { id:'w6', name:'The Leviathan',   icon:'\ud83d\udc0d', biomeIdx:29, desc:'The ancient serpent of the deep awakens', duration:120, isBoss:true, bossType:'leviathan' }
     ]
   },
@@ -11227,11 +11254,11 @@ var WORLDS = [
     skinReqName: 'Arctic skin required',
     unlocked: false,
     levels: [
-      { id:'i1', name:'Frozen Tundra',  icon:'\ud83e\udd86', biomeIdx:4,  desc:'Endless frozen plains',              duration:80 },
+      { id:'i1', name:'Frozen Tundra',  icon:'\ud83e\udd86', biomeIdx:3,  desc:'Endless frozen plains',              duration:80 },
       { id:'i2', name:'Arctic Tundra',  icon:'\ud83d\udc27', biomeIdx:19, desc:'Penguins and ice slides',            duration:83 },
-      { id:'i3', name:'Ice Cavern',     icon:'\ud83e\udde0', biomeIdx:3, desc:'Glittering stalactites of ice',      duration:86 },
+      { id:'i3', name:'Ice Cavern',     icon:'\ud83e\udde0', biomeIdx:4, desc:'Glittering stalactites of ice',      duration:86 },
       { id:'i4', name:'Crystal Void',   icon:'\ud83d\udc8e', biomeIdx:6,  desc:'Crystalline darkness and silence',  duration:89 },
-      { id:'i5', name:'The Blizzard',   icon:'\ud83c\udf28', biomeIdx:4,  desc:'A storm with no end in sight',      duration:92 },
+      { id:'i5', name:'The Blizzard',   icon:'\ud83c\udf28', biomeIdx:3,  desc:'A storm with no end in sight',      duration:92 },
       { id:'i6', name:'The Tempest',    icon:'\u26a1',       biomeIdx:30, desc:'Face the lord of lightning and storms', duration:120, isBoss:true, bossType:'tempest' }
     ]
   },
@@ -11484,6 +11511,7 @@ try{
 </script>
 
 <!-- Co-op uses native WebSockets — no external library needed -->
+
 <script>
 // ── CO-OP CLIENT (Native WebSocket) ─────────────────────────────────
 var COOP_SERVER_WS = 'wss://dragonfly-coop-server-production.up.railway.app';
@@ -11498,175 +11526,7 @@ var coopEmoteDisplay = null;
 var coopEmoteTimer = 0;
 
 var coopStyle = document.createElement('style');
-coopStyle.textContent = `/* ── CO-OP SCREEN — Full Polish ──────────────────────────── */
-#screenCoop {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  display: flex; flex-direction: column; align-items: center;
-  background: radial-gradient(ellipse at 50% 0%, #001830 0%, #000c1a 45%, #000508 100%);
-  overflow-y: auto; pointer-events: all;
-}
-#screenCoop::before {
-  content: ''; position: fixed; inset: 0;
-  background-image:
-    radial-gradient(1px 1px at 20% 30%, rgba(64,160,255,0.6) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 15%, rgba(64,160,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 55% 70%, rgba(120,200,255,0.5) 0%, transparent 100%),
-    radial-gradient(1px 1px at 10% 80%, rgba(64,160,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 60%, rgba(64,160,255,0.5) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 35% 45%, rgba(200,230,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 65% 25%, rgba(64,160,255,0.35) 0%, transparent 100%);
-  pointer-events: none; z-index: 0;
-  animation: coopStarDrift 20s linear infinite;
-}
-@keyframes coopStarDrift { 0% { transform: translateY(0); } 100% { transform: translateY(-20px); } }
-#screenCoop > * { position: relative; z-index: 1; }
-#coopStatus {
-  font-family: 'Crimson Text', serif; font-style: italic;
-  font-size: 13px; color: #4a9acc; text-align: center;
-  min-height: 22px; letter-spacing: 0.5px; transition: color 0.3s;
-}
-#coopStatus.status-ok   { color: #44cc88; }
-#coopStatus.status-err  { color: #ff6655; }
-#coopStatus.status-wait { color: #40a0ff; animation: coopPulse 1.4s ease-in-out infinite; }
-@keyframes coopPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
-.coop-mode-card {
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 20px; border-radius: 14px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  border: 1.5px solid rgba(64,160,255,0.25);
-  background: rgba(0,30,60,0.55); backdrop-filter: blur(4px);
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
-  position: relative; overflow: hidden;
-}
-.coop-mode-card::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(64,160,255,0.06) 0%, transparent 60%);
-  pointer-events: none;
-}
-.coop-mode-card:active { transform: scale(0.97); border-color: rgba(64,160,255,0.7); background: rgba(0,50,100,0.7); }
-.coop-mode-icon { font-size: 36px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(64,160,255,0.5)); }
-.coop-mode-label { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: #80d0ff; letter-spacing: 2px; }
-.coop-mode-desc { font-family: 'Crimson Text', serif; font-style: italic; font-size: 12px; color: #4a7899; margin-top: 3px; }
-.coop-mode-arrow { margin-left: auto; font-size: 18px; color: rgba(64,160,255,0.5); }
-#coopRoomCode {
-  display: none; width: 100%; background: rgba(0,20,50,0.8);
-  border: 2px solid rgba(64,160,255,0.5); border-radius: 18px;
-  padding: 20px 24px; text-align: center; position: relative; overflow: hidden;
-}
-#coopRoomCode::before {
-  content: ''; position: absolute;
-  top: -40px; left: -40px; right: -40px; bottom: -40px;
-  background: radial-gradient(ellipse at 50% 50%, rgba(64,160,255,0.08) 0%, transparent 70%);
-  animation: coopRoomGlow 2.5s ease-in-out infinite; pointer-events: none;
-}
-@keyframes coopRoomGlow { 0%,100% { opacity: 0.6; } 50% { opacity: 1.0; } }
-.coop-room-label { font-size: 9px; color: rgba(64,160,255,0.6); letter-spacing: 4px; font-family: 'Cinzel', serif; margin-bottom: 8px; }
-#coopCodeText {
-  font-family: 'Cinzel', serif; font-size: 36px; font-weight: 900; color: #80d8ff;
-  letter-spacing: 8px; text-shadow: 0 0 20px rgba(64,160,255,0.8), 0 0 40px rgba(64,160,255,0.4);
-  animation: coopCodeFlash 3s ease-in-out infinite;
-}
-@keyframes coopCodeFlash { 0%,85%,100% { opacity: 1; } 90% { opacity: 0.7; } }
-.coop-room-hint { font-size: 10px; color: rgba(64,160,255,0.5); letter-spacing: 1px; margin-top: 8px; font-family: 'Crimson Text', serif; font-style: italic; }
-#coopRadar { display: none; position: relative; width: 90px; height: 90px; margin: 8px auto; }
-#coopRadar.show { display: block; }
-.radar-ring {
-  position: absolute; border-radius: 50%; border: 1.5px solid rgba(64,160,255,0.5);
-  top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); opacity: 0;
-}
-.radar-ring:nth-child(1) { width: 30px; height: 30px; animation: radarPing 2.4s ease-out 0s infinite; }
-.radar-ring:nth-child(2) { width: 60px; height: 60px; animation: radarPing 2.4s ease-out 0.6s infinite; }
-.radar-ring:nth-child(3) { width: 90px; height: 90px; animation: radarPing 2.4s ease-out 1.2s infinite; }
-@keyframes radarPing {
-  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0.9; }
-  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
-}
-.radar-dot {
-  position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
-  border-radius: 50%; background: #40c8ff;
-  box-shadow: 0 0 12px #40c8ff, 0 0 24px rgba(64,160,255,0.6);
-  transform: translate(-50%, -50%);
-}
-#coopPartnerStatus {
-  display: none; width: 100%;
-  background: linear-gradient(135deg, rgba(0,40,80,0.7), rgba(0,20,50,0.9));
-  border: 1.5px solid rgba(64,160,255,0.4); border-radius: 14px;
-  padding: 16px 20px; align-items: center; gap: 14px;
-}
-#coopPartnerStatus.show { display: flex; }
-.partner-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, #0044aa, #0088ff);
-  border: 2px solid rgba(64,160,255,0.6);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
-  box-shadow: 0 0 14px rgba(64,160,255,0.4);
-  animation: partnerPulse 2s ease-in-out infinite;
-}
-@keyframes partnerPulse { 0%,100% { box-shadow: 0 0 14px rgba(64,160,255,0.4); } 50% { box-shadow: 0 0 24px rgba(64,160,255,0.8); } }
-.partner-info { flex: 1; }
-.partner-title { font-size: 9px; color: rgba(64,160,255,0.6); letter-spacing: 3px; font-family: 'Cinzel', serif; }
-#coopPartnerName { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: #80d0ff; margin-top: 3px; text-shadow: 0 0 10px rgba(64,160,255,0.5); }
-.partner-ready-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: #44ff88; box-shadow: 0 0 8px #44ff88; flex-shrink: 0;
-  animation: readyBlink 1s ease-in-out infinite;
-}
-@keyframes readyBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-#coopCountdown {
-  display: none; font-family: 'Cinzel', serif; font-size: 80px; font-weight: 900;
-  color: #40d0ff; text-shadow: 0 0 40px rgba(64,160,255,0.9), 0 0 80px rgba(64,160,255,0.4);
-  text-align: center; animation: countdownPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin: 8px 0;
-}
-@keyframes countdownPop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-#coopJoinCode {
-  flex: 1; background: rgba(0,30,70,0.6); border: 1.5px solid rgba(64,160,255,0.35);
-  border-radius: 10px; padding: 13px 16px; color: #80d8ff;
-  font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: 4px;
-  text-transform: uppercase; outline: none; text-align: center; transition: border-color 0.2s;
-}
-#coopJoinCode:focus { border-color: rgba(64,160,255,0.8); box-shadow: 0 0 14px rgba(64,160,255,0.25); }
-#coopJoinCode::placeholder { color: rgba(64,160,255,0.3); letter-spacing: 2px; }
-#btnCoopShare {
-  display: none; background: linear-gradient(135deg, #004020, #008040);
-  border: 1.5px solid #40ff80; border-radius: 10px; color: #a0ffcc;
-  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px;
-  padding: 12px 0; width: 100%; cursor: pointer; -webkit-tap-highlight-color: transparent;
-}
-#coopEmoteBar {
-  position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
-  display: none; gap: 8px; z-index: 500;
-  padding: 8px 12px; background: rgba(0,10,30,0.82);
-  border: 1px solid rgba(64,160,255,0.3); border-radius: 30px;
-  backdrop-filter: blur(6px); pointer-events: all;
-}
-#coopEmoteBar.show { display: flex; }
-.coop-emote-btn {
-  font-size: 22px; background: rgba(0,40,80,0.6);
-  border: 1px solid rgba(64,160,255,0.25); border-radius: 50%;
-  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s, background 0.1s; flex-shrink: 0;
-}
-.coop-emote-btn:active { transform: scale(0.85); background: rgba(0,80,160,0.8); }
-#coopGameHud {
-  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-  display: none; align-items: center; gap: 8px;
-  background: rgba(0,10,30,0.75); border: 1px solid rgba(64,160,255,0.3);
-  border-radius: 20px; padding: 5px 14px 5px 10px; z-index: 400; pointer-events: none;
-}
-#coopGameHud.show { display: flex; }
-.coop-hud-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: #44ff88;
-  box-shadow: 0 0 6px #44ff88; animation: readyBlink 1.2s ease-in-out infinite; flex-shrink: 0;
-}
-.coop-hud-text { font-family: 'Cinzel', serif; font-size: 9px; color: #4ac8ff; letter-spacing: 2px; }
-.coop-divider {
-  width: 100%; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(64,160,255,0.3), transparent);
-  margin: 2px 0; flex-shrink: 0;
-}
-.coop-emote{display:none;}`;
+coopStyle.textContent = '.coop-emote{background:rgba(0,60,120,0.5);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;font-size:24px;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}.coop-emote:active{transform:scale(0.9);}';
 document.head.appendChild(coopStyle);
 
 function setCoopStatus(msg){
@@ -11829,54 +11689,40 @@ function updateCoopSync(){
 
 function drawPartnerFly(){
   if(!coopActive) return;
-  var px=partnerFly.x, py=partnerFly.y;
+  // Draw trail
   if(partnerFly.trail&&partnerFly.trail.length>1){
     ctx.save();
-    for(var _ti=0;_ti<partnerFly.trail.length-1;_ti++){
-      var _ta=(_ti/partnerFly.trail.length)*0.5;
-      var _tr=(_ti/partnerFly.trail.length)*5+1;
-      ctx.beginPath();ctx.arc(partnerFly.trail[_ti].x,partnerFly.trail[_ti].y,_tr,0,Math.PI*2);
-      ctx.fillStyle='rgba(64,160,255,'+_ta+')';ctx.fill();
-    }
+    ctx.strokeStyle='rgba(64,160,255,0.4)';ctx.lineWidth=3;ctx.beginPath();
+    partnerFly.trail.forEach(function(p,i){i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);});
+    ctx.stroke();
     ctx.restore();
   }
-  ctx.save();
-  ctx.globalAlpha=0.22+Math.sin(frameN*0.05)*0.06;
-  var _pg=ctx.createRadialGradient(px,py,6,px,py,38);
-  _pg.addColorStop(0,'rgba(64,160,255,0.5)');_pg.addColorStop(1,'rgba(64,160,255,0)');
-  ctx.fillStyle=_pg;ctx.beginPath();ctx.arc(px,py,38,0,Math.PI*2);ctx.fill();
-  ctx.restore();
+  // Temporarily swap fly object to draw partner using actual drawFly
   var realFly=fly;
-  fly={x:px,y:py,vy:partnerFly.vy||0,trail:[]};
-  ctx.save();ctx.globalAlpha=partnerFly.alive?0.88:0.25;drawFly();ctx.restore();
+  fly={x:partnerFly.x, y:partnerFly.y, vy:partnerFly.vy||0, trail:partnerFly.trail||[]};
+  ctx.save();
+  ctx.globalAlpha=partnerFly.alive?0.85:0.3;
+  drawFly();
+  // Blue tint overlay on top
+  ctx.globalAlpha=0.35;
+  ctx.globalCompositeOperation='source-atop';
+  ctx.fillStyle='#0060ff';
+  ctx.fillRect(partnerFly.x-30,partnerFly.y-30,60,60);
+  ctx.restore();
   fly=realFly;
-  ctx.save();ctx.globalAlpha=partnerFly.alive?0.28:0.12;
-  ctx.fillStyle='#1a88ff';ctx.globalCompositeOperation='screen';
-  ctx.beginPath();ctx.ellipse(px,py,28,18,0,0,Math.PI*2);ctx.fill();ctx.restore();
-  if(partnerFly.alive){
-    ctx.save();ctx.globalAlpha=0.92;
-    ctx.fillStyle='rgba(0,20,60,0.85)';ctx.strokeStyle='rgba(64,160,255,0.7)';ctx.lineWidth=1;
-    var _bw=28,_bh=14,_bx=px-_bw/2,_by=py-48;
-    if(ctx.roundRect)ctx.roundRect(_bx,_by,_bw,_bh,4);else ctx.rect(_bx,_by,_bw,_bh);
-    ctx.fill();ctx.stroke();
-    ctx.font='bold 8px -apple-system,sans-serif';ctx.fillStyle='#80d8ff';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('P'+(coopPlayerNum===1?2:1),px,_by+_bh/2);ctx.restore();
-  } else {
-    ctx.save();ctx.globalAlpha=0.7;ctx.font='bold 9px sans-serif';
-    ctx.fillStyle='#ff6655';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('??',px,py-34);ctx.restore();
-  }
+  // P2 label
+  ctx.save();
+  ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.fillStyle='#80d0ff';
+  ctx.textAlign='center';
+  ctx.globalAlpha=0.9;
+  ctx.fillText('P'+(coopPlayerNum===1?2:1),partnerFly.x,partnerFly.y-28);
+  ctx.restore();
+  // Emote
   if(coopEmoteTimer>0&&coopEmoteDisplay){
-    var _ef=Math.min(1,coopEmoteTimer/30);
-    var _ey=py-62-(1-_ef)*12;
-    ctx.save();ctx.globalAlpha=_ef;
-    ctx.fillStyle='rgba(0,20,60,0.8)';ctx.strokeStyle='rgba(64,160,255,0.5)';ctx.lineWidth=1;
-    if(ctx.roundRect)ctx.roundRect(px-18,_ey-18,36,28,8);else ctx.rect(px-18,_ey-18,36,28);
-    ctx.fill();ctx.stroke();
-    ctx.font='18px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(coopEmoteDisplay,px,_ey-4);ctx.restore();
-    coopEmoteTimer--;
+    ctx.save();ctx.font='24px sans-serif';ctx.textAlign='center';
+    ctx.globalAlpha=Math.min(1,coopEmoteTimer/30);
+    ctx.fillText(coopEmoteDisplay,partnerFly.x,partnerFly.y-40);ctx.restore();
   }
 }
 
@@ -11903,10 +11749,6 @@ if(btnCoop){
     coopSelectedLevel=null;
     coopSelectedWorld=null;
     coopSelectedMode='normal';
-    var _rd5=document.getElementById('coopRadar');
-    if(_rd5) _rd5.classList.remove('show');
-    var _cs5=document.getElementById('coopStatus');
-    if(_cs5){ _cs5.textContent=''; _cs5.className=''; }
     initCoopSocket();
   }
   btnCoop.addEventListener('click',openCoop);
@@ -11915,16 +11757,8 @@ if(btnCoop){
 
 var coopBack=document.getElementById('coopBack');
 if(coopBack){
-  function doCoopBack(){
-    sfxMenuBack();
-    var _eb3=document.getElementById('coopEmoteBar');
-    if(_eb3) _eb3.classList.remove('show');
-    var _gh3=document.getElementById('coopGameHud');
-    if(_gh3) _gh3.classList.remove('show');
-    showScreen('screenMain');
-  }
-  coopBack.addEventListener('click',doCoopBack);
-  coopBack.addEventListener('touchstart',function(e){e.preventDefault();doCoopBack();},{passive:false});
+  coopBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
+  coopBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
 }
 
 var btnCoopWorldMap=document.getElementById('btnCoopWorldMap');
@@ -12064,10 +11898,6 @@ draw=function(){_origDraw();if(coopActive)drawPartnerFly();};
 var _origDie=die;
 die=function(){
   if(coopActive&&coopWS) coopSend({type:'gameEvent',event:'die',payload:{}});
-  var _eb2=document.getElementById('coopEmoteBar');
-  if(_eb2) _eb2.classList.remove('show');
-  var _gh2=document.getElementById('coopGameHud');
-  if(_gh2) _gh2.classList.remove('show');
 var _eb2=document.getElementById('coopEmoteBar');if(_eb2)_eb2.classList.remove('show');var _gh2=document.getElementById('coopGameHud');if(_gh2)_gh2.classList.remove('show');
   _origDie();
 };
