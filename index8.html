@@ -585,6 +585,16 @@ canvas { display:block; width:100%; height:100%; }
         <div class="opt-left"><span class="opt-icon">🎯</span><div><div class="opt-label">Show Hitbox</div><div class="opt-sub">Debug mode</div></div></div>
         <label class="toggle"><input type="checkbox" id="optHitbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
       </div>
+      <div class="opt-section" style="margin-top:14px;">💾 Save Data</div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div class="opt-left"><span class="opt-icon">📤</span><div><div class="opt-label">Backup & Restore</div><div class="opt-sub">Protect your progress from browser data clears</div></div></div>
+        <div style="display:flex;gap:8px;">
+          <button id="btnExportSave" style="flex:1;padding:10px 8px;border-radius:8px;border:1px solid #59b0ff;background:rgba(89,176,255,0.15);color:#80d0ff;font-size:12px;font-weight:700;cursor:pointer;">📋 Export Code</button>
+          <button id="btnImportSave" style="flex:1;padding:10px 8px;border-radius:8px;border:1px solid #59ff90;background:rgba(89,255,144,0.15);color:#80ffa0;font-size:12px;font-weight:700;cursor:pointer;">📥 Import Code</button>
+        </div>
+        <textarea id="saveCodeArea" style="display:none;width:100%;height:80px;background:rgba(0,0,0,0.4);border:1px solid rgba(120,120,255,0.3);border-radius:8px;color:#c0d0ff;font-family:monospace;font-size:11px;padding:8px;resize:none;" placeholder="Paste your save code here..."></textarea>
+        <button id="btnImportConfirm" style="display:none;padding:10px 8px;border-radius:8px;border:1px solid #ff9933;background:rgba(255,153,51,0.2);color:#ffcc80;font-size:12px;font-weight:700;cursor:pointer;">⚠️ Confirm Import (Overwrites Current Save)</button>
+      </div>
       <div class="opt-section" style="margin-top:14px;color:#ff6b35;">🔰️ Developer</div>
       <div class="opt-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
         <div class="opt-left">
@@ -6966,10 +6976,10 @@ function drawNearLayer(mn0,gameH){
   } else if(style==='crystal'){
     for(var i=0;i<bgMtnNear.length;i++){
       var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
-      // Smooth crystal formation
+      // Smooth crystal formation with gradient
       var ncG=ctx.createLinearGradient(rx,gameH-m.h,rx+m.w,gameH);
       ncG.addColorStop(0,'#3030a0');ncG.addColorStop(0.5,'#202078');ncG.addColorStop(1,'#181860');
-      ctx.fillStyle='#2a2890';
+      ctx.fillStyle=ncG;
       ctx.beginPath();ctx.moveTo(rx+m.w*0.1,gameH);
       ctx.bezierCurveTo(rx+m.w*0.2,gameH-m.h*0.5,rx+m.w*0.35,gameH-m.h*0.85,rx+m.w*0.5,gameH-m.h);
       ctx.bezierCurveTo(rx+m.w*0.65,gameH-m.h*0.85,rx+m.w*0.8,gameH-m.h*0.5,rx+m.w*0.9,gameH);
@@ -6981,11 +6991,50 @@ function drawNearLayer(mn0,gameH){
       ctx.lineTo(rx+m.w*0.3,gameH);ctx.closePath();ctx.fill();
       // Base glow
       ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.04+i*1.2)*0.1;
-      var cbG=ctx.createRadialGradient(rx+m.w*0.5,gameH,5,rx+m.w*0.5,gameH-m.h*0.3,m.w*0.5);
-      cbG.addColorStop(0,'rgba(100,100,255,0.4)');cbG.addColorStop(1,'rgba(60,60,200,0)');
-      ctx.fillStyle=cbG;ctx.beginPath();ctx.ellipse(rx+m.w*0.5,gameH-m.h*0.2,m.w*0.5,m.h*0.4,0,0,Math.PI*2);ctx.fill();
+      var cbG2=ctx.createRadialGradient(rx+m.w*0.5,gameH,5,rx+m.w*0.5,gameH-m.h*0.3,m.w*0.5);
+      cbG2.addColorStop(0,'rgba(100,100,255,0.4)');cbG2.addColorStop(1,'rgba(60,60,200,0)');
+      ctx.fillStyle=cbG2;ctx.beginPath();ctx.ellipse(rx+m.w*0.5,gameH-m.h*0.2,m.w*0.5,m.h*0.4,0,0,Math.PI*2);ctx.fill();
       ctx.restore();
     }
+    // Small crystal shards scattered on ground
+    ctx.save();ctx.globalAlpha=0.45;
+    for(var csi2=0;csi2<6;csi2++){
+      var csx2=((csi2*W/5+nearOff*0.5+csi2*35)%W+W)%W;
+      var csH=gameH*0.04+csi2%2*gameH*0.02;
+      ctx.fillStyle='rgba(120,120,220,0.6)';
+      ctx.beginPath();ctx.moveTo(csx2-3,gameH);ctx.lineTo(csx2,gameH-csH);ctx.lineTo(csx2+3,gameH);ctx.closePath();ctx.fill();
+      // Tiny refraction
+      ctx.fillStyle='rgba(180,180,255,0.3)';
+      ctx.beginPath();ctx.moveTo(csx2,gameH-csH);ctx.lineTo(csx2+3,gameH);ctx.lineTo(csx2+1,gameH);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+    // Prismatic light rays — occasional rainbow shimmer
+    ctx.save();var prismA=Math.sin(frameN*0.025);
+    if(prismA>0.6){
+      ctx.globalAlpha=(prismA-0.6)*0.2;
+      var prismX=W*(0.4+Math.sin(frameN*0.015)*0.2);
+      var prCols=['rgba(255,60,60,0.3)','rgba(255,180,0,0.3)','rgba(60,255,60,0.3)','rgba(60,60,255,0.3)'];
+      for(var pri2=0;pri2<4;pri2++){
+        ctx.fillStyle=prCols[pri2];
+        ctx.beginPath();ctx.moveTo(prismX+pri2*4-6,0);ctx.lineTo(prismX+pri2*8-12,gameH*0.7);
+        ctx.lineTo(prismX+pri2*8-8,gameH*0.7);ctx.lineTo(prismX+pri2*4-2,0);ctx.closePath();ctx.fill();
+      }
+    }
+    ctx.restore();
+    // Floating energy motes — drifting near crystal tips
+    ctx.save();
+    for(var emi=0;emi<6;emi++){
+      var emx=((emi*W/5+nearOff*0.2+Math.sin(frameN*0.018+emi*2.5)*15)%W+W)%W;
+      var emy=gameH*(0.25+Math.sin(frameN*0.022+emi*1.8)*0.15);
+      var emA=0.2+Math.sin(frameN*0.05+emi*1.3)*0.2;
+      if(emA>0.1){
+        ctx.globalAlpha=emA;ctx.fillStyle='rgba(160,160,255,0.8)';
+        ctx.beginPath();ctx.arc(emx,emy,1.5,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=emA*0.4;ctx.fillStyle='rgba(120,120,255,0.3)';
+        ctx.beginPath();ctx.arc(emx,emy,5,0,Math.PI*2);ctx.fill();
+      }
+    }
+    ctx.restore();
     // Ground energy — pulsing blue floor
     ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.035)*0.08;
     var cgG=ctx.createLinearGradient(0,gameH-25,0,gameH);
@@ -7259,10 +7308,51 @@ function drawNearLayer(mn0,gameH){
     ctx.globalAlpha=1;
 
   } else if(style==='venus'){
+    // Venus near — dark volcanic terrain with lava cracks, toxic haze
     for(var i=0;i<bgMtnNear.length;i++){
       var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
-      drawBgMountain(rx,gameH,m.h,m.w,'#604010');
+      // Jagged volcanic rock
+      var vnG=ctx.createLinearGradient(rx,gameH-m.h,rx,gameH);
+      vnG.addColorStop(0,'#5a3010');vnG.addColorStop(1,'#3a1808');
+      ctx.fillStyle=vnG;
+      ctx.beginPath();ctx.moveTo(rx,gameH);
+      ctx.lineTo(rx+m.w*0.1,gameH-m.h*0.6);
+      ctx.lineTo(rx+m.w*0.25,gameH-m.h*0.85);
+      ctx.lineTo(rx+m.w*0.4,gameH-m.h*0.7);
+      ctx.lineTo(rx+m.w*0.55,gameH-m.h);
+      ctx.lineTo(rx+m.w*0.7,gameH-m.h*0.75);
+      ctx.lineTo(rx+m.w*0.85,gameH-m.h*0.55);
+      ctx.lineTo(rx+m.w,gameH);ctx.closePath();ctx.fill();
     }
+    // Lava cracks in the ground — pulsing orange lines
+    ctx.save();ctx.globalAlpha=0.35+Math.sin(frameN*0.04)*0.12;
+    ctx.strokeStyle='rgba(255,120,20,0.7)';ctx.lineWidth=1.5;
+    for(var lci=0;lci<5;lci++){
+      var lcx=((lci*W/4+nearOff*0.3+lci*30)%W+W)%W;
+      ctx.beginPath();ctx.moveTo(lcx,gameH);
+      ctx.bezierCurveTo(lcx+8,gameH-10,lcx-5,gameH-18,lcx+12,gameH-25);ctx.stroke();
+      // Lava glow at crack
+      ctx.globalAlpha=0.2+Math.sin(frameN*0.05+lci)*0.08;
+      var lcG=ctx.createRadialGradient(lcx+4,gameH-12,1,lcx+4,gameH-12,12);
+      lcG.addColorStop(0,'rgba(255,140,20,0.5)');lcG.addColorStop(1,'rgba(255,60,0,0)');
+      ctx.fillStyle=lcG;ctx.beginPath();ctx.arc(lcx+4,gameH-12,12,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    // Toxic ground haze — dense yellow-orange fog
+    ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.02)*0.05;
+    var vnFog=ctx.createLinearGradient(0,gameH-35,0,gameH);
+    vnFog.addColorStop(0,'rgba(200,120,20,0)');vnFog.addColorStop(0.5,'rgba(180,100,15,0.4)');
+    vnFog.addColorStop(1,'rgba(140,70,10,0.3)');
+    ctx.fillStyle=vnFog;ctx.fillRect(0,gameH-35,W,35);ctx.restore();
+    // Floating volcanic ash
+    ctx.save();ctx.globalAlpha=0.25;
+    for(var vai=0;vai<6;vai++){
+      var vax=((vai*W/5+nearOff*0.4+vai*25)%W+W)%W;
+      var vay=gameH*(0.3+Math.sin(vai*1.7+frameN*0.02)*0.15);
+      ctx.fillStyle='rgba(120,80,30,0.5)';
+      ctx.beginPath();ctx.arc(vax,vay,1.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
 
   } else if(style==='saturn'){
     // Saturn's moon surface — icy crystalline terrain
@@ -7294,6 +7384,88 @@ function drawNearLayer(mn0,gameH){
     var satFlr=ctx.createLinearGradient(0,gameH-18,0,gameH);
     satFlr.addColorStop(0,'rgba(120,100,200,0)');satFlr.addColorStop(1,'rgba(100,80,180,0.3)');
     ctx.fillStyle=satFlr;ctx.fillRect(0,gameH-18,W,18);ctx.restore();
+
+  } else if(style==='upperatmo'){
+    // Upper atmosphere near — thin atmosphere glow, orbital debris, cloud tops
+    // Atmosphere line — thin bright band
+    ctx.save();ctx.globalAlpha=0.4;
+    var uaLine=ctx.createLinearGradient(0,gameH-20,0,gameH);
+    uaLine.addColorStop(0,'rgba(40,120,255,0)');
+    uaLine.addColorStop(0.3,'rgba(60,160,255,0.6)');
+    uaLine.addColorStop(0.7,'rgba(30,100,200,0.4)');
+    uaLine.addColorStop(1,'rgba(0,60,140,0.5)');
+    ctx.fillStyle=uaLine;ctx.fillRect(0,gameH-20,W,20);ctx.restore();
+    // Cloud formations below — peeking through atmosphere
+    ctx.save();ctx.globalAlpha=0.2;
+    for(var uci=0;uci<5;uci++){
+      var ucx=((uci*W/4+nearOff*0.15+uci*50)%W+W)%W;
+      ctx.fillStyle='rgba(180,220,255,0.4)';
+      ctx.beginPath();ctx.ellipse(ucx,gameH-6,W*0.06+uci*3,6,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    // Orbital debris — small metallic chunks
+    ctx.save();ctx.globalAlpha=0.4;
+    for(var odi=0;odi<4;odi++){
+      var odx=((odi*W/3+nearOff*0.5+odi*70)%W+W)%W;
+      var ody=gameH*(0.2+odi*0.15);
+      ctx.save();ctx.translate(odx,ody);ctx.rotate(frameN*0.015+odi*1.5);
+      ctx.fillStyle='rgba(160,170,200,0.6)';
+      ctx.fillRect(-4,-2,8,4);
+      ctx.fillStyle='rgba(100,140,200,0.4)';
+      ctx.fillRect(-10,-1,6,2);ctx.fillRect(4,-1,6,2);
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.globalAlpha=1;
+
+  } else if(style==='alienworld'){
+    // Alien world near — bizarre organic terrain, glowing tendrils, alien flora
+    ctx.globalAlpha=0.7;
+    for(var i=0;i<bgMtnNear.length;i++){
+      var m=bgMtnNear[i]; var rx=((m.x-nearOff*0.6)%W+W*2)%W;
+      // Strange organic mound — dark with green bioluminescence
+      var awG=ctx.createLinearGradient(rx,gameH-m.h*0.7,rx,gameH);
+      awG.addColorStop(0,'#0a0818');awG.addColorStop(1,'#040410');
+      ctx.fillStyle=awG;
+      ctx.beginPath();ctx.moveTo(rx,gameH);
+      ctx.bezierCurveTo(rx,gameH-m.h*0.3,rx+m.w*0.2,gameH-m.h*0.7,rx+m.w*0.5,gameH-m.h*0.7);
+      ctx.bezierCurveTo(rx+m.w*0.8,gameH-m.h*0.7,rx+m.w,gameH-m.h*0.3,rx+m.w,gameH);
+      ctx.closePath();ctx.fill();
+      // Bioluminescent edge glow
+      ctx.save();ctx.globalAlpha=0.25+Math.sin(frameN*0.04+i*1.5)*0.1;
+      ctx.strokeStyle='rgba(0,255,150,0.4)';ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(rx,gameH);
+      ctx.bezierCurveTo(rx,gameH-m.h*0.3,rx+m.w*0.2,gameH-m.h*0.7,rx+m.w*0.5,gameH-m.h*0.7);
+      ctx.bezierCurveTo(rx+m.w*0.8,gameH-m.h*0.7,rx+m.w,gameH-m.h*0.3,rx+m.w,gameH);
+      ctx.stroke();ctx.restore();
+    }
+    // Alien tendrils — glowing organic growths reaching upward
+    ctx.save();
+    for(var ati=0;ati<5;ati++){
+      var atx=((ati*W/4+nearOff*0.6+ati*40)%W+W)%W;
+      var ath=gameH*0.15+Math.sin(ati*1.8)*gameH*0.05;
+      ctx.globalAlpha=0.35+Math.sin(frameN*0.05+ati*1.2)*0.1;
+      ctx.strokeStyle='rgba(0,220,120,0.5)';ctx.lineWidth=2;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(atx,gameH);
+      ctx.bezierCurveTo(atx+Math.sin(frameN*0.03+ati)*8,gameH-ath*0.4,
+        atx-Math.sin(frameN*0.025+ati)*6,gameH-ath*0.7,
+        atx+Math.sin(frameN*0.02+ati)*4,gameH-ath);
+      ctx.stroke();
+      // Glowing tip
+      var tipG=ctx.createRadialGradient(atx+Math.sin(frameN*0.02+ati)*4,gameH-ath,1,
+        atx+Math.sin(frameN*0.02+ati)*4,gameH-ath,8);
+      tipG.addColorStop(0,'rgba(0,255,160,0.7)');tipG.addColorStop(1,'rgba(0,200,100,0)');
+      ctx.fillStyle=tipG;ctx.beginPath();
+      ctx.arc(atx+Math.sin(frameN*0.02+ati)*4,gameH-ath,8,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    // Alien ground glow — eerie green pulsing
+    ctx.save();ctx.globalAlpha=0.2+Math.sin(frameN*0.03)*0.06;
+    var agG=ctx.createLinearGradient(0,gameH-25,0,gameH);
+    agG.addColorStop(0,'rgba(0,180,100,0)');agG.addColorStop(1,'rgba(0,140,80,0.4)');
+    ctx.fillStyle=agG;ctx.fillRect(0,gameH-25,W,25);ctx.restore();
+    ctx.globalAlpha=1;
 
   } else if(style==='restaurant'){
     for(var i=0;i<bgMtnNear.length;i++){
@@ -8339,7 +8511,7 @@ function drawEliteInfiniteOverlay(){
 
 var _spawnSide='bottom', _spawnGameH=0, _spawnX=0;
 function spawnSingle(minH,maxH,ww,type){
-  var h2=_spawnGameH*(minH+Math.random()*(maxH-minH));
+  var h2=_spawnGameH*(Math.min(0.92,minH+0.08)+Math.random()*(maxH-minH));
   var y2=_spawnSide==='bottom'?_spawnGameH-h2:0;
   obstacles.push({x:_spawnX,y:y2,w:ww,h:h2,side:_spawnSide,type:type||'mountain',phase:Math.random()*Math.PI*2});
 }
@@ -8375,7 +8547,7 @@ function spawnObstacle(){
         return;
       }
     }
-    var minH=0.62+progress*0.14; var maxH=0.82+progress*0.08;
+    var minH=0.68+progress*0.14; var maxH=0.85+progress*0.08;
     var h2=gameH2*(minH+Math.random()*(maxH-minH));
     var y2=side==='bottom'?gameH2-h2:0;
     obstacles.push({x:x,y:y2,w:w,h:h2,side:side,type:'tree',phase:Math.random()*Math.PI*2});
@@ -8428,6 +8600,15 @@ function spawnObstacle(){
       var w=32+Math.random()*16;
       if(progress>0.30&&Math.random()<0.60){ if(spawnPair(0.24,0.30,w,'mountain')) return; }
       spawnSingle(0.58+progress*0.18, 0.80+progress*0.08, w, 'mountain');
+      return;
+    }
+    // e6 - Enchanted Forest: dense magical trees, tight gaps, branches from both sides
+    if(lid==='e6'){
+      var w=34+Math.random()*18;
+      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.24+progress*0.02, 0.30, w, 'tree')) return; }
+      spawnSingle(0.56+progress*0.16, 0.78+progress*0.10, w, 'tree');
+      if(progress>0.50&&Math.random()<0.12&&frogs.length<2)
+        frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
       return;
     }
 
@@ -8644,8 +8825,8 @@ function spawnObstacle(){
   }
   var side=Math.random()<0.5?'bottom':'top';
   var worldDiff=currentWorldLevel?currentWorldLevel.levelIdx:0;
-  var minH=0.28+worldDiff*0.04;
-  var maxH=0.55+worldDiff*0.04;
+  var minH=0.42+worldDiff*0.04;
+  var maxH=0.65+worldDiff*0.04;
   var hh=gameH*(minH+Math.random()*(maxH-minH));
   var ww=28+Math.random()*22;
   var y=side==='bottom'?gameH-hh:0;
@@ -10737,8 +10918,9 @@ function update(){
 
   score++;
   if(gameMode==='infinite'){
-    speed=Math.min(maxSpeed,2.2+(score/2400)*(maxSpeed-2.2));
-    obstInterval=Math.max(85,170-Math.floor(score/320));
+    var infProg=Math.min(1,score/3000);
+    speed=Math.min(maxSpeed,2.2+Math.pow(infProg,1.5)*(maxSpeed-2.2));
+    obstInterval=Math.max(75,180-Math.floor(Math.pow(infProg,1.3)*105));
   } else if(currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
     var prog=levelTimer/((levelDuration||80)*60);
     speed=1.8+Math.pow(prog,1.5)*2.4;
@@ -11831,6 +12013,44 @@ if(devTestShieldBtn) devTestShieldBtn.addEventListener('click',function(){sfxMen
 if(devTestWingsBtn) devTestWingsBtn.addEventListener('click',function(){sfxMenuTap();wingTrailRuns+=5;showToast('\u2728 Wing Trail for '+wingTrailRuns+' runs!');});
 if(devResetBtn) devResetBtn.addEventListener('click',function(){sfxMenuBack();mothsTotal=0;ownedSkins=['default'];activeSkin='default';shieldActive=false;wingTrailRuns=0;highScoreStory=0;highScoreInfinite=0;levelProgress={};leaderboard=[];try{localStorage.removeItem('dragonflySave');}catch(e){}updateCurrencyUI();updateMothUI();buildSkins();showToast('\ud83d\udd04 Progress reset');});
 
+// ── SAVE EXPORT / IMPORT ──
+var btnExport=document.getElementById('btnExportSave');
+var btnImport=document.getElementById('btnImportSave');
+var btnImportConfirm=document.getElementById('btnImportConfirm');
+var saveArea=document.getElementById('saveCodeArea');
+if(btnExport) btnExport.addEventListener('click',function(){
+  sfxMenuSelect();saveGame();
+  try{
+    var raw=localStorage.getItem('dragonflySave')||'{}';
+    var code=btoa(unescape(encodeURIComponent(raw)));
+    if(saveArea){saveArea.style.display='block';saveArea.value=code;saveArea.select();}
+    if(navigator.clipboard){navigator.clipboard.writeText(code).then(function(){showToast('📋 Save code copied!');}).catch(function(){showToast('📋 Code ready — copy it manually');});}
+    else{showToast('📋 Code ready — copy it manually');}
+    if(btnImportConfirm) btnImportConfirm.style.display='none';
+  }catch(e){showToast('❌ Export failed');}
+});
+if(btnImport) btnImport.addEventListener('click',function(){
+  sfxMenuSelect();
+  if(saveArea){saveArea.style.display='block';saveArea.value='';saveArea.placeholder='Paste your save code here...';}
+  if(btnImportConfirm) btnImportConfirm.style.display='block';
+});
+if(btnImportConfirm) btnImportConfirm.addEventListener('click',function(){
+  sfxMenuSelect();
+  try{
+    var code=saveArea?saveArea.value.trim():'';
+    if(!code){showToast('❌ Paste a save code first');return;}
+    var raw=decodeURIComponent(escape(atob(code)));
+    var data=JSON.parse(raw);
+    if(!data.mothsTotal&&data.mothsTotal!==0){showToast('❌ Invalid save code');return;}
+    localStorage.setItem('dragonflySave',raw);
+    loadGame();updateCurrencyUI();updateMothUI();
+    if(typeof buildSkins==='function') buildSkins();
+    showToast('✅ Save imported! '+Object.keys(data.levelProgress||{}).length+' levels restored');
+    if(saveArea) saveArea.style.display='none';
+    if(btnImportConfirm) btnImportConfirm.style.display='none';
+  }catch(e){showToast('❌ Invalid save code');}
+});
+
 function startGame(){
   initAudio();sfxMenuSelect();
   stopMusic();
@@ -12365,8 +12585,8 @@ var WORLDS = [
     color: '#5c1a00',
     border: '#ff6600',
     glow: '255,102,0',
-    skinReq: ['ember','volcanic','crimson'],
-    skinReqName: 'Ember, Volcanic, or Crimson skin',
+    skinReq: null,
+    skinReqName: 'Defeat the Great Owl',
     unlocked: false,
     levels: [
       { id:'f1', name:'Volcanic Hellscape', icon:'\ud83c\udf0b', biomeIdx:2,  desc:'Lava flows and molten boulders',        duration:80 },
@@ -12385,8 +12605,8 @@ var WORLDS = [
     color: '#001a4a',
     border: '#0088ff',
     glow: '0,136,255',
-    skinReq: ['ocean','sapphire','cobalt'],
-    skinReqName: 'Ocean Deep, Sapphire, or Cobalt skin',
+    skinReq: null,
+    skinReqName: 'Defeat the Inferno Drake',
     unlocked: false,
     levels: [
       { id:'w1', name:'Crystal Void',    icon:'\ud83d\udc8e', biomeIdx:6,  desc:'Floating crystals in deep space',   duration:80 },
@@ -12405,8 +12625,8 @@ var WORLDS = [
     color: '#001828',
     border: '#80d8ff',
     glow: '128,216,255',
-    skinReq: ['arctic'],
-    skinReqName: 'Arctic skin required',
+    skinReq: null,
+    skinReqName: 'Defeat the Leviathan',
     unlocked: false,
     levels: [
       { id:'i1', name:'Cloud Kingdom',   icon:'\u2601\ufe0f', biomeIdx:34, desc:'Soaring above an endless sea of clouds',  duration:80 },
@@ -12425,8 +12645,8 @@ var WORLDS = [
     color: '#080018',
     border: '#ffd700',
     glow: '255,215,0',
-    skinReq: ['legendary','galaxy'],
-    skinReqName: 'Legendary or Galaxy skin required',
+    skinReq: null,
+    skinReqName: 'Defeat the Tempest',
     unlocked: false,
     levels: [
       { id:'g1', name:'The Moon',       icon:'\ud83c\udf14', biomeIdx:21, desc:'Craters and silence above the Earth',  duration:80 },
@@ -12444,10 +12664,25 @@ var levelProgress = {};
 var currentWorldLevel = null;
 
 function worldUnlocked(world){
+  // Awakening + Earth always open
+  if(world.id==='awakening'||world.id==='earth') return true;
+  // Each world unlocked by defeating previous world's boss
+  if(world.id==='fire') return defeatedBosses.indexOf('owl')>=0;
+  if(world.id==='water') return defeatedBosses.indexOf('dragon')>=0;
+  if(world.id==='ice') return defeatedBosses.indexOf('leviathan')>=0;
+  if(world.id==='galaxy') return defeatedBosses.indexOf('tempest')>=0;
   return true;
 }
 function levelUnlocked(worldId, levelIdx){
-  return true;
+  // Dev mode — all bosses defeated means skip level gating
+  if(defeatedBosses.length>=6) return true;
+  // First level of any unlocked world is always available
+  if(levelIdx===0) return true;
+  // Must clear previous level to unlock next
+  var world=getWorldById(worldId);
+  if(!world) return false;
+  var prevLevel=world.levels[levelIdx-1];
+  return prevLevel && levelProgress[prevLevel.id]!==undefined;
 }
 function getWorldById(id){ for(var i=0;i<WORLDS.length;i++) if(WORLDS[i].id===id) return WORLDS[i]; return WORLDS[0]; }
 
@@ -12466,8 +12701,8 @@ function buildWorldMap(){
       var done=0;
       for(var li=0;li<world.levels.length;li++) if(levelProgress[world.levels[li].id]!==undefined) done++;
       var reqTxt='';
-      if(!unlocked && world.skinReqName) reqTxt='<div class="world-req" style="color:#ffaa44;">\ud83d\udd12 Requires: '+world.skinReqName+'</div>';
-      else if(world.skinReqName) reqTxt='<div class="world-req" style="color:rgba(255,255,255,0.6);">\u2713 '+world.skinReqName+'</div>';
+      if(!unlocked && world.skinReqName) reqTxt='<div class="world-req" style="color:#ffaa44;">\ud83d\udd12 '+world.skinReqName+'</div>';
+      else if(unlocked && world.skinReqName) reqTxt='<div class="world-req" style="color:rgba(100,255,120,0.7);">\u2713 Unlocked</div>';
       card.innerHTML='<div class="world-header">'
         +'<div class="world-icon">'+(unlocked?world.icon:'\ud83d\udd12')+'</div>'
         +'<div class="world-info">'
@@ -12567,7 +12802,7 @@ function showLevelDetail(world,level,li){
   document.getElementById('ldTitle').textContent=level.name;
   document.getElementById('ldSub').textContent=level.desc;
   var req=document.getElementById('ldReq');
-  if(world.skinReqName) req.textContent=(unlocked?'\u2713 Skin OK':'\ud83d\udd12 '+world.skinReqName);
+  if(world.skinReqName) req.textContent=(unlocked?'\u2713 Unlocked':'\ud83d\udd12 '+world.skinReqName);
   else req.textContent='';
   var best=levelProgress[level.id];
   var bestScore2=best!==undefined?(typeof best==='object'?best.score:best):'--';
@@ -12583,7 +12818,9 @@ function showLevelDetail(world,level,li){
 document.getElementById('ldPlayBtn').addEventListener('touchstart',function(e){
   e.preventDefault();
   if(!_ldLevel||!_ldWorld) return;
-  if(!worldUnlocked(_ldWorld)){showToast('Equip the required skin first!');return;}
+  if(!worldUnlocked(_ldWorld)){showToast('🔒 '+(_ldWorld.skinReqName||'Complete previous world'));return;}
+  var _lvlIdx=_ldWorld.levels.indexOf(_ldLevel);
+  if(!levelUnlocked(_ldWorld.id,_lvlIdx)){showToast('🔒 Clear the previous level first');return;}
   try{sfxMenuSelect();}catch(ex){}
   stopMusic();
   var _sld3=document.getElementById('screenLevelDetail');
@@ -12609,7 +12846,9 @@ document.getElementById('ldPlayBtn').addEventListener('touchstart',function(e){
 
 document.getElementById('ldPlayBtn').addEventListener('click',function(){
   if(!_ldLevel||!_ldWorld) return;
-  if(!worldUnlocked(_ldWorld)){showToast('Equip the required skin first!');return;}
+  if(!worldUnlocked(_ldWorld)){showToast('🔒 '+(_ldWorld.skinReqName||'Complete previous world'));return;}
+  var _lvlIdx2=_ldWorld.levels.indexOf(_ldLevel);
+  if(!levelUnlocked(_ldWorld.id,_lvlIdx2)){showToast('🔒 Clear the previous level first');return;}
   try{sfxMenuSelect();}catch(ex){}
   stopMusic();
   var _sldh=document.getElementById('screenLevelDetail');if(_sldh){_sldh.classList.add('hidden');_sldh.style.display='none';}
