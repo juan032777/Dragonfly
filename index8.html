@@ -103,6 +103,10 @@ canvas { display:block; width:100%; height:100%; }
 .life-icon.lost { opacity:0.18; filter:none; transform:scale(0.8); }
 #mothCounter { position:absolute; top:62px; right:16px; display:flex; align-items:center; gap:5px; background:rgba(20,8,50,0.75); border:1px solid #6a20aa; border-radius:20px; padding:4px 10px 4px 8px; }
 #mothHudCount { font-size:12px; font-weight:700; color:#e8d8ff; text-shadow:0 0 8px #b06eff80; min-width:26px; transition:transform 0.2s; }
+#mothHudCount.pop { animation:mothPop 0.35s ease-out; }
+@keyframes mothPop { 0%{transform:scale(1);color:#e8d8ff;text-shadow:0 0 8px #b06eff80;} 40%{transform:scale(1.5);color:#ffd700;text-shadow:0 0 16px #ffd700;} 100%{transform:scale(1);color:#e8d8ff;text-shadow:0 0 8px #b06eff80;} }
+#mothHudCount.pop-golden { animation:mothPopGold 0.5s ease-out; }
+@keyframes mothPopGold { 0%{transform:scale(1);color:#e8d8ff;} 30%{transform:scale(1.8);color:#ffd700;text-shadow:0 0 20px #ffd700,0 0 40px #ff8800;} 60%{transform:scale(1.2);color:#ffee88;} 100%{transform:scale(1);color:#e8d8ff;text-shadow:0 0 8px #b06eff80;} }
 #mothHudBarWrap { width:36px; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
 #mothHudBar { height:100%; border-radius:2px; background:linear-gradient(90deg,#d070ff,#fff); transition:width 0.2s; }
 
@@ -151,28 +155,194 @@ canvas { display:block; width:100%; height:100%; }
 /* Menu screens */
 .menu-screen { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; background:linear-gradient(170deg,#04001a 0%,#0d0530 40%,#180a40 100%); pointer-events:all; overflow-y:auto; }
 .menu-screen.hidden { display:none; }
-.topband { width:100%; height:3px; flex-shrink:0; background:linear-gradient(90deg,transparent,#b06eff,#40c8ff,#b06eff,transparent); }
-.menu-logo { margin-top:28px; display:flex; flex-direction:column; align-items:center; gap:6px; }
-.menu-bug-icon { font-size:72px; filter:drop-shadow(0 0 22px #b06eff); animation:mFloat 3s ease-in-out infinite; }
+.topband { width:100%; height:3px; flex-shrink:0; background:linear-gradient(90deg,transparent,#b06eff,#40c8ff,#b06eff,transparent); position:relative; z-index:5; }
+
+/* ── KH-STYLE MENU LAYOUT ── */
+.kh-menu { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; }
+.kh-menu.hidden { display:none; }
+
+/* Top HUD bar */
+.kh-top-hud { position:absolute; top:16px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; z-index:20; pointer-events:none; }
+.kh-top-hud > * { pointer-events:all; }
+.kh-gear { width:38px; height:38px; display:flex; align-items:center; justify-content:center; background:rgba(20,5,40,0.55); border:1px solid rgba(176,110,255,0.4); border-radius:50%; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform 0.15s; font-size:16px; backdrop-filter:blur(6px); }
+.kh-gear:active { transform:scale(0.9) rotate(45deg); }
+.kh-moth-hud { display:flex; align-items:center; gap:6px; background:rgba(20,5,40,0.55); border:1px solid rgba(153,64,204,0.5); border-radius:20px; padding:6px 14px; backdrop-filter:blur(6px); box-shadow:0 0 14px rgba(153,64,204,0.2); }
+.kh-moth-hud .gem-icon { font-size:14px; }
+.kh-moth-hud .gem-count { font-size:13px; font-weight:700; color:#e8d8ff; font-family:'Cinzel',serif; letter-spacing:1px; }
+
+/* Hero dragonfly art - center/right positioned */
+.kh-hero { position:absolute; top:18%; right:-8%; width:340px; height:340px; z-index:2; pointer-events:none; filter:drop-shadow(0 0 40px rgba(176,110,255,0.45)); animation:heroFloat 5s ease-in-out infinite; }
+@keyframes heroFloat { 0%,100%{transform:translateY(0) rotate(-8deg)} 50%{transform:translateY(-14px) rotate(-4deg)} }
+.kh-hero svg { width:100%; height:100%; }
+.kh-hero-glow { position:absolute; top:12%; right:-8%; width:340px; height:340px; background:radial-gradient(circle at 50% 50%, rgba(176,110,255,0.3) 0%, rgba(64,200,255,0.15) 40%, transparent 70%); filter:blur(30px); z-index:1; pointer-events:none; animation:heroGlowPulse 4s ease-in-out infinite; }
+@keyframes heroGlowPulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+
+/* Title top-left */
+.kh-title-zone { position:absolute; top:60px; left:24px; z-index:3; }
+.kh-title-main { font-family:'Cinzel',serif; font-size:32px; font-weight:900; letter-spacing:4px; line-height:0.95;
+  background:linear-gradient(90deg, #e8d8ff 0%, #b06eff 25%, #40c8ff 50%, #b06eff 75%, #e8d8ff 100%);
+  background-size:200% 100%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:titleShimmer 5s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(176,110,255,0.5)) drop-shadow(2px 3px 0 #0a0025);
+  text-transform:uppercase;
+}
+.kh-title-sub { font-family:'Crimson Text',serif; font-style:italic; font-size:11px; color:#9080c0; letter-spacing:3px; margin-top:6px; text-transform:lowercase; }
+.kh-title-dec { margin-top:8px; width:120px; height:2px; background:linear-gradient(90deg, #b06eff, #40c8ff 50%, transparent); background-size:200% 100%; animation:dividerFlow 4s linear infinite; }
+
+/* Menu items bottom-left (KH style) */
+.kh-nav { position:absolute; bottom:60px; left:0; right:0; z-index:3; padding:0 20px; display:flex; flex-direction:column; gap:2px; }
+.mbtn.kh-item { display:flex; align-items:center; gap:14px; padding:11px 16px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:all 0.2s; position:relative; border-top:1px solid rgba(120,80,180,0.15); border-left:none; border-right:none; border-bottom:none; border-radius:0; background:transparent; font-family:inherit; text-align:left; width:100%; letter-spacing:0; text-transform:none; font-size:inherit; font-weight:normal; box-shadow:none; margin:0; color:inherit; }
+.mbtn.kh-item:last-child { border-bottom:1px solid rgba(120,80,180,0.15); }
+.mbtn.kh-item:active { transform:translateX(4px); background:rgba(176,110,255,0.1); }
+.mbtn.kh-item > span { pointer-events:none; }
+.kh-item-bar { display:inline-block; width:10px; height:10px; flex-shrink:0; box-shadow:0 0 8px currentColor; transition:transform 0.2s; }
+.mbtn.kh-item:active .kh-item-bar { transform:scale(1.3); }
+.kh-item-label { font-family:'Cinzel',serif; font-size:14px; letter-spacing:3px; text-transform:uppercase; color:#e8d8ff; text-shadow:0 0 8px rgba(176,110,255,0.4), 1px 1px 0 #0a0025; font-weight:700; flex:1; }
+.kh-item-hint { font-family:'Crimson Text',serif; font-style:italic; font-size:10px; color:#7755aa; letter-spacing:1px; }
+.kh-item-arrow { font-size:16px; color:rgba(176,110,255,0.5); transition:transform 0.2s; }
+.mbtn.kh-item:active .kh-item-arrow { transform:translateX(4px); color:rgba(176,110,255,1); }
+/* Accent bar colors per item */
+.map-bar { background:#b06eff; color:#b06eff; }
+.coop-bar { background:#40a0ff; color:#40a0ff; }
+.inf-bar { background:#44cc44; color:#44cc44; }
+.shop-bar { background:#ffcc44; color:#ffcc44; }
+.ach-bar { background:#ff8844; color:#ff8844; }
+.lb-bar { background:#c0c0c0; color:#c0c0c0; }
+.stats-bar { background:#ff88cc; color:#ff88cc; }
+/* Hover glow per color */
+.kh-item:hover { background:linear-gradient(90deg, rgba(176,110,255,0.15), transparent 80%); }
+
+/* Best badge floating below title */
+.kh-best { position:absolute; top:150px; left:28px; z-index:3; display:flex; align-items:center; gap:8px; background:rgba(20,5,40,0.55); border:1px solid rgba(176,110,255,0.3); border-radius:20px; padding:5px 14px; backdrop-filter:blur(4px); }
+.kh-best-label { font-family:'Cinzel',serif; font-size:9px; color:#9080c0; letter-spacing:2px; }
+.kh-best-val { font-family:'Cinzel',serif; font-size:16px; font-weight:700; color:#e8d8ff; text-shadow:0 0 10px #b06eff80; animation:bestPulse 3s ease-in-out infinite; }
+
+/* Daily challenge mini-banner */
+.kh-daily { position:absolute; top:190px; left:28px; right:28px; z-index:3; max-width:260px; background:rgba(0,40,20,0.5); border:1px solid rgba(64,204,128,0.5); border-radius:8px; padding:8px 12px; backdrop-filter:blur(4px); }
+.kh-daily-title { font-family:'Cinzel',serif; font-size:9px; color:#40cc80; letter-spacing:2px; }
+.kh-daily-desc { font-family:'Crimson Text',serif; font-size:11px; color:#e8d8ff; margin-top:3px; }
+.kh-daily-reward { font-size:10px; color:#ffd700; font-weight:700; margin-top:2px; }
+
+/* Watch ad (corner) */
+.kh-ad-btn { position:absolute; bottom:20px; right:20px; z-index:3; background:rgba(26,58,0,0.8); border:1px solid #44cc44; border-radius:20px; color:#aaffaa; font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; padding:7px 14px; cursor:pointer; -webkit-tap-highlight-color:transparent; backdrop-filter:blur(4px); }
+.kh-ad-btn:active { transform:scale(0.95); }
+
+/* Life timer */
+.kh-life-timer { position:absolute; bottom:22px; left:20px; z-index:3; font-size:10px; color:#9966cc; font-family:'Cinzel',serif; letter-spacing:1px; min-height:14px; }
+
+
+
+/* Parallax background scene — stars, moon, hills */
+.menu-scene { position:absolute; top:0; left:0; right:0; bottom:0; overflow:hidden; pointer-events:none; z-index:0; }
+.menu-scene-stars { position:absolute; top:0; left:0; right:0; height:60%; background-image:
+  radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,0.8), transparent),
+  radial-gradient(1.5px 1.5px at 45% 35%, rgba(180,220,255,0.7), transparent),
+  radial-gradient(2px 2px at 75% 15%, rgba(255,255,255,0.9), transparent),
+  radial-gradient(1.5px 1.5px at 30% 50%, rgba(200,180,255,0.6), transparent),
+  radial-gradient(2px 2px at 85% 45%, rgba(180,220,255,0.7), transparent),
+  radial-gradient(1px 1px at 60% 25%, rgba(255,255,255,0.8), transparent),
+  radial-gradient(1.5px 1.5px at 20% 40%, rgba(220,200,255,0.5), transparent),
+  radial-gradient(2px 2px at 50% 10%, rgba(255,255,255,0.9), transparent),
+  radial-gradient(1px 1px at 90% 30%, rgba(180,180,220,0.7), transparent),
+  radial-gradient(1.5px 1.5px at 10% 55%, rgba(200,220,255,0.6), transparent);
+  background-size: 100% 100%;
+  animation: starTwinkle 4s ease-in-out infinite;
+}
+@keyframes starTwinkle { 0%,100%{opacity:0.7} 50%{opacity:1} }
+.menu-scene-moon { position:absolute; top:8%; right:12%; width:50px; height:50px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #fff8e8, #e0d8c0 60%, #a090a0 100%); box-shadow:0 0 30px rgba(255,240,200,0.4), 0 0 60px rgba(200,180,255,0.2); animation:moonGlow 6s ease-in-out infinite; }
+@keyframes moonGlow { 0%,100%{box-shadow:0 0 30px rgba(255,240,200,0.4), 0 0 60px rgba(200,180,255,0.2)} 50%{box-shadow:0 0 40px rgba(255,240,200,0.6), 0 0 80px rgba(200,180,255,0.35)} }
+.menu-scene-hills-far { position:absolute; bottom:0; left:0; right:0; height:22%; background:linear-gradient(180deg, transparent 0%, rgba(60,30,100,0.4) 100%); clip-path:polygon(0 70%, 12% 45%, 24% 60%, 38% 35%, 52% 55%, 68% 40%, 82% 60%, 100% 50%, 100% 100%, 0 100%); }
+.menu-scene-hills-near { position:absolute; bottom:0; left:0; right:0; height:15%; background:linear-gradient(180deg, rgba(40,20,80,0.6) 0%, rgba(20,10,50,0.9) 100%); clip-path:polygon(0 80%, 15% 55%, 32% 70%, 48% 40%, 64% 65%, 80% 50%, 100% 70%, 100% 100%, 0 100%); }
+.menu-scene-glow { position:absolute; bottom:10%; left:50%; transform:translateX(-50%); width:300px; height:60px; background:radial-gradient(ellipse, rgba(176,110,255,0.3) 0%, transparent 70%); filter:blur(20px); animation:bottomGlow 5s ease-in-out infinite; }
+@keyframes bottomGlow { 0%,100%{opacity:0.6;width:300px} 50%{opacity:0.9;width:380px} }
+/* Flying dragonfly silhouette */
+.menu-fly-silhouette { position:absolute; top:25%; width:30px; height:16px; animation:flyAcross 18s linear infinite; animation-delay:3s; opacity:0; }
+.menu-fly-silhouette::before { content:'🦋'; font-size:20px; filter:drop-shadow(0 0 8px rgba(176,110,255,0.8)) brightness(0.6) hue-rotate(40deg); }
+@keyframes flyAcross {
+  0% { left:-5%; opacity:0; transform:translateY(0); }
+  10% { opacity:0.6; }
+  50% { transform:translateY(-20px); }
+  90% { opacity:0.6; }
+  100% { left:105%; opacity:0; transform:translateY(10px); }
+}
+
+.menu-logo { margin-top:18px; display:flex; flex-direction:column; align-items:center; gap:4px; position:relative; z-index:2; }
+.menu-bug-icon { font-size:56px; filter:drop-shadow(0 0 22px #b06eff); animation:mFloat 3s ease-in-out infinite; }
 @keyframes mFloat { 0%,100%{transform:translateY(0) rotate(-4deg) scale(1)} 50%{transform:translateY(-8px) rotate(4deg) scale(1.06)} }
-.menu-title { font-size:34px; font-weight:700; color:#e8d8ff; text-shadow:0 0 28px #b06eff90,2px 4px 0 #0a0025; letter-spacing:5px; text-align:center; line-height:1.1; }
-.menu-tagline { font-family:'Crimson Text',serif; font-style:italic; font-size:13px; color:#7755aa; letter-spacing:2px; }
-.divider { width:200px; height:1px; background:linear-gradient(90deg,transparent,#6a20aa,#40c8ff,#6a20aa,transparent); margin:10px 0; flex-shrink:0; }
-.best-badge { display:flex; align-items:center; gap:8px; background:rgba(176,110,255,0.07); border:1px solid #3a1060; border-radius:30px; padding:7px 20px; }
+
+/* Animated title with aurora shimmer */
+.menu-title { font-size:30px; font-weight:700; letter-spacing:5px; text-align:center; line-height:1.1;
+  background:linear-gradient(90deg, #e8d8ff 0%, #b06eff 25%, #40c8ff 50%, #b06eff 75%, #e8d8ff 100%);
+  background-size:200% 100%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:titleShimmer 5s ease-in-out infinite;
+  text-shadow:0 0 0 transparent; filter:drop-shadow(0 0 22px rgba(176,110,255,0.6)) drop-shadow(2px 4px 0 #0a0025);
+  position:relative;
+}
+@keyframes titleShimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+/* Sparkles near title */
+.menu-title::after {
+  content:'✨'; position:absolute; top:-8px; right:-20px; font-size:14px;
+  animation:sparkleDance 3s ease-in-out infinite;
+}
+@keyframes sparkleDance { 0%,100%{opacity:0;transform:scale(0.5) rotate(0deg)} 25%{opacity:1;transform:scale(1.2) rotate(180deg)} 50%{opacity:0;transform:scale(0.5) rotate(360deg)} }
+.menu-tagline { font-family:'Crimson Text',serif; font-style:italic; font-size:12px; color:#7755aa; letter-spacing:2px; position:relative; z-index:2; }
+
+/* Enhanced aurora divider */
+.divider { width:220px; height:2px; background:linear-gradient(90deg,transparent,#6a20aa,#40c8ff,#b06eff,#40c8ff,#6a20aa,transparent); background-size:200% 100%; margin:8px 0; flex-shrink:0; animation:dividerFlow 4s linear infinite; position:relative; z-index:2; border-radius:2px; }
+@keyframes dividerFlow { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+
+.best-badge { display:flex; align-items:center; gap:8px; background:rgba(176,110,255,0.08); border:1px solid #3a1060; border-radius:30px; padding:6px 18px; position:relative; z-index:2; box-shadow:0 0 12px rgba(176,110,255,0.15); }
 .best-label { font-size:10px; color:#6a20aa; letter-spacing:2px; }
-.best-val { font-size:18px; font-weight:700; color:#e8d8ff; text-shadow:0 0 10px #b06eff60; }
-.menu-nav { display:flex; flex-direction:column; gap:12px; width:100%; padding:0 32px; margin-top:10px; }
-.mbtn { display:flex; align-items:center; justify-content:center; gap:10px; padding:15px 0; border-radius:6px; font-family:'Cinzel',serif; font-size:14px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; transition:transform 0.1s; border:none; width:100%; }
+.best-val { font-size:18px; font-weight:700; color:#e8d8ff; text-shadow:0 0 10px #b06eff60; animation:bestPulse 3s ease-in-out infinite; }
+@keyframes bestPulse { 0%,100%{text-shadow:0 0 10px #b06eff60} 50%{text-shadow:0 0 18px #b06eff} }
+
+.menu-nav { display:flex; flex-direction:column; gap:10px; width:100%; padding:0 28px; margin-top:8px; position:relative; z-index:2; }
+.mbtn { display:flex; align-items:center; justify-content:center; gap:10px; padding:14px 0; border-radius:6px; font-family:'Cinzel',serif; font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; transition:transform 0.1s,box-shadow 0.3s; border:none; width:100%; position:relative; overflow:hidden; }
 .mbtn:active { transform:scale(0.97); }
-.mbtn-primary { background:linear-gradient(135deg,#3a00a0,#7020d0,#3a00a0); border:2px solid #b06eff; color:#f0e8ff; box-shadow:0 0 20px #b06eff40; }
+.mbtn-primary { background:linear-gradient(135deg,#3a00a0,#7020d0,#3a00a0); border:2px solid #b06eff; color:#f0e8ff; box-shadow:0 0 20px #b06eff40; animation:primaryGlow 4s ease-in-out infinite; }
+@keyframes primaryGlow { 0%,100%{box-shadow:0 0 20px #b06eff40} 50%{box-shadow:0 0 30px #b06eff70} }
 .mbtn-secondary { background:rgba(80,30,160,0.25); border:1px solid #6a20aa; color:#c0a0e8; }
 .mbtn-ghost { background:transparent; border:1px solid #3a1060; color:#7755aa; }
-.currency-row { display:flex; gap:10px; margin-top:14px; }
+.currency-row { display:flex; gap:10px; margin-top:10px; position:relative; z-index:2; }
 .gem-badge { display:flex; align-items:center; gap:6px; background:rgba(80,30,160,0.3); border:1px solid #6a20aa; border-radius:20px; padding:5px 14px; }
 .gem-badge.moth { border-color:#9940cc; }
 .gem-icon { font-size:15px; }
 .gem-count { font-size:14px; font-weight:700; color:#e8d8ff; }
-.menu-footer { margin-top:auto; padding:16px 0 20px; color:#3a1060; font-family:'Crimson Text',serif; font-size:10px; letter-spacing:1px; }
+.menu-footer { margin-top:auto; padding:10px 0 16px; color:#3a1060; font-family:'Crimson Text',serif; font-size:10px; letter-spacing:1px; position:relative; z-index:2; }
+
+/* Redesigned menu elements */
+.menu-moth-hud { position:absolute; top:14px; right:14px; z-index:10; display:flex; align-items:center; gap:6px; background:rgba(80,30,160,0.5); border:1px solid #9940cc; border-radius:20px; padding:6px 14px; backdrop-filter:blur(6px); box-shadow:0 0 14px rgba(153,64,204,0.3); }
+.menu-gear-btn { position:absolute; top:14px; left:14px; z-index:10; width:38px; height:38px; display:flex; align-items:center; justify-content:center; background:rgba(80,30,160,0.4); border:1px solid #6a20aa; border-radius:50%; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform 0.15s; font-size:18px; backdrop-filter:blur(6px); }
+.menu-gear-btn:active { transform:scale(0.9) rotate(45deg); }
+.menu-util-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; padding:0 28px; margin-top:4px; position:relative; z-index:2; }
+.mbtn-util { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 0; border-radius:10px; font-family:'Cinzel',serif; font-size:10px; font-weight:700; letter-spacing:2px; cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent; transition:transform 0.1s,box-shadow 0.2s; border:1px solid; background:rgba(80,30,160,0.2); backdrop-filter:blur(2px); }
+.mbtn-util:active { transform:scale(0.96); }
+.mbtn-util:hover { box-shadow:0 0 16px currentColor; }
+.mbtn-util .util-icon { font-size:22px; }
+.mbtn-util.shop-btn { border-color:#ffaa44; color:#ffcc77; background:rgba(100,60,10,0.25); }
+.mbtn-util.ach-btn { border-color:#cc7744; color:#e8a077; background:rgba(90,50,20,0.25); }
+.mbtn-util.lb-btn { border-color:#c0c0c0; color:#e0e0e0; background:rgba(60,60,70,0.3); }
+.mbtn-util.stats-btn { border-color:#b06eff; color:#c8a0ff; background:rgba(80,30,160,0.3); }
+
+/* Floating moth particles in background */
+.menu-particles { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; overflow:hidden; z-index:1; }
+.menu-particle { position:absolute; font-size:14px; opacity:0.2; animation:mothDrift linear infinite; filter:drop-shadow(0 0 6px #b06eff); }
+@keyframes mothDrift {
+  0% { transform:translate(0,0) rotate(0deg); opacity:0; }
+  10% { opacity:0.25; }
+  50% { opacity:0.3; }
+  90% { opacity:0.25; }
+  100% { transform:translate(40px,-120vh) rotate(360deg); opacity:0; }
+}
+@keyframes heroWing {
+  0% { transform:scale(1,1); }
+  100% { transform:scale(1,0.75); }
+}
+@keyframes photoFade { 0%{opacity:0.5;} 70%{opacity:0.5;} 100%{opacity:0;} }
 
 /* Sub-screen header */
 .sub-header { width:100%; display:flex; align-items:center; padding:18px 18px 10px; gap:12px; flex-shrink:0; }
@@ -402,7 +572,6 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Boss Victory -->
-
   <div id="bossVictoryOverlay">
     <div class="bv-icon">🏆</div>
     <div class="bv-title">GUARDIAN DEFEATED!</div>
@@ -433,105 +602,242 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Pause Screen -->
-
   <div id="pauseOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(2,0,12,0.88);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
     <div style="font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#e8d8ff;letter-spacing:4px;text-shadow:0 0 20px #b06eff80;">PAUSED</div>
     <div style="width:2px;height:30px;background:linear-gradient(180deg,transparent,#6a20aa,transparent);"></div>
+    <div id="pauseRunStats" style="width:240px;background:rgba(10,0,30,0.6);border:1.5px solid #4a1a8a;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:#b06eff;letter-spacing:2px;text-align:center;margin-bottom:2px;">CURRENT RUN</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:#7755aa;">Score</span><span id="pauseScore" style="color:#40c8ff;font-weight:700;">0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:#7755aa;">Moths Collected</span><span id="pauseMoths" style="color:#e8d8ff;font-weight:700;">0 🦋</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:#7755aa;">Near-Misses</span><span id="pauseNearMiss" style="color:#ff9966;font-weight:700;">0</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:#7755aa;">Lives Remaining</span><span id="pauseLives" style="color:#e8d8ff;font-weight:700;">3</span></div>
+    </div>
     <button id="pauseResume" style="width:220px;background:linear-gradient(135deg,#1a0050,#5000c0);border:1.5px solid #9040ff;border-radius:10px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;padding:16px 0;cursor:pointer;">
       ▶ RESUME
     </button>
     <button id="pauseMenu" style="width:220px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#7755aa;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;padding:14px 0;cursor:pointer;">
       🏠 MAIN MENU
     </button>
+    <button id="pausePhoto" style="width:220px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,200,100,0.3);border-radius:10px;color:#c0a060;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;cursor:pointer;">
+      📷 PHOTO MODE
+    </button>
+    <button id="pausePhoto" style="width:220px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#5a4a7a;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;cursor:pointer;">
+      📸 PHOTO MODE
+    </button>
   </div>
+
+  <!-- Photo Mode overlay -->
+  <div id="photoModeOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:300;pointer-events:all;">
+    <div id="photoModeHint" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);font-family:'Crimson Text',serif;font-style:italic;font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:1px;pointer-events:none;animation:photoFade 3s ease-out forwards;">tap anywhere to exit</div>
+  </div>
+
+  <!-- Photo Mode hint -->
+  <div id="photoModeHint" style="display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:800;background:rgba(0,0,0,0.5);border-radius:20px;padding:6px 16px;pointer-events:none;">
+    <span style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:rgba(255,255,255,0.6);">tap anywhere to exit photo mode</span>
+  </div>
+  <!-- Photo Mode tap-to-exit overlay (invisible full-screen tap target) -->
+  <div id="photoModeOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:700;cursor:pointer;"></div>
 
   <!-- Game Over -->
 
   <div id="overlayDead" class="hidden">
     <div class="ov-bug">🪲</div>
     <div class="ov-title">GAME OVER</div>
+    <div id="deathQuote" style="font-family:'Crimson Text',serif;font-style:italic;font-size:12px;color:#9080c0;letter-spacing:1px;text-align:center;margin:-2px 0 4px;min-height:16px;"></div>
     <div class="ov-line"></div>
     <div class="ov-score-box" id="scoreBox" style="display:none">
       <div class="ov-score-label">YOUR SCORE</div>
       <div class="ov-score-val" id="finalScore">0</div>
     </div>
+    <div id="infDeathStats" style="display:none;width:100%;max-width:280px;background:rgba(10,0,30,0.7);border:1.5px solid #2a6010;border-radius:14px;padding:12px 16px;text-align:center;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:#40c060;letter-spacing:2px;margin-bottom:8px;">INFINITE MODE RUN</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="color:#7755aa;font-size:11px;">Rank</span>
+        <span id="infDeathRank" style="color:#ffd700;font-size:13px;font-weight:700;">#1</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="color:#7755aa;font-size:11px;">Biome Reached</span>
+        <span id="infDeathBiome" style="color:#80d0ff;font-size:11px;">Ancient Forest</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="color:#7755aa;font-size:11px;">Moths Collected</span>
+        <span id="infDeathMoths" style="color:#e8d8ff;font-size:11px;">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#7755aa;font-size:11px;">Time Survived</span>
+        <span id="infDeathTime" style="color:#e8d8ff;font-size:11px;">0:00</span>
+      </div>
+      <div id="infDeathBest" style="margin-top:8px;font-size:10px;color:#b06eff;font-family:'Crimson Text',serif;font-style:italic;"></div>
+    </div>
 
-```
-<!-- Out of lives panel -->
-<div id="outOfLivesPanel" style="display:none;width:100%;max-width:280px;background:rgba(10,0,30,0.7);border:1.5px solid #5020a0;border-radius:14px;padding:16px;text-align:center;gap:10px;display:flex;flex-direction:column;align-items:center;">
-  <div style="font-family:'Cinzel',serif;font-size:11px;color:#b06eff;letter-spacing:2px;">OUT OF LIVES</div>
-  <div id="lifeTimerDisplay" style="font-size:13px;color:#e8d8ff;font-family:'Cinzel',serif;"></div>
-  <button id="btnWatchAd" style="
-    background:linear-gradient(135deg,#1a4a00,#2e8800);
-    border:2px solid #44ff44;border-radius:12px;
-    color:#ccffcc;font-family:'Cinzel',serif;font-size:11px;
-    letter-spacing:2px;padding:12px 0;cursor:pointer;
-    width:100%;-webkit-tap-highlight-color:transparent;">
-    📺 WATCH AD → PLAY NOW
-  </button>
-  <button id="btnBuyLife" style="
-    background:linear-gradient(135deg,#3a00a0,#7020d0);
-    border:1.5px solid #b06eff;border-radius:12px;
-    color:#e8d8ff;font-family:'Cinzel',serif;font-size:11px;
-    letter-spacing:2px;padding:10px 0;cursor:pointer;
-    width:100%;-webkit-tap-highlight-color:transparent;">
-    🦋 100 MOTHS → +1 LIFE
-  </button>
-  <div style="font-size:10px;color:#7755aa;font-family:'Crimson Text',serif;font-style:italic;">Or wait for the timer above</div>
-</div>
+    <!-- Out of lives panel -->
+    <div id="outOfLivesPanel" style="display:none;width:100%;max-width:280px;background:rgba(10,0,30,0.7);border:1.5px solid #5020a0;border-radius:14px;padding:16px;text-align:center;gap:10px;display:flex;flex-direction:column;align-items:center;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:#b06eff;letter-spacing:2px;">OUT OF LIVES</div>
+      <div id="lifeTimerDisplay" style="font-size:13px;color:#e8d8ff;font-family:'Cinzel',serif;"></div>
+      <button id="btnWatchAd" style="
+        background:linear-gradient(135deg,#1a4a00,#2e8800);
+        border:2px solid #44ff44;border-radius:12px;
+        color:#ccffcc;font-family:'Cinzel',serif;font-size:11px;
+        letter-spacing:2px;padding:12px 0;cursor:pointer;
+        width:100%;-webkit-tap-highlight-color:transparent;">
+        📺 WATCH AD → PLAY NOW
+      </button>
+      <button id="btnBuyLife" style="
+        background:linear-gradient(135deg,#3a00a0,#7020d0);
+        border:1.5px solid #b06eff;border-radius:12px;
+        color:#e8d8ff;font-family:'Cinzel',serif;font-size:11px;
+        letter-spacing:2px;padding:10px 0;cursor:pointer;
+        width:100%;-webkit-tap-highlight-color:transparent;">
+        🦋 100 MOTHS → +1 LIFE
+      </button>
+      <div style="font-size:10px;color:#7755aa;font-family:'Crimson Text',serif;font-style:italic;">Or wait for the timer above</div>
+    </div>
 
-<button class="ov-btn" id="btnFlyAgain" style="font-size:13px;">FLY AGAIN</button>
-<button class="mbtn mbtn-ghost" id="btnBackMenu" style="display:none;width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
-<div id="newBestBanner"><div id="newBestText">⭐ NEW BEST! ⭐</div></div>
-```
-
+    <button class="ov-btn" id="btnFlyAgain" style="font-size:13px;">FLY AGAIN</button>
+    <button class="mbtn mbtn-ghost" id="btnBackMenu" style="display:none;width:200px;padding:10px 0;font-size:11px;letter-spacing:2px;margin-top:4px;">MAIN MENU</button>
+    <div id="newBestBanner"><div id="newBestText">⭐ NEW BEST! ⭐</div></div>
   </div>
 
   <!-- Powerup active indicators -->
-
   <div id="powerupBar"></div>
 
   <!-- Tutorial Overlay -->
-
   <div id="tutorialOverlay" style="display:none;"></div>
 
   <!-- PASSWORD GATE -->
 
-  <!-- Main Menu -->
+  <!-- Daily Login Reward Popup -->
+  <div id="dailyRewardPopup" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(2,0,12,0.92);z-index:600;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:30px;">
+    <div style="font-size:36px;" id="dailyRewardIcon">🎁</div>
+    <div style="font-family:'Cinzel',serif;font-size:20px;font-weight:900;color:#ffd700;letter-spacing:3px;">DAILY REWARD</div>
+    <div id="dailyStreak" style="font-family:'Crimson Text',serif;font-style:italic;font-size:13px;color:#b06eff;"></div>
+    <div style="display:flex;gap:6px;margin:8px 0;" id="dailyDots"></div>
+    <div style="background:rgba(40,20,0,0.6);border:2px solid #ffd700;border-radius:14px;padding:16px 30px;text-align:center;">
+      <div style="font-size:28px;color:#ffd700;font-weight:900;font-family:'Cinzel',serif;" id="dailyRewardAmount">+50 🦋</div>
+    </div>
+    <button id="dailyClaimBtn" style="background:linear-gradient(135deg,#5a3a00,#c08000);border:2px solid #ffd700;border-radius:12px;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:2px;padding:14px 40px;cursor:pointer;margin-top:8px;">CLAIM</button>
+  </div>
 
+  <!-- Daily Challenge Banner (shown on main menu) -->
+  <div id="dailyChallengeCard" style="display:none;width:100%;background:rgba(0,40,20,0.4);border:1.5px solid #40cc80;border-radius:10px;padding:12px 16px;cursor:pointer;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:#40cc80;letter-spacing:2px;">⚔️ DAILY CHALLENGE</div>
+        <div id="dailyChallengeText" style="font-family:'Crimson Text',serif;font-size:12px;color:#e8d8ff;margin-top:4px;"></div>
+      </div>
+      <div id="dailyChallengeReward" style="color:#ffd700;font-size:12px;font-weight:700;white-space:nowrap;"></div>
+    </div>
+    <div id="dailyChallengeStatus" style="font-size:10px;color:#7755aa;margin-top:4px;font-family:'Crimson Text',serif;font-style:italic;"></div>
+  </div>
+
+  <!-- Main Menu -->
   <div class="menu-screen hidden" id="screenMain">
     <div class="topband"></div>
-    <div class="menu-logo">
-      <div class="menu-bug-icon">🪲</div>
-      <div class="menu-title">DRAGONFLY'S<br>FLIGHT</div>
-      <div class="menu-tagline">survive the ruined kingdom</div>
+    <!-- Background scene -->
+    <div class="menu-scene">
+      <div class="menu-scene-stars"></div>
+      <div class="menu-scene-moon"></div>
+      <div class="menu-fly-silhouette"></div>
+      <div class="menu-scene-glow"></div>
+      <div class="menu-scene-hills-far"></div>
+      <div class="menu-scene-hills-near"></div>
     </div>
-    <div class="divider"></div>
-    <div class="best-badge">
-      <span class="best-label">BEST</span>
-      <span class="best-val" id="menuBest">0</span>
+    <div class="menu-particles" id="menuParticles"></div>
+    <div class="kh-hero-glow"></div>
+    <div class="kh-hero">
+      <svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bodyGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d8b0ff"/><stop offset="60%" stop-color="#7040c8"/><stop offset="100%" stop-color="#2a0a4a"/></radialGradient>
+          <linearGradient id="wingGradTL" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e8d8ff" stop-opacity="0.95"/><stop offset="50%" stop-color="#b06eff" stop-opacity="0.75"/><stop offset="100%" stop-color="#40c8ff" stop-opacity="0.4"/></linearGradient>
+          <linearGradient id="wingGradTR" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8d8ff" stop-opacity="0.95"/><stop offset="50%" stop-color="#b06eff" stop-opacity="0.75"/><stop offset="100%" stop-color="#40c8ff" stop-opacity="0.4"/></linearGradient>
+          <filter id="wingGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <ellipse cx="100" cy="130" rx="85" ry="45" fill="rgba(176,110,255,0.15)" filter="url(#wingGlow)"/>
+        <ellipse cx="240" cy="130" rx="85" ry="45" fill="rgba(64,200,255,0.15)" filter="url(#wingGlow)"/>
+        <g style="animation:heroWing 0.5s ease-in-out infinite alternate;transform-origin:160px 160px;"><path d="M 160 160 Q 90 100, 50 130 Q 30 160, 70 175 Q 110 175, 160 165 Z" fill="url(#wingGradTL)" stroke="rgba(200,160,255,0.5)" stroke-width="1.5"/></g>
+        <g style="animation:heroWing 0.5s ease-in-out infinite alternate-reverse;transform-origin:180px 160px;"><path d="M 180 160 Q 250 100, 290 130 Q 310 160, 270 175 Q 230 175, 180 165 Z" fill="url(#wingGradTR)" stroke="rgba(200,160,255,0.5)" stroke-width="1.5"/></g>
+        <g style="animation:heroWing 0.5s ease-in-out 0.05s infinite alternate;transform-origin:160px 180px;"><path d="M 160 175 Q 100 195, 75 225 Q 70 250, 105 245 Q 140 235, 160 195 Z" fill="url(#wingGradTL)" opacity="0.85"/></g>
+        <g style="animation:heroWing 0.5s ease-in-out 0.05s infinite alternate-reverse;transform-origin:180px 180px;"><path d="M 180 175 Q 240 195, 265 225 Q 270 250, 235 245 Q 200 235, 180 195 Z" fill="url(#wingGradTR)" opacity="0.85"/></g>
+        <ellipse cx="170" cy="135" rx="12" ry="14" fill="url(#bodyGrad)"/><ellipse cx="170" cy="160" rx="14" ry="16" fill="url(#bodyGrad)"/>
+        <ellipse cx="170" cy="185" rx="12" ry="16" fill="url(#bodyGrad)"/><ellipse cx="170" cy="210" rx="10" ry="16" fill="url(#bodyGrad)"/>
+        <ellipse cx="170" cy="232" rx="8" ry="14" fill="url(#bodyGrad)"/>
+        <ellipse cx="167" cy="158" rx="4" ry="8" fill="rgba(255,220,255,0.5)"/>
+        <circle cx="170" cy="115" r="15" fill="url(#bodyGrad)"/>
+        <ellipse cx="163" cy="113" rx="4" ry="5" fill="#40c8ff"/><ellipse cx="177" cy="113" rx="4" ry="5" fill="#40c8ff"/>
+        <ellipse cx="163" cy="113" rx="1.5" ry="2" fill="#fff"/><ellipse cx="177" cy="113" rx="1.5" ry="2" fill="#fff"/>
+        <path d="M 165 103 Q 158 88, 155 75" stroke="#2a0a4a" stroke-width="1.5" fill="none"/><path d="M 175 103 Q 182 88, 185 75" stroke="#2a0a4a" stroke-width="1.5" fill="none"/>
+        <circle cx="155" cy="75" r="2" fill="#b06eff"/><circle cx="185" cy="75" r="2" fill="#b06eff"/>
+      </svg>
     </div>
-    <div class="menu-nav">
-      <button class="mbtn mbtn-primary" id="btnWorldMap">🌍 &nbsp;WORLD MAP</button>
-      <button class="mbtn mbtn-primary" id="btnCoop" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">👥 &nbsp;CO-OP MODE</button>
-      <button class="mbtn mbtn-primary" id="btnPlayInfinite" style="background:linear-gradient(135deg,#005a00,#00a000,#005a00);">▶ &nbsp;INFINITE MODE</button>
-      <button class="mbtn mbtn-secondary" id="btnShop" style="display:flex;align-items:center;justify-content:center;gap:10px;">🎃 &nbsp;SHOP</button>
-      <button class="mbtn mbtn-secondary" id="btnAchievements">🏅 &nbsp;ACHIEVEMENTS</button>
-      <button class="mbtn mbtn-secondary" id="btnLeaderboard">🏆 &nbsp;LEADERBOARD</button>
-      <button class="mbtn mbtn-ghost" id="btnOptions">⚙️ &nbsp;OPTIONS</button>
-      <button id="btnMenuRewardedAd" style="
-        background:linear-gradient(135deg,#1a3a00,#2a6000);
-        border:1.5px solid #44cc44; border-radius:10px;
-        color:#aaffaa; font-family:'Cinzel',serif; font-size:10px;
-        letter-spacing:2px; padding:10px 0; width:100%; cursor:pointer;
-        -webkit-tap-highlight-color:transparent;
-      ">📺 &nbsp;WATCH AD → EARN 50 MOTHS</button>
+
+    <!-- Title top-left -->
+    <div class="kh-title-zone">
+      <div class="kh-title-main" id="menuTitleTap">Dragonfly's<br>Flight</div>
+      <div class="kh-title-sub">soar through five realms</div>
+      <div class="kh-title-dec"></div>
     </div>
-    <div class="currency-row">
-      <div class="gem-badge moth"><span class="gem-icon">🦋</span><span class="gem-count" id="menuMoths">0</span></div>
+
+    <!-- Best score -->
+    <div class="kh-best">
+      <span class="kh-best-label">BEST</span>
+      <span class="kh-best-val" id="menuBest">0</span>
     </div>
-    <div id="menuLifeTimer" style="font-size:11px;color:#9966cc;font-family:'Cinzel',serif;letter-spacing:1px;text-align:center;padding:2px 0;min-height:16px;"></div>
-    <div class="menu-footer">tap rapidly to fly faster</div>
+
+    <!-- Daily challenge -->
+    <div id="dailyChallengeSlot" style="display:none;"></div>
+
+    <!-- Moth counter top-right -->
+    <div style="position:absolute;top:14px;right:14px;z-index:10;display:flex;align-items:center;gap:6px;background:rgba(20,5,40,0.55);border:1px solid rgba(153,64,204,0.5);border-radius:20px;padding:6px 14px;backdrop-filter:blur(6px);">
+      <span class="gem-icon">🦋</span><span class="gem-count" id="menuMoths">0</span>
+    </div>
+
+    <!-- Gear top-left -->
+    <button id="btnOptions" style="position:absolute;top:14px;left:14px;z-index:10;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(20,5,40,0.55);border:1px solid rgba(176,110,255,0.4);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;font-size:16px;backdrop-filter:blur(6px);">⚙️</button>
+
+    <!-- KH-style nav — 3 primary items only -->
+    <div style="position:absolute;bottom:80px;left:0;right:0;z-index:10;padding:0 24px;display:flex;flex-direction:column;gap:0;">
+      <button class="mbtn" id="btnWorldMap" style="background:transparent;border:none;border-top:1px solid rgba(176,110,255,0.18);box-shadow:none;animation:none;justify-content:flex-start;padding:13px 16px;font-size:14px;gap:14px;"><span style="display:inline-block;width:9px;height:9px;background:#b06eff;box-shadow:0 0 8px #b06eff;flex-shrink:0;"></span>WORLD MAP<span style="margin-left:auto;color:rgba(176,110,255,0.4);font-size:15px;">▸</span></button>
+      <button class="mbtn" id="btnCoop" style="background:transparent;border:none;border-top:1px solid rgba(176,110,255,0.12);box-shadow:none;animation:none;justify-content:flex-start;padding:13px 16px;font-size:14px;gap:14px;color:#c0d8ff;"><span style="display:inline-block;width:9px;height:9px;background:#40a0ff;box-shadow:0 0 8px #40a0ff;flex-shrink:0;"></span>CO-OP MODE<span style="margin-left:auto;color:rgba(64,160,255,0.4);font-size:15px;">▸</span></button>
+      <button class="mbtn" id="btnPlayInfinite" style="background:transparent;border:none;border-top:1px solid rgba(176,110,255,0.12);border-bottom:1px solid rgba(176,110,255,0.18);box-shadow:none;animation:none;justify-content:flex-start;padding:13px 16px;font-size:14px;gap:14px;color:#c0ffc0;"><span style="display:inline-block;width:9px;height:9px;background:#44cc44;box-shadow:0 0 8px #44cc44;flex-shrink:0;"></span>INFINITE MODE<span style="margin-left:auto;color:rgba(68,204,68,0.4);font-size:15px;">▸</span></button>
+    </div>
+
+    <!-- Utility icon row at bottom edge -->
+    <div style="position:absolute;bottom:28px;left:0;right:0;z-index:10;display:flex;justify-content:center;gap:24px;">
+      <button class="mbtn" id="btnShop" style="background:transparent;border:none;box-shadow:none;animation:none;width:40px;height:40px;padding:0;font-size:20px;opacity:0.5;border-radius:50;">🛒</button>
+      <button class="mbtn" id="btnAchievements" style="background:transparent;border:none;box-shadow:none;animation:none;width:40px;height:40px;padding:0;font-size:20px;opacity:0.5;border-radius:50;">🏅</button>
+      <button class="mbtn" id="btnLeaderboard" style="background:transparent;border:none;box-shadow:none;animation:none;width:40px;height:40px;padding:0;font-size:20px;opacity:0.5;border-radius:50;">🏆</button>
+      <button class="mbtn" id="btnStats" style="background:transparent;border:none;box-shadow:none;animation:none;width:40px;height:40px;padding:0;font-size:20px;opacity:0.5;border-radius:50;">📊</button>
+    </div>
+
+    <!-- Ad as subtle text, bottom-right -->
+    <button id="btnMenuRewardedAd" style="position:absolute;bottom:6px;right:16px;z-index:10;background:transparent;border:none;color:rgba(170,255,170,0.4);font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;padding:4px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">📺 AD → 50 🦋</button>
+
+    <!-- Life timer bottom-left -->
+    <div id="menuLifeTimer" style="position:absolute;bottom:12px;left:16px;z-index:10;font-size:10px;color:#9966cc;font-family:'Cinzel',serif;letter-spacing:1px;min-height:14px;"></div>
+  </div>
+
+  <!-- Infinite Mode Splash -->
+  <div id="infiniteSplash" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(170deg,#001a00 0%,#002a08 30%,#003a10 60%,#001a08 100%);z-index:600;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;pointer-events:all;">
+    <!-- Decorative glow -->
+    <div style="position:absolute;top:20%;left:50%;transform:translateX(-50%);width:250px;height:250px;background:radial-gradient(circle,rgba(68,204,68,0.15) 0%,rgba(0,100,0,0.05) 50%,transparent 70%);filter:blur(30px);pointer-events:none;"></div>
+    <!-- Mode icon -->
+    <div style="font-size:52px;filter:drop-shadow(0 0 20px rgba(68,204,68,0.6));animation:mFloat 3s ease-in-out infinite;">♾️</div>
+    <!-- Title -->
+    <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:#c0ffc0;letter-spacing:5px;text-shadow:0 0 20px rgba(68,204,68,0.5),2px 3px 0 #001a00;text-align:center;">INFINITE MODE</div>
+    <!-- Decorative line -->
+    <div style="width:180px;height:2px;background:linear-gradient(90deg,transparent,#44cc44,#80ff80,#44cc44,transparent);margin:4px 0;"></div>
+    <!-- Description -->
+    <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:13px;color:rgba(160,220,160,0.8);text-align:center;line-height:1.5;max-width:280px;">Survive as long as you can.<br>Biomes shift. Speed climbs. No second chances.</div>
+    <!-- Best score -->
+    <div style="background:rgba(0,40,0,0.5);border:1px solid rgba(68,204,68,0.3);border-radius:14px;padding:14px 28px;text-align:center;margin:6px 0;">
+      <div style="font-family:'Cinzel',serif;font-size:9px;color:rgba(68,204,68,0.6);letter-spacing:3px;margin-bottom:6px;">PERSONAL BEST</div>
+      <div id="infSplashBest" style="font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#e0ffe0;text-shadow:0 0 14px rgba(68,204,68,0.5);">0</div>
+      <div id="infSplashRank" style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:rgba(160,220,160,0.6);margin-top:4px;"></div>
+    </div>
+    <!-- Play button -->
+    <button id="btnInfSplashPlay" style="background:linear-gradient(135deg,#003a00,#006a00,#003a00);border:2px solid #44cc44;border-radius:10px;color:#c0ffc0;font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:4px;padding:16px 50px;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 0 20px rgba(68,204,68,0.3);margin-top:4px;">TAP TO FLY</button>
+    <!-- Back -->
+    <button id="btnInfSplashBack" style="background:transparent;border:1px solid rgba(68,204,68,0.2);border-radius:8px;color:rgba(160,220,160,0.5);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:10px 30px;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:2px;">← BACK</button>
   </div>
 
   <!-- Options -->
@@ -571,6 +877,10 @@ canvas { display:block; width:100%; height:100%; }
         <div class="opt-left"><span class="opt-icon">📳</span><div><div class="opt-label">Vibration</div><div class="opt-sub">Haptic on tap</div></div></div>
         <label class="toggle"><input type="checkbox" id="optVibe" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
       </div>
+      <div class="opt-row">
+        <div class="opt-left"><span class="opt-icon">📱</span><div><div class="opt-label">Tilt to Fly</div><div class="opt-sub">Use gyroscope instead of tapping</div></div></div>
+        <label class="toggle"><input type="checkbox" id="optTilt"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
       <div class="opt-section">Difficulty</div>
       <div class="opt-row">
         <div class="opt-left"><span class="opt-icon">🗴️</span><div class="opt-label">Game Speed</div></div>
@@ -584,6 +894,11 @@ canvas { display:block; width:100%; height:100%; }
       <div class="opt-row">
         <div class="opt-left"><span class="opt-icon">🎯</span><div><div class="opt-label">Show Hitbox</div><div class="opt-sub">Debug mode</div></div></div>
         <label class="toggle"><input type="checkbox" id="optHitbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="opt-section" style="margin-top:14px;">📚 Tutorial</div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div class="opt-left"><span class="opt-icon">🎓</span><div><div class="opt-label">Replay Tutorial</div><div class="opt-sub">Learn the basics again</div></div></div>
+        <button id="btnReplayTutorial" style="padding:10px 8px;border-radius:8px;border:1px solid #b06eff;background:rgba(176,110,255,0.15);color:#c8a0ff;font-size:12px;font-weight:700;cursor:pointer;">🎓 Play Tutorial</button>
       </div>
       <div class="opt-section" style="margin-top:14px;">💾 Save Data</div>
       <div class="opt-row" style="flex-direction:column;align-items:stretch;gap:8px;">
@@ -641,122 +956,118 @@ canvas { display:block; width:100%; height:100%; }
     </div>
     <div class="shop-body">
 
-```
-  <!-- IAP MOTH PACKS -->
-  <div class="shop-section" style="color:#ffd700;">💰 Buy Moths</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 4px 8px;">
-    <button class="iap-pack" data-iap="moths_small">
-      <div class="iap-icon">🦋</div>
-      <div class="iap-amount">500</div>
-      <div class="iap-label">Moths</div>
-      <div class="iap-price">$0.99</div>
-    </button>
-    <button class="iap-pack" data-iap="moths_medium">
-      <div class="iap-icon">🦋🦋</div>
-      <div class="iap-amount">1,200</div>
-      <div class="iap-label">Moths</div>
-      <div class="iap-price">$1.99</div>
-    </button>
-    <button class="iap-pack" data-iap="moths_large" style="border-color:#ffd700;">
-      <div class="iap-icon">🦋🦋🦋</div>
-      <div class="iap-amount">3,000</div>
-      <div class="iap-label">Moths <span style="color:#ffd700;font-size:9px;">BEST VALUE</span></div>
-      <div class="iap-price">$2.99</div>
-    </button>
-    <button class="iap-pack" data-iap="moths_mega">
-      <div class="iap-icon">✨🦋✨</div>
-      <div class="iap-amount">8,000</div>
-      <div class="iap-label">Moths</div>
-      <div class="iap-price">$3.99</div>
-    </button>
-  </div>
+      <!-- IAP MOTH PACKS -->
+      <div class="shop-section" style="color:#ffd700;">💰 Buy Moths</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 4px 8px;">
+        <button class="iap-pack" data-iap="moths_small">
+          <div class="iap-icon">🦋</div>
+          <div class="iap-amount">500</div>
+          <div class="iap-label">Moths</div>
+          <div class="iap-price">$0.99</div>
+        </button>
+        <button class="iap-pack" data-iap="moths_medium">
+          <div class="iap-icon">🦋🦋</div>
+          <div class="iap-amount">1,200</div>
+          <div class="iap-label">Moths</div>
+          <div class="iap-price">$1.99</div>
+        </button>
+        <button class="iap-pack" data-iap="moths_large" style="border-color:#ffd700;">
+          <div class="iap-icon">🦋🦋🦋</div>
+          <div class="iap-amount">3,000</div>
+          <div class="iap-label">Moths <span style="color:#ffd700;font-size:9px;">BEST VALUE</span></div>
+          <div class="iap-price">$2.99</div>
+        </button>
+        <button class="iap-pack" data-iap="moths_mega">
+          <div class="iap-icon">✨🦋✨</div>
+          <div class="iap-amount">8,000</div>
+          <div class="iap-label">Moths</div>
+          <div class="iap-price">$3.99</div>
+        </button>
+      </div>
 
-  <!-- PREMIUM BUNDLES -->
-  <div class="shop-section" style="color:#ffd700;">👑 Premium</div>
-  <div class="shop-card" style="border:1.5px solid #cc44ff;background:rgba(40,0,60,0.4);">
-    <div class="shop-card-icon" style="font-size:28px;">👑</div>
-    <div style="flex:1">
-      <div class="shop-card-name" style="color:#cc44ff;">Royal Bundle</div>
-      <div class="shop-card-desc">All skins + 5,000 moths + no ads</div>
+      <!-- PREMIUM BUNDLES -->
+      <div class="shop-section" style="color:#ffd700;">👑 Premium</div>
+      <div class="shop-card" style="border:1.5px solid #cc44ff;background:rgba(40,0,60,0.4);">
+        <div class="shop-card-icon" style="font-size:28px;">👑</div>
+        <div style="flex:1">
+          <div class="shop-card-name" style="color:#cc44ff;">Royal Bundle</div>
+          <div class="shop-card-desc">All skins + 5,000 moths + no ads</div>
+        </div>
+        <button class="shop-buy iap-btn" data-iap="royal_bundle" style="border-color:#cc44ff;background:linear-gradient(135deg,#2a005a,#7000c0);">
+          <span class="bp" style="color:#cc44ff;">$9.99</span>
+        </button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">🚫</div>
+        <div style="flex:1"><div class="shop-card-name">Remove Ads</div><div class="shop-card-desc">Clean experience, forever</div></div>
+        <button class="shop-buy iap-btn" data-iap="remove_ads"><span class="bp">$0.99</span><span class="bc">one-time</span></button>
+      </div>
+
+      <div class="shop-section">⚡ Infinite Dragonfly</div>
+      <div class="shop-card" style="border:1px solid #ffd700;background:rgba(60,40,0,0.35);">
+        <div class="shop-card-icon" style="font-size:32px;filter:drop-shadow(0 0 10px #ffd700)">⚡</div>
+        <div style="flex:1">
+          <div class="shop-card-name" style="color:#ffd700;font-size:13px;">Infinite Dragonfly</div>
+          <div class="shop-card-desc">Become golden &amp; invincible for the level. Tap ⚡ icon to activate!</div>
+        </div>
+        <button class="shop-buy" id="buyInfiniteBtn" data-action="moths-infinite" style="border-color:#ffd700;background:linear-gradient(135deg,#5a3a00,#c08000);">
+          <span class="bp" style="color:#ffd700;">🦋 500</span>
+        </button>
+      </div>
+
+      <div class="shop-section">🦋 Dragonfly Skins</div>
+      <div class="skin-row" id="skinRow"></div>
+
+      <div class="shop-section">✨ Powerups</div>
+      <div class="shop-card">
+        <div class="shop-card-icon">🛡️</div>
+        <div style="flex:1"><div class="shop-card-name">Shield Charm</div><div class="shop-card-desc">Absorbs your next collision</div></div>
+        <button class="shop-buy" data-action="moths-shield"><span class="bp">🦋 150</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">⏱️</div>
+        <div style="flex:1"><div class="shop-card-name">Slow-Mo Bubble</div><div class="shop-card-desc">Time slows for 8 seconds</div></div>
+        <button class="shop-buy" data-action="moths-slowmo"><span class="bp">🦋 120</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">👻</div>
+        <div style="flex:1"><div class="shop-card-name">Ghost Mode</div><div class="shop-card-desc">Pass through one obstacle</div></div>
+        <button class="shop-buy" data-action="moths-ghost"><span class="bp">🦋 200</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">✨</div>
+        <div style="flex:1"><div class="shop-card-name">Wing Trail Boost</div><div class="shop-card-desc">Rainbow sparkle trail for 3 runs</div></div>
+        <button class="shop-buy" data-action="moths-trail"><span class="bp">🦋 80</span></button>
+      </div>
+
+      <div class="shop-section">❤️ Extra Lives</div>
+      <div class="shop-card">
+        <div class="shop-card-icon">❤️</div>
+        <div style="flex:1"><div class="shop-card-name">Bonus Life</div><div class="shop-card-desc">+1 life right now</div></div>
+        <button class="shop-buy" data-action="moths-life"><span class="bp">🦋 100</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">💖</div>
+        <div style="flex:1"><div class="shop-card-name">5 Lives Pack</div><div class="shop-card-desc">+5 lives — save 100 moths</div></div>
+        <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 400</span></button>
+      </div>
+      <div class="shop-card">
+        <div class="shop-card-icon">💝</div>
+        <div style="flex:1"><div class="shop-card-name">10 Lives Pack</div><div class="shop-card-desc">+10 lives — save 300 moths</div></div>
+        <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 700</span></button>
+      </div>
+
+      <!-- Restore + legal -->
+      <div style="text-align:center;padding:12px 0 4px;">
+        <button id="restorePurchasesBtn" style="background:none;border:1px solid rgba(180,140,255,0.3);color:rgba(180,140,255,0.7);font-size:11px;padding:8px 20px;border-radius:8px;cursor:pointer;">Restore Purchases</button>
+      </div>
+      <div style="text-align:center;padding:4px 16px 20px;font-size:9px;color:rgba(180,140,255,0.4);line-height:1.5;">
+        Purchases are processed securely. Subscriptions auto-renew unless cancelled.<br>Terms of Service &amp; Privacy Policy apply.
+      </div>
     </div>
-    <button class="shop-buy iap-btn" data-iap="royal_bundle" style="border-color:#cc44ff;background:linear-gradient(135deg,#2a005a,#7000c0);">
-      <span class="bp" style="color:#cc44ff;">$9.99</span>
-    </button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">🚫</div>
-    <div style="flex:1"><div class="shop-card-name">Remove Ads</div><div class="shop-card-desc">Clean experience, forever</div></div>
-    <button class="shop-buy iap-btn" data-iap="remove_ads"><span class="bp">$0.99</span><span class="bc">one-time</span></button>
-  </div>
-
-  <div class="shop-section">⚡ Infinite Dragonfly</div>
-  <div class="shop-card" style="border:1px solid #ffd700;background:rgba(60,40,0,0.35);">
-    <div class="shop-card-icon" style="font-size:32px;filter:drop-shadow(0 0 10px #ffd700)">⚡</div>
-    <div style="flex:1">
-      <div class="shop-card-name" style="color:#ffd700;font-size:13px;">Infinite Dragonfly</div>
-      <div class="shop-card-desc">Become golden &amp; invincible for the level. Tap ⚡ icon to activate!</div>
-    </div>
-    <button class="shop-buy" id="buyInfiniteBtn" data-action="moths-infinite" style="border-color:#ffd700;background:linear-gradient(135deg,#5a3a00,#c08000);">
-      <span class="bp" style="color:#ffd700;">🦋 500</span>
-    </button>
-  </div>
-
-  <div class="shop-section">🦋 Dragonfly Skins</div>
-  <div class="skin-row" id="skinRow"></div>
-
-  <div class="shop-section">✨ Powerups</div>
-  <div class="shop-card">
-    <div class="shop-card-icon">🛡️</div>
-    <div style="flex:1"><div class="shop-card-name">Shield Charm</div><div class="shop-card-desc">Absorbs your next collision</div></div>
-    <button class="shop-buy" data-action="moths-shield"><span class="bp">🦋 150</span></button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">⏱️</div>
-    <div style="flex:1"><div class="shop-card-name">Slow-Mo Bubble</div><div class="shop-card-desc">Time slows for 8 seconds</div></div>
-    <button class="shop-buy" data-action="moths-slowmo"><span class="bp">🦋 120</span></button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">👻</div>
-    <div style="flex:1"><div class="shop-card-name">Ghost Mode</div><div class="shop-card-desc">Pass through one obstacle</div></div>
-    <button class="shop-buy" data-action="moths-ghost"><span class="bp">🦋 200</span></button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">✨</div>
-    <div style="flex:1"><div class="shop-card-name">Wing Trail Boost</div><div class="shop-card-desc">Rainbow sparkle trail for 3 runs</div></div>
-    <button class="shop-buy" data-action="moths-trail"><span class="bp">🦋 80</span></button>
-  </div>
-
-  <div class="shop-section">❤️ Extra Lives</div>
-  <div class="shop-card">
-    <div class="shop-card-icon">❤️</div>
-    <div style="flex:1"><div class="shop-card-name">Bonus Life</div><div class="shop-card-desc">+1 life right now</div></div>
-    <button class="shop-buy" data-action="moths-life"><span class="bp">🦋 100</span></button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">💖</div>
-    <div style="flex:1"><div class="shop-card-name">5 Lives Pack</div><div class="shop-card-desc">+5 lives — save 100 moths</div></div>
-    <button class="shop-buy" data-action="moths-life5"><span class="bp">🦋 400</span></button>
-  </div>
-  <div class="shop-card">
-    <div class="shop-card-icon">💝</div>
-    <div style="flex:1"><div class="shop-card-name">10 Lives Pack</div><div class="shop-card-desc">+10 lives — save 300 moths</div></div>
-    <button class="shop-buy" data-action="moths-life10"><span class="bp">🦋 700</span></button>
-  </div>
-
-  <!-- Restore + legal -->
-  <div style="text-align:center;padding:12px 0 4px;">
-    <button id="restorePurchasesBtn" style="background:none;border:1px solid rgba(180,140,255,0.3);color:rgba(180,140,255,0.7);font-size:11px;padding:8px 20px;border-radius:8px;cursor:pointer;">Restore Purchases</button>
-  </div>
-  <div style="text-align:center;padding:4px 16px 20px;font-size:9px;color:rgba(180,140,255,0.4);line-height:1.5;">
-    Purchases are processed securely. Subscriptions auto-renew unless cancelled.<br>Terms of Service &amp; Privacy Policy apply.
-  </div>
-</div>
-```
-
   </div>
 
   <!-- Co-op Screen -->
-
   <div class="menu-screen hidden" id="screenCoop">
     <div class="topband"></div>
     <div class="sub-header">
@@ -767,74 +1078,72 @@ canvas { display:block; width:100%; height:100%; }
       <!-- Status display -->
       <div id="coopStatus" style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:13px;text-align:center;min-height:20px;"></div>
 
-```
-  <!-- Room code display -->
-  <div id="coopRoomCode" style="display:none;background:rgba(0,60,120,0.3);border:2px solid #40a0ff;border-radius:16px;padding:16px 32px;text-align:center;">
-    <div style="font-size:10px;color:#4080cc;letter-spacing:3px;margin-bottom:6px;">YOUR ROOM CODE</div>
-    <div id="coopCodeText" style="font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:#80d0ff;letter-spacing:6px;">----</div>
-    <div style="font-size:10px;color:#4080cc;margin-top:6px;">Share this with your friend</div>
-  </div>
+      <!-- Room code display -->
+      <div id="coopRoomCode" style="display:none;background:rgba(0,60,120,0.3);border:2px solid #40a0ff;border-radius:16px;padding:16px 32px;text-align:center;">
+        <div style="font-size:10px;color:#4080cc;letter-spacing:3px;margin-bottom:6px;">YOUR ROOM CODE</div>
+        <div id="coopCodeText" style="font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:#80d0ff;letter-spacing:6px;">----</div>
+        <div style="font-size:10px;color:#4080cc;margin-top:6px;">Share this with your friend</div>
+      </div>
 
-  <!-- Countdown display -->
-  <div id="coopCountdown" style="display:none;font-family:'Cinzel',serif;font-size:64px;font-weight:900;color:#40c0ff;text-shadow:0 0 40px #40c0ff;">3</div>
+      <!-- Countdown display -->
+      <div id="coopCountdown" style="display:none;font-family:'Cinzel',serif;font-size:64px;font-weight:900;color:#40c0ff;text-shadow:0 0 40px #40c0ff;">3</div>
 
-  <!-- Partner status -->
-  <div id="coopPartnerStatus" style="display:none;background:rgba(0,40,80,0.4);border:1px solid rgba(64,160,255,0.3);border-radius:12px;padding:12px 20px;text-align:center;width:100%;">
-    <div style="font-size:10px;color:#4080cc;letter-spacing:2px;">PARTNER</div>
-    <div id="coopPartnerName" style="font-family:'Cinzel',serif;font-size:16px;color:#80d0ff;margin-top:4px;">Waiting...</div>
-  </div>
+      <!-- Partner status -->
+      <div id="coopPartnerStatus" style="display:none;background:rgba(0,40,80,0.4);border:1px solid rgba(64,160,255,0.3);border-radius:12px;padding:12px 20px;text-align:center;width:100%;">
+        <div style="font-size:10px;color:#4080cc;letter-spacing:2px;">PARTNER</div>
+        <div id="coopPartnerName" style="font-family:'Cinzel',serif;font-size:16px;color:#80d0ff;margin-top:4px;">Waiting...</div>
+      </div>
 
-  <!-- Buttons -->
-  <div id="coopButtons" style="display:flex;flex-direction:column;gap:12px;width:100%;">
-    <!-- Mode selection — shown first -->
-    <div id="coopModeSelect" style="display:flex;flex-direction:column;gap:10px;width:100%;">
-      <div style="font-family:'Cinzel',serif;font-size:10px;color:#4080cc;letter-spacing:2px;text-align:center;margin-bottom:4px;">SELECT MODE</div>
-      <button class="mbtn mbtn-primary" id="btnCoopWorldMap" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
-        🌍 &nbsp;WORLD MAP
+      <!-- Buttons -->
+      <div id="coopButtons" style="display:flex;flex-direction:column;gap:12px;width:100%;">
+        <!-- Mode selection — shown first -->
+        <div id="coopModeSelect" style="display:flex;flex-direction:column;gap:10px;width:100%;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;color:#4080cc;letter-spacing:2px;text-align:center;margin-bottom:4px;">SELECT MODE</div>
+          <button class="mbtn mbtn-primary" id="btnCoopWorldMap" style="background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
+            🌍 &nbsp;WORLD MAP
+          </button>
+          <button class="mbtn mbtn-primary" id="btnCoopInfinite" style="background:linear-gradient(135deg,#200040,#5000a0,#200040);border-color:#a040ff;">
+            ♾️ &nbsp;INFINITE MODE
+          </button>
+        </div>
+        <!-- Create room button — shown after mode/level selected -->
+        <button class="mbtn mbtn-primary" id="btnCoopCreate" style="display:none;background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
+          ➕ &nbsp;CREATE ROOM
+        </button>
+        <!-- Join input — hidden until mode selected -->
+        <div id="coopJoinRow" style="display:none;flex-direction:row;gap:10px;align-items:center;">
+          <input id="coopJoinCode" placeholder="Enter room code" maxlength="9"
+            style="flex:1;background:rgba(0,40,80,0.4);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;
+            padding:12px 16px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
+            text-transform:uppercase;outline:none;text-align:center;"/>
+          <button class="mbtn mbtn-primary" id="btnCoopJoin" style="background:linear-gradient(135deg,#003060,#0060c0);border-color:#40a0ff;white-space:nowrap;padding:12px 20px;">
+            JOIN
+          </button>
+        </div>
+      </div>
+
+      <!-- Share button (shown after room created) -->
+      <button id="btnCoopShare" style="display:none;background:linear-gradient(135deg,#004020,#008040);border:1.5px solid #40ff80;border-radius:10px;color:#a0ffcc;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;width:100%;cursor:pointer;">
+        📤 &nbsp;SHARE ROOM LINK
       </button>
-      <button class="mbtn mbtn-primary" id="btnCoopInfinite" style="background:linear-gradient(135deg,#200040,#5000a0,#200040);border-color:#a040ff;">
-        ♾️ &nbsp;INFINITE MODE
-      </button>
+
+      <!-- Emotes (shown during game) -->
+      <div id="coopEmotes" style="display:none;gap:12px;justify-content:center;">
+        <button class="coop-emote" data-emote="👍">👍</button>
+        <button class="coop-emote" data-emote="❤️">❤️</button>
+        <button class="coop-emote" data-emote="😂">😂</button>
+        <button class="coop-emote" data-emote="🔥">🔥</button>
+        <button class="coop-emote" data-emote="💀">💀</button>
+      </div>
+
+      <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:#4a3070;text-align:center;margin-top:8px;">
+        Both players fly together on the same level.<br>Both must survive to clear it!
+      </div>
     </div>
-    <!-- Create room button — shown after mode/level selected -->
-    <button class="mbtn mbtn-primary" id="btnCoopCreate" style="display:none;background:linear-gradient(135deg,#003060,#0060c0,#003060);border-color:#40a0ff;">
-      ➕ &nbsp;CREATE ROOM
-    </button>
-    <!-- Join input — hidden until mode selected -->
-    <div id="coopJoinRow" style="display:none;flex-direction:row;gap:10px;align-items:center;">
-      <input id="coopJoinCode" placeholder="Enter room code" maxlength="9"
-        style="flex:1;background:rgba(0,40,80,0.4);border:1.5px solid rgba(64,160,255,0.4);border-radius:10px;
-        padding:12px 16px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
-        text-transform:uppercase;outline:none;text-align:center;"/>
-      <button class="mbtn mbtn-primary" id="btnCoopJoin" style="background:linear-gradient(135deg,#003060,#0060c0);border-color:#40a0ff;white-space:nowrap;padding:12px 20px;">
-        JOIN
-      </button>
-    </div>
-  </div>
-
-  <!-- Share button (shown after room created) -->
-  <button id="btnCoopShare" style="display:none;background:linear-gradient(135deg,#004020,#008040);border:1.5px solid #40ff80;border-radius:10px;color:#a0ffcc;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 0;width:100%;cursor:pointer;">
-    📤 &nbsp;SHARE ROOM LINK
-  </button>
-
-  <!-- Emotes (shown during game) -->
-  <div id="coopEmotes" style="display:none;gap:12px;justify-content:center;">
-    <button class="coop-emote" data-emote="👍">👍</button>
-    <button class="coop-emote" data-emote="❤️">❤️</button>
-    <button class="coop-emote" data-emote="😂">😂</button>
-    <button class="coop-emote" data-emote="🔥">🔥</button>
-    <button class="coop-emote" data-emote="💀">💀</button>
-  </div>
-
-  <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:11px;color:#4a3070;text-align:center;margin-top:8px;">
-    Both players fly together on the same level.<br>Both must survive to clear it!
-  </div>
-</div>
-```
-
   </div>
 
   <!-- Story Mode Screen -->
+
 
   <div class="menu-screen hidden" id="screenStory">
     <div class="topband"></div>
@@ -853,7 +1162,6 @@ canvas { display:block; width:100%; height:100%; }
   </div>
 
   <!-- Achievements Screen -->
-
   <div class="menu-screen hidden" id="screenAchievements">
     <div class="topband"></div>
     <div class="sub-header">
@@ -875,8 +1183,25 @@ canvas { display:block; width:100%; height:100%; }
       <div class="sub-title">LEADERBOARD</div>
     </div>
     <div style="padding:8px 24px 16px;width:100%;">
-      <div style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:11px;text-align:center;margin-bottom:12px;">Infinite Mode -- Top 10 Scores</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:11px;color:#7755aa;font-family:'Crimson Text',serif;">Your Name:</span>
+        <input id="playerNameInput" type="text" maxlength="16" placeholder="Enter name..." style="flex:1;background:rgba(20,5,40,0.6);border:1px solid #5020a0;border-radius:8px;color:#e8d8ff;font-family:'Cinzel',serif;font-size:13px;padding:8px 12px;outline:none;">
+        <button id="btnSaveName" style="background:rgba(80,30,160,0.3);border:1px solid #7040c0;border-radius:8px;color:#b06eff;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;">Save</button>
+      </div>
+      <div style="font-family:'Crimson Text',serif;font-style:italic;color:#7755aa;font-size:11px;text-align:center;margin-bottom:8px;">Infinite Mode — Top 10 Runs</div>
       <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Stats Screen -->
+  <div class="menu-screen hidden" id="screenStats">
+    <div class="topband"></div>
+    <div class="sub-header">
+      <div class="back-btn" id="statsBack">←</div>
+      <div class="sub-title">STATS</div>
+    </div>
+    <div style="padding:8px 24px 16px;width:100%;">
+      <div id="statsBody" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
   </div>
 
@@ -970,6 +1295,8 @@ var gameMode = 'story';
 var highScoreStory = 0;
 var highScoreInfinite = 0;
 var leaderboard = [];
+var playerName = '';
+try{playerName=localStorage.getItem('df_playerName')||'';}catch(e){}
 
 var state = 'idle';
 var score=0, frameN=0, speed=2.6, maxSpeed=6.0;
@@ -2741,19 +3068,103 @@ function drawGrey(){
 function drawBoss(){
   if(!boss) return;
 
-  // Telegraph warning glow — pulsing red/orange aura before attack
+  // Boss entry cinematic — screen darkening + energy trail
+  if(bossEntryTimer>0){
+    var ep=1-(bossEntryTimer/BOSS_ENTRY_DURATION);
+    // Screen darkening vignette — builds then fades
+    var darkA=ep<0.6?ep*0.5:Math.max(0,(1-ep)*0.75);
+    ctx.save();ctx.globalAlpha=darkA;
+    var vigG=ctx.createRadialGradient(W*0.5,H*0.4,H*0.2,W*0.5,H*0.4,H*0.9);
+    vigG.addColorStop(0,'rgba(0,0,0,0)');vigG.addColorStop(1,'rgba(0,0,0,0.8)');
+    ctx.fillStyle=vigG;ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    // Energy trail behind boss — glowing streak
+    if(ep>0.1){
+      ctx.save();
+      var trailLen=W*0.3*(1-ep);
+      ctx.globalAlpha=0.3+ep*0.2;
+      var bType3=getBossType();
+      var trailCol=bType3==='dragon'?'255,100,0':bType3==='leviathan'?'0,150,255':bType3==='tempest'?'150,180,255':bType3==='jeanjacket'?'200,100,255':bType3==='grey'?'0,255,150':'200,160,60';
+      var trG=ctx.createLinearGradient(boss.x+trailLen,boss.y,boss.x,boss.y);
+      trG.addColorStop(0,'rgba('+trailCol+',0)');
+      trG.addColorStop(0.5,'rgba('+trailCol+',0.4)');
+      trG.addColorStop(1,'rgba('+trailCol+',0.8)');
+      ctx.fillStyle=trG;
+      ctx.beginPath();
+      ctx.moveTo(boss.x,boss.y-15);
+      ctx.lineTo(boss.x+trailLen,boss.y-5);
+      ctx.lineTo(boss.x+trailLen,boss.y+5);
+      ctx.lineTo(boss.x,boss.y+15);
+      ctx.closePath();ctx.fill();
+      // Sparkle particles along trail
+      for(var bsi=0;bsi<6;bsi++){
+        var bsx=boss.x+Math.random()*trailLen*0.7;
+        var bsy=boss.y+(Math.random()-0.5)*20;
+        ctx.fillStyle='rgba('+trailCol+',0.7)';
+        ctx.beginPath();ctx.arc(bsx,bsy,1+Math.random()*1.5,0,Math.PI*2);ctx.fill();
+      }
+      ctx.restore();
+    }
+    // Warning pulse ring expanding from boss position
+    if(ep>0.7){
+      var ringP=(ep-0.7)/0.3;
+      ctx.save();ctx.globalAlpha=(1-ringP)*0.3;
+      ctx.strokeStyle='rgba(255,200,100,0.6)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(boss.x,boss.y,30+ringP*80,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Telegraph warning — unique per boss type
   if(bossTelegraph>0&&bossActive&&!bossDefeated){
-    var telProg=1-(bossTelegraph/BOSS_TELEGRAPH_DURATION); // 0→1 as attack approaches
+    var telProg=1-(bossTelegraph/BOSS_TELEGRAPH_DURATION);
     var telPulse=0.3+telProg*0.5+Math.sin(frameN*0.5)*0.15;
-    var telSize=60+telProg*40;
-    ctx.save();
-    ctx.globalAlpha=telPulse;
-    var telG=ctx.createRadialGradient(boss.x,boss.y,8,boss.x,boss.y,telSize);
-    telG.addColorStop(0,'rgba(255,'+Math.floor(200-telProg*150)+',0,0.8)');
-    telG.addColorStop(0.5,'rgba(255,'+Math.floor(100-telProg*80)+',0,0.3)');
-    telG.addColorStop(1,'rgba(255,0,0,0)');
-    ctx.fillStyle=telG;
-    ctx.beginPath();ctx.arc(boss.x,boss.y,telSize,0,Math.PI*2);ctx.fill();
+    var bType4=getBossType();
+    ctx.save();ctx.globalAlpha=telPulse;
+    if(bType4==='dragon'){
+      // Fire — expanding flame ring + ember sparks
+      var telS=50+telProg*50;
+      var fG=ctx.createRadialGradient(boss.x,boss.y,6,boss.x,boss.y,telS);
+      fG.addColorStop(0,'rgba(255,200,0,0.9)');fG.addColorStop(0.4,'rgba(255,80,0,0.5)');fG.addColorStop(1,'rgba(200,0,0,0)');
+      ctx.fillStyle=fG;ctx.beginPath();ctx.arc(boss.x,boss.y,telS,0,Math.PI*2);ctx.fill();
+      // Ember sparks
+      for(var ei=0;ei<4;ei++){var ea=ei*1.57+frameN*0.15;ctx.fillStyle='rgba(255,180,0,0.7)';ctx.beginPath();ctx.arc(boss.x+Math.cos(ea)*telS*0.6,boss.y+Math.sin(ea)*telS*0.6,2+telProg*2,0,Math.PI*2);ctx.fill();}
+    } else if(bType4==='leviathan'){
+      // Water ripples — concentric expanding rings
+      ctx.strokeStyle='rgba(0,200,255,'+(0.5-telProg*0.3)+')';ctx.lineWidth=1.5;
+      for(var ri=0;ri<3;ri++){var rr=20+telProg*40+ri*18;ctx.beginPath();ctx.arc(boss.x,boss.y,rr,0,Math.PI*2);ctx.stroke();}
+      // Water shimmer
+      var wG=ctx.createRadialGradient(boss.x,boss.y,5,boss.x,boss.y,40);
+      wG.addColorStop(0,'rgba(0,180,255,0.4)');wG.addColorStop(1,'rgba(0,100,200,0)');
+      ctx.fillStyle=wG;ctx.beginPath();ctx.arc(boss.x,boss.y,40,0,Math.PI*2);ctx.fill();
+    } else if(bType4==='tempest'){
+      // Lightning crackle — jagged arcs from boss
+      ctx.strokeStyle='rgba(180,200,255,'+(0.5+telProg*0.4)+')';ctx.lineWidth=2;ctx.shadowColor='rgba(100,150,255,0.8)';ctx.shadowBlur=10;
+      for(var li=0;li<3;li++){var la=li*2.09+frameN*0.2;ctx.beginPath();ctx.moveTo(boss.x,boss.y);var lx=boss.x,ly=boss.y;
+        for(var lj=0;lj<4;lj++){lx+=Math.cos(la)*(10+telProg*8)+(Math.random()-0.5)*12;ly+=Math.sin(la)*(10+telProg*8)+(Math.random()-0.5)*12;ctx.lineTo(lx,ly);}ctx.stroke();}
+      ctx.shadowBlur=0;
+    } else if(bType4==='jeanjacket'){
+      // Alien shimmer — purple/pink distortion wave
+      var jG=ctx.createRadialGradient(boss.x,boss.y,5,boss.x,boss.y,55+telProg*30);
+      jG.addColorStop(0,'rgba(200,80,255,0.6)');jG.addColorStop(0.5,'rgba(180,40,200,0.2)');jG.addColorStop(1,'rgba(100,0,150,0)');
+      ctx.fillStyle=jG;ctx.beginPath();ctx.arc(boss.x,boss.y,55+telProg*30,0,Math.PI*2);ctx.fill();
+      // Warping ring
+      ctx.strokeStyle='rgba(220,120,255,'+(0.3+telProg*0.3)+')';ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(boss.x,boss.y,40+telProg*20,25+telProg*12,frameN*0.08,0,Math.PI*2);ctx.stroke();
+    } else if(bType4==='grey'){
+      // Green beam charge — converging particles toward center
+      var gG=ctx.createRadialGradient(boss.x,boss.y,3,boss.x,boss.y,35+telProg*25);
+      gG.addColorStop(0,'rgba(0,255,120,0.7)');gG.addColorStop(0.5,'rgba(0,200,80,0.3)');gG.addColorStop(1,'rgba(0,100,60,0)');
+      ctx.fillStyle=gG;ctx.beginPath();ctx.arc(boss.x,boss.y,35+telProg*25,0,Math.PI*2);ctx.fill();
+      // Converging dots
+      for(var gi=0;gi<5;gi++){var ga=gi*1.26+frameN*0.1;var gd=(1-telProg)*50+10;ctx.fillStyle='rgba(0,255,150,0.8)';ctx.beginPath();ctx.arc(boss.x+Math.cos(ga)*gd,boss.y+Math.sin(ga)*gd,1.5,0,Math.PI*2);ctx.fill();}
+    } else {
+      // Owl — amber warning glow
+      var telS2=60+telProg*40;
+      var oG=ctx.createRadialGradient(boss.x,boss.y,8,boss.x,boss.y,telS2);
+      oG.addColorStop(0,'rgba(255,180,40,0.8)');oG.addColorStop(0.5,'rgba(200,120,0,0.3)');oG.addColorStop(1,'rgba(180,80,0,0)');
+      ctx.fillStyle=oG;ctx.beginPath();ctx.arc(boss.x,boss.y,telS2,0,Math.PI*2);ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -2927,20 +3338,31 @@ function updateBoss(){
   b.phase+=0.04;
   if(b.hurtTimer>0) b.hurtTimer--;
 
-  // Entry animation — fly in from right
+  // Entry animation — dramatic cinematic entrance
   if(bossEntryTimer>0){
     bossEntryTimer--;
     var ep=1-(bossEntryTimer/BOSS_ENTRY_DURATION);
     b.x=W+120-(W+120-W*0.72)*ep;
+    // Slow approach — ease-out curve
+    b.x=W+120-(W+120-W*0.72)*(1-Math.pow(1-ep,2.5));
+    // Vertical sway during approach
+    b.y=b.ty+Math.sin(ep*Math.PI*3)*20*(1-ep);
+    // Boss name announcement at 40% entry
+    if(!bossAnnounceDone&&ep>0.4){
+      bossAnnounceDone=true;
+      var bType2=getBossType();
+      var bName=bType2==='dragon'?'THE INFERNO DRAKE':bType2==='leviathan'?'THE LEVIATHAN':bType2==='tempest'?'THE TEMPEST':bType2==='jeanjacket'?'JEAN JACKET':bType2==='grey'?'THE GREY':'THE GREAT OWL';
+      var nameEl=document.getElementById('bossName');
+      if(nameEl){nameEl.textContent=bName;nameEl.style.animation='none';void nameEl.offsetWidth;nameEl.style.animation='countdownPop 0.4s cubic-bezier(0.34,1.56,0.64,1)';}
+    }
     if(bossEntryTimer===0){
-      // Dramatic entrance effects
+      // Final arrival — dramatic impact
       shakeFrames=18; shakeIntensity=8;
       sfxBossEnter();
       var sf=document.getElementById('screenFlash');
       if(sf){sf.classList.add('flash');setTimeout(function(){sf.classList.remove('flash');},300);}
       document.getElementById('bossHud').classList.add('show');
       showToast('\uD83E\uDD89 FLY CLOSE & TAP TO ATTACK!');
-      // Remind again after 4 seconds
       setTimeout(function(){if(bossActive&&!bossDefeated) showToast('\u2695\uFE0F TAP NEAR THE OWL TO DEAL DAMAGE!');},4000);
     }
     return;
@@ -3222,6 +3644,7 @@ function hitBoss(){
   bossHP--;
   boss.hurtTimer=20;
   sfxBossHurt();
+  haptic(25); // light thump per hit
   shakeFrames=4; shakeIntensity=3;
   var pct=bossHP/bossMaxHP;
   var fill=document.getElementById('bossHpFill');
@@ -3231,6 +3654,7 @@ function hitBoss(){
     bossDefeated=true;
     bossActive=false;
     bossFeathers=[];
+    haptic([150,80,200,80,300]); // victory pattern
     var bType=getBossType();
     var defeatMsg=bType==='dragon'?'\uD83D\uDC09 THE DRAKE FALLS!':bType==='leviathan'?'\uD83D\uDC0D THE LEVIATHAN SINKS!':bType==='tempest'?'\u26A1 THE TEMPEST IS BROKEN!':bType==='jeanjacket'?'\uD83D\uDEF8 JEAN JACKET RETREATS!':bType==='grey'?'\uD83D\uDC7D THE ALIEN IS DEFEATED!':'\uD83C\uDF1F THE OWL IS DEFEATED!';
     showToast(defeatMsg);
@@ -3713,7 +4137,7 @@ function showBossVictory(){
   state='levelclear';
   var bType=getBossType();
   var isDragon=bType==='dragon',isLev=bType==='leviathan',isTempest=bType==='tempest',isJJ=bType==='jeanjacket',isGrey=bType==='grey';
-  var bonus=isDragon?750:isLev?600:isTempest?800:isJJ?900:isGrey?1200:500;
+  var bonus=isDragon?1000:isLev?1200:isTempest?1500:isJJ?2000:isGrey?3000:750;
   mothsTotal+=bonus; lifetimeMoths+=bonus;
   updateMothUI();
   var ov=document.getElementById('bossVictoryOverlay');
@@ -3797,6 +4221,9 @@ var nearMissActive=false, nearMissTimer=0, NEAR_MISS_DURATION=18;
 var nearMissCooldown=0;
 var shieldActive=false, wingTrailRuns=0;
 var invincibleTimer=0; // brief invincibility after losing a life
+var dyingTimer=0, dyingRotation=0, deathParticles=[]; // death tumble animation
+var levelTransFade=0; // crossfade between levels
+var bossEntrance=0, BOSS_ENTRANCE_DURATION=120; // boss cinematic entrance
 
 var bgStars=[],bgClouds=[],bgMtnFar=[],bgMtnNear=[],bgRuins=[];
 var farOff=0,nearOff=0,ruinOff=0;
@@ -3871,16 +4298,16 @@ var SKINS=[
   {id:'celestial',name:'Celestial',  moths:10000,
    body:['#ffc0a0','#cc8860','#2a1808'], wing:['#fff0e8','#ffd0b0','#aa6040'],
    eye:'#ffddcc', leg:'#cc8060', thorax:['#ffd8b8','#ddaa80','#2a1808'], fx:'stars'},
-  {id:'phoenix',  name:'Phoenix',    moths:15000,
+  {id:'phoenix',  name:'Phoenix',    moths:5000,
    body:['#ff8800','#ff4400','#200800'], wing:['#ffff00','#ff8800','#cc2200'],
    eye:'#ffffff', leg:'#cc4400', thorax:['#ffaa00','#ff6600','#200800'], fx:'flames'},
-  {id:'ocean',    name:'Ocean Deep', moths:20000,
+  {id:'ocean',    name:'Ocean Deep', moths:6000,
    body:['#003366','#001a44','#000410'], wing:['#00ccff','#0088cc','#002244'],
    eye:'#80ffee', leg:'#002255', thorax:['#004488','#002266','#000410']},
-  {id:'galaxy',   name:'Galaxy',     moths:25000,
+  {id:'galaxy',   name:'Galaxy',     moths:8000,
    body:['#080018','#040010','#000005'], wing:['#8844ff','#4422cc','#100030'],
    eye:'#ffffff', leg:'#220044', thorax:['#100028','#080018','#000005'], fx:'stars2'},
-  {id:'legendary',name:'Legendary',  moths:50000,
+  {id:'legendary',name:'Legendary',  moths:10000,
    body:['#ffffff','#e0e0ff','#101020'], wing:['#ffffff','#ffffff','#ffffff'],
    eye:'#ffffff', leg:'#ccccff', thorax:['#ffffff','#f0f0ff','#101020'], fx:'legendary'},
   {id:'blossom',  name:'Blossom',    moths:120,
@@ -4173,6 +4600,8 @@ function resetGame(){
     levelDuration=getLevelDuration(1);
     speed=getLevelSpeed(1);
     obstInterval=getLevelObstInterval(1);
+  } else if(gameMode==='infinite'){
+    levelDuration=999999; speed=2.2; obstInterval=160;
   } else {
     levelDuration=30; speed=2.2; obstInterval=160;
   }
@@ -4184,6 +4613,7 @@ function resetGame(){
   windItems=[]; windTimer=0; windActive=false; windActiveTimer=0; slowMoItems=[]; slowMoSpawnTimer=0; ghostItems=[]; ghostSpawnTimer=0;
   infiniteActive=false; infiniteTimer=0; infiniteMothSpawned=false; infMoth=null;
   infMothSpawnTimer=0;
+  window._runNearMisses=0;
   debris=[]; steamParticles=[]; lightningBolts=[]; transParticles=[];
   lightningTimer=0; lightningBurstActive=false; lightningBurstFrames=0; lightningBurstCooldown=0;
   document.getElementById('infiniteHud').classList.remove('show');
@@ -4244,7 +4674,10 @@ function updateLivesUI(){
 function updateLevelUI(){
   if(state==='levelclear') return;
   if(levelLbl){
-    if(currentWorldLevel){
+    if(gameMode==='infinite'){
+      var bm3=getBiome(currentLevel);
+      levelLbl.textContent='\u267e\ufe0f '+(bm3?bm3.name:'INFINITE');
+    } else if(currentWorldLevel){
       levelLbl.textContent=currentWorldLevel.level.icon+' '+currentWorldLevel.level.name.toUpperCase();
     } else {
       levelLbl.textContent='LVL '+currentLevel;
@@ -4297,7 +4730,7 @@ function showMothPop(x,y,val,golden,mult){
 }
 
 function showScreen(id){
-  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements'];
+  var screens=['screenMain','screenOptions','screenShop','screenStory','screenLeaderboard','screenWorldMap','screenAchievements','screenCoop','screenStats'];
   for(var i=0;i<screens.length;i++){
     var el=document.getElementById(screens[i]);
     if(!el) continue;
@@ -4305,6 +4738,8 @@ function showScreen(id){
     else{el.classList.add('hidden');el.style.display='none';}
   }
   if(!id){var _ld2=document.getElementById('screenLevelDetail');if(_ld2){_ld2.classList.add('hidden');_ld2.style.display='none';}}
+  // Stop ambient when entering any menu, let playMusic restart it during gameplay
+  if(id&&typeof stopAmbient==='function') stopAmbient();
   // Show pause button only during gameplay (no screen shown)
   var pb=document.getElementById('pauseBtn');
   if(pb) pb.style.display = id ? 'none' : 'block';
@@ -8602,13 +9037,24 @@ function spawnObstacle(){
       spawnSingle(0.58+progress*0.18, 0.80+progress*0.08, w, 'mountain');
       return;
     }
-    // e6 - Enchanted Forest: dense magical trees, tight gaps, branches from both sides
+    // e6 - Enchanted Forest: dense enchanted trees, almost all pairs forcing gap navigation
     if(lid==='e6'){
-      var w=34+Math.random()*18;
-      if(progress>0.35&&Math.random()<0.55){ if(spawnPair(0.24+progress*0.02, 0.30, w, 'tree')) return; }
-      spawnSingle(0.56+progress*0.16, 0.78+progress*0.10, w, 'tree');
-      if(progress>0.50&&Math.random()<0.12&&frogs.length<2)
-        frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+      var w=36+Math.random()*18;
+      // 80% pairs from the very start — blocks the middle, forces gap threading
+      if(Math.random()<0.80){
+        var gapSize=gameH2*(0.20+Math.random()*0.06); // tight 20-26% gap
+        var gapY=gameH2*(0.15+Math.random()*0.50); // gap can appear anywhere
+        var topH2=gapY; var botH2=gameH2-gapY-gapSize;
+        if(botH2>50&&topH2>50){
+          obstacles.push({x:x,y:0,w:w,h:topH2,side:'top',type:'tree',phase:Math.random()*Math.PI*2,paired:true});
+          obstacles.push({x:x,y:gapY+gapSize,w:w,h:botH2,side:'bottom',type:'tree',phase:Math.random()*Math.PI*2,paired:true});
+          if(progress>0.40&&Math.random()<0.15&&frogs.length<2)
+            frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
+          return;
+        }
+      }
+      // Remaining 20%: extremely tall singles
+      spawnSingle(0.82+progress*0.06, 0.92, w, 'tree');
       return;
     }
 
@@ -8808,6 +9254,15 @@ function spawnObstacle(){
       side=Math.random()<0.5?'top':'bottom';
       _spawnSide=side;
       spawnSingle(0.56+progress*0.18,0.78+progress*0.10,w,'alien');
+      return;
+    }
+    // secret1 - Rooftop Bistro: building-style obstacles, moderate difficulty, fun
+    if(lid==='secret1'){
+      var w=36+Math.random()*18;
+      if(progress>0.30&&Math.random()<0.50){ if(spawnPair(0.24+progress*0.02,0.30,w,'mountain')) return; }
+      spawnSingle(0.60+progress*0.14, 0.80+progress*0.08, w, 'mountain');
+      if(progress>0.50&&Math.random()<0.10&&frogs.length<1)
+        frogs.push({x:W+100,y:gameH2-20,vx:0,vy:0,state:'idle',phase:Math.random()*Math.PI*2});
       return;
     }
     return;
@@ -9997,13 +10452,20 @@ function drawFrogs(){
 function spawnMoth(){
   var gameH=H-20;
   var y=gameH*0.12+Math.random()*gameH*0.76;
-  var golden=Math.random()<0.05;
-  moths.push({x:W+20,y:y,floatPh:Math.random()*Math.PI*2,phase:Math.random()*Math.PI*2,golden:golden,value:golden?3:1,collected:false,collectAnim:0,scale:golden?1.35:1.0,glowPh:Math.random()*Math.PI*2});
+  // Scale moth value by world
+  var worldMothVal={earth:3,fire:5,water:7,ice:9,galaxy:12};
+  var baseVal=currentWorldLevel?worldMothVal[currentWorldLevel.worldId]||3:3;
+  // Infinite mode scales with score
+  if(gameMode==='infinite') baseVal=3+Math.floor(score/800);
+  var golden=Math.random()<0.12; // 12% golden chance (was 5%)
+  var val=golden?baseVal*5:baseVal;
+  moths.push({x:W+20,y:y,floatPh:Math.random()*Math.PI*2,phase:Math.random()*Math.PI*2,golden:golden,value:val,collected:false,collectAnim:0,scale:golden?1.35:1.0,glowPh:Math.random()*Math.PI*2});
 }
 
 function updateMoths(){
   mothTimer++;
-  if(mothTimer>=mothInterval){spawnMoth();mothTimer=0;mothInterval=Math.max(300,mothInterval-1);}
+  var mothIntTarget=gameMode==='infinite'?Math.max(150,300-Math.floor(score/50)):mothInterval;
+  if(mothTimer>=mothIntTarget){spawnMoth();mothTimer=0;mothInterval=Math.max(250,mothInterval-1);}
   if(comboTimer>0){comboTimer--;}else{comboCount=0;comboMult=1;}
   var as=speed*diffMult*(infiniteActive?1.35:1.0)*(slowMoActive?0.4:1.0);
   var hx=fly.x-14,hy=fly.y-8,hw=28,hh=16;
@@ -10035,9 +10497,11 @@ function updateMoths(){
     if(!m.collected && hx<m.x+12 && hx+hw>m.x-12 && hy<m.y+10 && hy+hh>m.y-10){
       m.collected=true; m.collectAnim=1;
       comboTimer=COMBO_WINDOW; comboCount++;
-      comboMult=comboCount>=5?3:comboCount>=3?2:1;
+      comboMult=comboCount>=8?4:comboCount>=5?3:comboCount>=3?2:1;
       var earned=m.value*comboMult;
       mothsTotal+=earned; lifetimeMoths+=earned; currentRunMoths+=earned; sfxMothCollect(m.golden);
+      // Moth counter bounce animation
+      if(mothCount){mothCount.classList.remove('pop','pop-golden');void mothCount.offsetWidth;mothCount.classList.add(m.golden?'pop-golden':'pop');}
       if(tutActive) tutOnMothCollect();
       // Every 100 moths collected in a run = bonus life
       var prevHundreds=Math.floor((currentRunMoths-earned)/100);
@@ -10546,7 +11010,9 @@ function checkCollision(){
       if(nearX>0&&nearX<10&&nearY===0){
         nearMissActive=true; nearMissTimer=NEAR_MISS_DURATION; nearMissCooldown=150;
         try{sfxNearMiss();}catch(e){}
+        haptic(15); // subtle buzz for near miss
         totalNearMisses++;
+        window._runNearMisses=(window._runNearMisses||0)+1;
         showToast('😅 CLOSE!');
       }
     }
@@ -10644,8 +11110,9 @@ function loseLife(){
   if(shieldActive){
     shieldActive=false;
     sfxShieldBlock();
+    haptic(80);
     showToast('\uD83D\uDEE1\uFE0F Shield absorbed the hit!');
-    fly.vy=0; fly.y=H*0.42; fly.trail=[];
+    fly.x=W*0.22; fly.vy=0; fly.y=H*0.42; fly.trail=[];
     obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
     return;
   }
@@ -10653,8 +11120,9 @@ function loseLife(){
   noDamageLevelsStreak=0;
   lives--; updateLivesUI();
   shakeFrames=14; shakeIntensity=7;
+  haptic([40,30,40]); // short double-buzz
   try{sfxLoseLife();}catch(e){}
-  fly.vy=0; fly.y=H*0.42; fly.trail=[];
+  fly.x=W*0.22; fly.y=H*0.42; fly.vy=0; fly.trail=[];
   obstacles=[]; moths=[]; frogs=[]; branches=[]; movingObst=[];
   magnetItems=[]; magnetActive=false;
   comboCount=0; comboTimer=0; comboMult=1;
@@ -10680,6 +11148,15 @@ function triggerLevelClear(){
       mothsTotal+=25; updateMothUI();
       setTimeout(function(){showToast('⭐ First 3-star! +25 🦋');},2400);
     }
+    // Every-run completion bonus (15 moths per clear)
+    mothsTotal+=15; lifetimeMoths+=15;
+    // Score bonus — every 100 score = 5 moths
+    var scoreBonus=Math.floor(sc/100)*5;
+    if(scoreBonus>0){
+      mothsTotal+=scoreBonus; lifetimeMoths+=scoreBonus;
+      setTimeout(function(){showToast('💰 Score bonus: +'+scoreBonus+' 🦋');},1200);
+    }
+    updateMothUI();
   }
   try{sfxLevelClear();}catch(e){}
   state='levelclear';
@@ -10702,7 +11179,11 @@ function triggerLevelClear(){
   var overlayStars=currentWorldLevel?calcStars(currentRunMoths, currentRunNoDamage):0;
   showStarOverlay(overlayStars);
 
+  // Check daily challenge before resetting run stats
+  checkDailyChallengeProgress();
+
   currentRunNoDamage=true; currentRunMoths=0;
+  window._runNearMisses=0;
   deathStreakOnLevel=0; lastDeathLevelId=null;
   checkAchievements();
   saveGame();
@@ -10754,6 +11235,8 @@ function triggerLevelClear(){
         skinTransformTimer=SKIN_TRANSFORM_DURATION;
         starlightParticles=[];
         currentRunNoDamage=true; currentRunMoths=0;
+        window._runNearMisses=0;
+        levelTransFade=50; // crossfade transition
         updateLevelUI();
         state='playing';
       } else {
@@ -10787,7 +11270,25 @@ function triggerLevelClear(){
 }
 
 function die(){
-  try{sfxGameOver(); stopMusic();}catch(e){}
+  if(state==='dying') return; // already dying
+  try{sfxGameOver(); stopMusic(); stopAmbient();}catch(e){}
+  haptic([100,50,100,50,150]); // dramatic death buzz
+  state='dying';
+  dyingTimer=75; // 1.25 seconds of tumble animation
+  dyingRotation=0;
+  // Spawn death burst particles
+  deathParticles=[];
+  for(var dpi=0;dpi<12;dpi++){
+    var dAng=dpi*(Math.PI*2/12)+Math.random()*0.3;
+    var dSpd=2+Math.random()*4;
+    deathParticles.push({
+      x:fly.x,y:fly.y,vx:Math.cos(dAng)*dSpd,vy:Math.sin(dAng)*dSpd-2,
+      life:1.0,r:3+Math.random()*3,
+      col:'hsla('+(270+Math.floor(Math.random()*60))+',80%,70%,'
+    });
+  }
+}
+function finishDeath(){
   state='dead';
   totalDeaths++;
   var curLid=currentWorldLevel&&currentWorldLevel.level?currentWorldLevel.level.id:null;
@@ -10799,15 +11300,71 @@ function die(){
   if(gameMode==='story' && sc>highScoreStory) highScoreStory=sc;
   if(gameMode==='infinite'){
     if(sc>highScoreInfinite) highScoreInfinite=sc;
-    var name=window._playerName||'Anonymous';
-    leaderboard.push({name:name,score:sc,level:currentLevel});
+    var name=playerName||'Anonymous';
+    var bm4=getBiome(currentLevel);
+    var biomeName=bm4?bm4.name:'Unknown';
+    var timeSurvived=Math.floor(score/60);
+    var timeMins=Math.floor(timeSurvived/60);
+    var timeSecs=timeSurvived%60;
+    var timeStr=timeMins+':'+(timeSecs<10?'0':'')+timeSecs;
+    leaderboard.push({
+      name:name, score:sc, level:currentLevel,
+      biome:biomeName, moths:currentRunMoths,
+      time:timeStr, date:Date.now()
+    });
     leaderboard.sort(function(a,b){return b.score-a.score;});
     leaderboard=leaderboard.slice(0,10);
     updateLeaderboard();
+    // Find this run's rank
+    var rank=leaderboard.length;
+    for(var ri2=0;ri2<leaderboard.length;ri2++){
+      if(leaderboard[ri2].score===sc){rank=ri2+1;break;}
+    }
+    // Show infinite stats on death screen
+    var infStats=document.getElementById('infDeathStats');
+    if(infStats) infStats.style.display='block';
+    var rankEl=document.getElementById('infDeathRank');
+    if(rankEl) rankEl.textContent='#'+rank+(rank<=3?' 🏆':'');
+    var biomeEl=document.getElementById('infDeathBiome');
+    if(biomeEl) biomeEl.textContent=biomeName;
+    var mothsEl=document.getElementById('infDeathMoths');
+    if(mothsEl) mothsEl.textContent=currentRunMoths+' 🦋';
+    var timeEl=document.getElementById('infDeathTime');
+    if(timeEl) timeEl.textContent=timeStr;
+    var bestEl=document.getElementById('infDeathBest');
+    if(bestEl) bestEl.textContent=sc>=highScoreInfinite?'⭐ NEW PERSONAL BEST! ⭐':'Best: '+highScoreInfinite;
+    var scoreBox=document.getElementById('scoreBox');
+    if(scoreBox) scoreBox.style.display='block';
+    checkDailyChallengeInfinite(sc);
+  } else {
+    var infStats2=document.getElementById('infDeathStats');
+    if(infStats2) infStats2.style.display='none';
   }
   var prevBest=Math.max(highScoreStory,highScoreInfinite);
   if(highScEl) highScEl.textContent='BEST: '+Math.max(highScoreStory,highScoreInfinite);
   var finEl=document.getElementById('finalScore');if(finEl) finEl.textContent=sc;
+  // Per-world death quotes
+  var dqEl=document.getElementById('deathQuote');
+  if(dqEl){
+    var worldDeathQuotes={
+      earth:['The forest reclaims its own.','Nature shows no mercy.','The ancient trees watch you fall.','Swallowed by the wild.'],
+      fire:['Consumed by the flames.','The fire cares not for wings.','Ash and ember — nothing remains.','The inferno claims another.'],
+      water:['Dragged into the deep.','The current pulls you under.','Lost beneath the waves.','The abyss swallows all.'],
+      ice:['The wind carries you away.','Frozen in the storm.','The sky offers no shelter.','Torn apart by the gale.'],
+      galaxy:['Lost among the stars.','The void takes you.','Drifting through endless space.','The cosmos is indifferent.']
+    };
+    var wid=currentWorldLevel?currentWorldLevel.worldId:'earth';
+    var quotes=worldDeathQuotes[wid]||worldDeathQuotes.earth;
+    if(gameMode==='infinite'){
+      var bm5=getBiome(currentLevel);
+      var bn5=bm5?bm5.name.toLowerCase():'';
+      if(bn5.indexOf('fire')>=0||bn5.indexOf('lava')>=0||bn5.indexOf('volcan')>=0||bn5.indexOf('dragon')>=0||bn5.indexOf('desert')>=0||bn5.indexOf('burning')>=0) quotes=worldDeathQuotes.fire;
+      else if(bn5.indexOf('cloud')>=0||bn5.indexOf('wind')>=0||bn5.indexOf('sky')>=0||bn5.indexOf('storm')>=0||bn5.indexOf('thunder')>=0||bn5.indexOf('tornado')>=0) quotes=worldDeathQuotes.ice;
+      else if(bn5.indexOf('abyss')>=0||bn5.indexOf('lake')>=0||bn5.indexOf('beach')>=0||bn5.indexOf('crystal')>=0||bn5.indexOf('swamp')>=0) quotes=worldDeathQuotes.water;
+      else if(bn5.indexOf('moon')>=0||bn5.indexOf('mars')>=0||bn5.indexOf('space')>=0||bn5.indexOf('saturn')>=0||bn5.indexOf('venus')>=0||bn5.indexOf('alien')>=0||bn5.indexOf('atmo')>=0) quotes=worldDeathQuotes.galaxy;
+    }
+    dqEl.textContent=quotes[Math.floor(Math.random()*quotes.length)];
+  }
   document.getElementById('overlayDead').classList.remove('hidden');
   onGameOverAd();
 
@@ -10848,6 +11405,22 @@ function die(){
 }
 
 function update(){
+  // Dying animation — tumble and fall
+  if(state==='dying'){
+    dyingTimer--;
+    dyingRotation+=0.15; // spin
+    fly.vy+=0.5; // gravity pull
+    fly.y+=fly.vy;
+    fly.x-=0.5; // drift backward
+    // Update death particles
+    for(var dpi2=deathParticles.length-1;dpi2>=0;dpi2--){
+      var dp=deathParticles[dpi2];
+      dp.x+=dp.vx; dp.y+=dp.vy; dp.vy+=0.15; dp.life-=0.02; dp.vx*=0.97;
+      if(dp.life<=0) deathParticles.splice(dpi2,1);
+    }
+    if(dyingTimer<=0) finishDeath();
+    return;
+  }
   if(state!=='playing') return;
   // Near-miss slow-mo
   if(nearMissCooldown>0) nearMissCooldown--;
@@ -10869,7 +11442,12 @@ function update(){
   frameN++;
   if(TAP_COOLDOWN>0) TAP_COOLDOWN--;
   fly.vy += 0.38;
-  fly.vy *= (fly.vy < 0 ? 0.94 : 0.88); // asymmetric: crisp taps up, controlled fall down
+  fly.vy *= (fly.vy < 0 ? 0.94 : 0.88);
+  // Tilt-to-fly: gyroscope overrides tap physics
+  if(tiltEnabled&&state==='playing'){
+    fly.vy += tiltY * 1.8; // tilt forward = up, back = down
+    fly.vy *= 0.85; // extra damping for smooth tilt feel
+  }
   // Hold-to-dive: sustained press after threshold dives straight down
   if(holdDive&&state==='playing'){
     holdDiveTimer++;
@@ -10918,9 +11496,38 @@ function update(){
 
   score++;
   if(gameMode==='infinite'){
-    var infProg=Math.min(1,score/3000);
-    speed=Math.min(maxSpeed,2.2+Math.pow(infProg,1.5)*(maxSpeed-2.2));
-    obstInterval=Math.max(75,180-Math.floor(Math.pow(infProg,1.3)*105));
+    // Biome cycling — shift through worlds as score climbs
+    var infBiomes=[5,18,9,16,2,14,13,15,11,6,4,10,17,34,35,38,21,22,23,24,25,33,31,32];
+    var biomeStage=Math.min(infBiomes.length-1,Math.floor(score/1200));
+    var newBiome=infBiomes[biomeStage];
+    if(newBiome!==currentLevel){
+      currentLevel=newBiome;
+      initBg();
+      var bm2=getBiome(currentLevel);
+      if(bm2){
+        showToast('🌍 '+bm2.name);
+        updateLevelUI();
+        // Update ambient to match new biome
+        var bnLo=bm2.name.toLowerCase();
+        var newAmbient='earth';
+        if(bnLo.indexOf('fire')>=0||bnLo.indexOf('lava')>=0||bnLo.indexOf('volcan')>=0||bnLo.indexOf('desert')>=0||bnLo.indexOf('burning')>=0||bnLo.indexOf('dragon')>=0) newAmbient='fire';
+        else if(bnLo.indexOf('cloud')>=0||bnLo.indexOf('wind')>=0||bnLo.indexOf('sky')>=0||bnLo.indexOf('thunder')>=0||bnLo.indexOf('tornado')>=0||bnLo.indexOf('storm')>=0||bnLo.indexOf('tempest')>=0||bnLo.indexOf('ice')>=0||bnLo.indexOf('frozen')>=0||bnLo.indexOf('arctic')>=0) newAmbient='ice';
+        else if(bnLo.indexOf('water')>=0||bnLo.indexOf('lake')>=0||bnLo.indexOf('beach')>=0||bnLo.indexOf('swamp')>=0||bnLo.indexOf('abyss')>=0||bnLo.indexOf('levia')>=0) newAmbient='water';
+        else if(bnLo.indexOf('moon')>=0||bnLo.indexOf('mars')>=0||bnLo.indexOf('venus')>=0||bnLo.indexOf('saturn')>=0||bnLo.indexOf('space')>=0||bnLo.indexOf('alien')>=0||bnLo.indexOf('atmo')>=0||bnLo.indexOf('celestial')>=0) newAmbient='galaxy';
+        if(typeof startAmbient==='function') startAmbient(newAmbient);
+      }
+    }
+    // Speed — ramps continuously, no cap at 3000
+    var infProg=Math.min(1,score/5000);
+    var infMaxSpd=6.0+Math.min(2.0,score/8000); // ceiling rises over time
+    speed=Math.min(infMaxSpd,2.2+Math.pow(infProg,1.5)*(infMaxSpd-2.2));
+    // Obstacle interval — starts generous, gets brutal
+    obstInterval=Math.max(55,180-Math.floor(Math.pow(Math.min(1,score/4000),1.3)*125));
+    // Milestone toasts
+    if(score===1000) showToast('🔥 1,000 — Warming up!');
+    else if(score===2500) showToast('⚡ 2,500 — Getting fast!');
+    else if(score===5000) showToast('💀 5,000 — Danger zone!');
+    else if(score===10000) showToast('👑 10,000 — LEGENDARY!');
   } else if(currentWorldLevel && currentWorldLevel.level && currentWorldLevel.level.id==='e1'){
     var prog=levelTimer/((levelDuration||80)*60);
     speed=1.8+Math.pow(prog,1.5)*2.4;
@@ -10937,8 +11544,9 @@ function update(){
     var baseSpd=worldSpeeds[currentWorldLevel.worldId]||2.0;
     speed=baseSpd+Math.pow(prog,1.5)*2.0;
     var baseInterval=lid2==='f5'||lid2==='i5'||lid2==='g5'?160:
-                     lid2==='f4'||lid2==='i4'||lid2==='g4'?170:180;
-    obstInterval=Math.max(80, Math.floor(baseInterval-prog*80));
+                     lid2==='f4'||lid2==='i4'||lid2==='g4'?170:
+                     lid2==='e6'?110:180;
+    obstInterval=Math.max(lid2==='e6'?55:80, Math.floor(baseInterval-prog*80));
     if(prog>0.44&&prog<0.46&&windItems.length===0&&!windActive) spawnWind();
   } else if(!currentWorldLevel){
     speed=getLevelSpeed(currentLevel);
@@ -10948,10 +11556,15 @@ function update(){
   var FPS=60,total=levelDuration*FPS;
   colorP=Math.min(1,levelTimer/total);
   var secsLeft=Math.max(0,Math.ceil((total-levelTimer)/FPS));
-  if(timerFill) timerFill.style.width=(colorP*100)+'%';
-  if(timerTxt) timerTxt.textContent=secsLeft+'s';
+  if(gameMode==='infinite'){
+    if(timerFill) timerFill.style.width='0%';
+    if(timerTxt) timerTxt.textContent='Score: '+score;
+  } else {
+    if(timerFill) timerFill.style.width=(colorP*100)+'%';
+    if(timerTxt) timerTxt.textContent=secsLeft+'s';
+  }
 
-  if(colorP>=1&&!levelTransitioning&&!isBossLevel()&&!isTutorialLevel()){
+  if(colorP>=1&&!levelTransitioning&&!isBossLevel()&&!isTutorialLevel()&&gameMode!=='infinite'){
     if(levelClearSlowMo<=0){
       levelClearSlowMo=36; // start cinematic slowdown
       levelTransitioning=true;
@@ -11001,7 +11614,28 @@ function draw(){
   drawPowerupItems();
   drawMagnetItems();
   if(state!=='idle'){
-    if(infiniteActive && isEliteSkin()){drawFly();drawEliteInfiniteOverlay();}
+    // Dying tumble animation
+    if(state==='dying'){
+      ctx.save();
+      ctx.translate(fly.x,fly.y);
+      ctx.rotate(dyingRotation);
+      ctx.globalAlpha=Math.max(0.1,dyingTimer/75);
+      ctx.translate(-fly.x,-fly.y);
+      drawFly();
+      ctx.restore();
+      // Death burst particles
+      for(var dpi3=0;dpi3<deathParticles.length;dpi3++){
+        var dp2=deathParticles[dpi3];
+        ctx.save();ctx.globalAlpha=dp2.life;
+        ctx.fillStyle=dp2.col+dp2.life+')';
+        ctx.shadowColor=dp2.col+'0.6)';ctx.shadowBlur=8;
+        ctx.beginPath();ctx.arc(dp2.x,dp2.y,dp2.r*dp2.life,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+      }
+      // Screen darkening during death
+      ctx.save();ctx.globalAlpha=(1-dyingTimer/75)*0.4;
+      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.restore();
+    } else if(infiniteActive && isEliteSkin()){drawFly();drawEliteInfiniteOverlay();}
     else if(infiniteActive){drawInfiniteFly();}
     else{drawFly();}
   }
@@ -11036,12 +11670,23 @@ function draw(){
     var comboAlpha=Math.min(1,comboTimer/30);
     ctx.save();
     ctx.globalAlpha=comboAlpha;
-    ctx.font='bold 13px Cinzel,serif';
     ctx.textAlign='center';
-    var comboCol=comboMult>=3?'#ffd700':'#ff88ff';
+    var comboCol=comboMult>=4?'#ff4444':comboMult>=3?'#ffd700':'#ff88ff';
+    // Big bouncing multiplier number
+    var comboBounce=comboTimer>COMBO_WINDOW-15?1+Math.sin((COMBO_WINDOW-comboTimer)/15*Math.PI)*0.4:1;
+    var comboSize=Math.floor(22+comboMult*4);
+    ctx.font='bold '+Math.floor(comboSize*comboBounce)+'px Cinzel,serif';
     ctx.fillStyle=comboCol;
-    ctx.shadowColor=comboCol;ctx.shadowBlur=10;
-    ctx.fillText('x'+comboMult+' COMBO!',fly.x,fly.y-52);
+    ctx.shadowColor=comboCol;ctx.shadowBlur=16;
+    ctx.fillText('x'+comboMult,fly.x,fly.y-55);
+    // Smaller "COMBO!" below
+    ctx.font='bold 10px Cinzel,serif';
+    ctx.shadowBlur=8;
+    ctx.fillText(comboCount+' COMBO!',fly.x,fly.y-40);
+    // Rotating ring around multiplier
+    ctx.globalAlpha=comboAlpha*0.3;
+    ctx.strokeStyle=comboCol;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(fly.x,fly.y-50,20+comboMult*3,frameN*0.1,frameN*0.1+Math.PI*1.5);ctx.stroke();
     ctx.shadowBlur=0;
     ctx.restore();
   }
@@ -11053,6 +11698,13 @@ function draw(){
     nmg.addColorStop(0,'rgba(255,255,255,0)');
     nmg.addColorStop(1,'rgba(255,255,100,'+nmAlpha+')');
     ctx.fillStyle=nmg; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+  // Level transition crossfade — white flash fading in from biome change
+  if(levelTransFade>0){
+    levelTransFade--;
+    ctx.save();ctx.globalAlpha=levelTransFade/50*0.6;
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     ctx.restore();
   }
   // Close screen shake translate
@@ -11080,7 +11732,21 @@ setInterval(loop,16);
 // -- AUDIO ENGINE --------------------------------------------
 var AC=null,sfxGain,musicGain,masterGain;
 var musicIds=[],curTrack=null;
-var sfxEnabled=true,musicEnabled=true;
+var sfxEnabled=true,musicEnabled=true,hapticEnabled=true;
+// ── TILT TO FLY ──
+var tiltEnabled=false, tiltY=0; // tiltY: device pitch
+try{window.addEventListener('deviceorientation',function(e){
+  if(!tiltEnabled||state!=='playing') return;
+  // beta = front-back tilt. Neutral ~30-40° when holding phone. Map to fly velocity.
+  var pitch=e.beta||0; // -180 to 180
+  tiltY=(pitch-35)/20; // 35° is neutral, negative = tilt forward = fly up
+  tiltY=Math.max(-1.5,Math.min(1.5,tiltY)); // clamp
+},{passive:true});}catch(e){}
+// ── HAPTIC FEEDBACK ──
+function haptic(pattern){
+  if(!hapticEnabled) return;
+  try{if(navigator.vibrate) navigator.vibrate(pattern);}catch(e){}
+}
 
 function initAudio(){
   if(AC) return;
@@ -11810,9 +12476,116 @@ function stopMusic(){
   musicGain.connect(masterGain);
 }
 
+// ── AMBIENT WORLD SOUNDS ──
+var ambientNodes=[], ambientGain=null, currentAmbient=null;
+function stopAmbient(){
+  if(!AC) return;
+  ambientNodes.forEach(function(n){try{n.stop();}catch(e){}try{n.disconnect();}catch(e){}});
+  ambientNodes=[];
+  if(ambientGain){try{ambientGain.disconnect();}catch(e){} ambientGain=null;}
+  currentAmbient=null;
+}
+function startAmbient(worldId){
+  if(!AC||!musicEnabled) return;
+  if(currentAmbient===worldId) return;
+  stopAmbient();
+  currentAmbient=worldId;
+  try{
+    ambientGain=AC.createGain();
+    var av=parseInt(document.getElementById('musicVolSlider')?document.getElementById('musicVolSlider').value:45)/100*0.12;
+    ambientGain.gain.value=av||0.08;
+    ambientGain.connect(masterGain);
+    // Generate 4s of noise buffer — looped for continuous sound
+    var len=Math.floor(AC.sampleRate*4);
+    var buf=AC.createBuffer(2,len,AC.sampleRate);
+    var l=buf.getChannelData(0),r=buf.getChannelData(1);
+    for(var i=0;i<len;i++){
+      var n=Math.random()*2-1;
+      l[i]=n*0.5; r[i]=(Math.random()*2-1)*0.5;
+    }
+    var src=AC.createBufferSource();
+    src.buffer=buf;src.loop=true;
+    var filter=AC.createBiquadFilter();
+    // Tune filter per world
+    if(worldId==='earth'){
+      // Rustling leaves / forest — gentle high-mid filter with slow sweep
+      filter.type='bandpass';filter.frequency.value=2000;filter.Q.value=0.8;
+      var lfo=AC.createOscillator();lfo.type='sine';lfo.frequency.value=0.2;
+      var lfoGain=AC.createGain();lfoGain.gain.value=400;
+      lfo.connect(lfoGain);lfoGain.connect(filter.frequency);lfo.start();
+      ambientNodes.push(lfo);
+    } else if(worldId==='fire'){
+      // Crackling / distant roar — low-mid rumble with random pops
+      filter.type='lowpass';filter.frequency.value=350;filter.Q.value=1.2;
+      // Add occasional crackle oscillator
+      var crackleInt=setInterval(function(){
+        if(currentAmbient!=='fire'||!AC) return;
+        try{
+          var cg=AC.createGain();cg.gain.value=0.15;cg.connect(ambientGain);
+          var co=AC.createOscillator();co.type='sawtooth';
+          co.frequency.value=80+Math.random()*200;
+          co.connect(cg);co.start();
+          co.stop(AC.currentTime+0.05);
+          setTimeout(function(){try{cg.disconnect();}catch(e){}},100);
+        }catch(e){}
+      },1200+Math.random()*800);
+      ambientNodes.push({stop:function(){clearInterval(crackleInt);},disconnect:function(){}});
+    } else if(worldId==='water'){
+      // Deep rumble / water — very low resonant filter
+      filter.type='lowpass';filter.frequency.value=220;filter.Q.value=2;
+      var lfo2=AC.createOscillator();lfo2.type='sine';lfo2.frequency.value=0.08;
+      var lfoGain2=AC.createGain();lfoGain2.gain.value=80;
+      lfo2.connect(lfoGain2);lfoGain2.connect(filter.frequency);lfo2.start();
+      ambientNodes.push(lfo2);
+    } else if(worldId==='ice'){
+      // Wind whistling — high bandpass sweep
+      filter.type='bandpass';filter.frequency.value=1200;filter.Q.value=3;
+      var lfo3=AC.createOscillator();lfo3.type='sine';lfo3.frequency.value=0.25;
+      var lfoGain3=AC.createGain();lfoGain3.gain.value=800;
+      lfo3.connect(lfoGain3);lfoGain3.connect(filter.frequency);lfo3.start();
+      ambientNodes.push(lfo3);
+      // Add extra gain boost for wind prominence
+      ambientGain.gain.value=(av||0.08)*1.4;
+    } else if(worldId==='galaxy'){
+      // Cosmic drone — very low pad with slow shimmer
+      filter.type='lowpass';filter.frequency.value=180;filter.Q.value=4;
+      // Add a high shimmer oscillator
+      var shimmer=AC.createOscillator();shimmer.type='sine';shimmer.frequency.value=880;
+      var shimmerGain=AC.createGain();shimmerGain.gain.value=0.01;
+      var shimmerLfo=AC.createOscillator();shimmerLfo.type='sine';shimmerLfo.frequency.value=0.15;
+      var shimmerLfoGain=AC.createGain();shimmerLfoGain.gain.value=0.008;
+      shimmerLfo.connect(shimmerLfoGain);shimmerLfoGain.connect(shimmerGain.gain);shimmerLfo.start();
+      shimmer.connect(shimmerGain);shimmerGain.connect(ambientGain);shimmer.start();
+      ambientNodes.push(shimmer,shimmerLfo);
+    } else {
+      filter.type='lowpass';filter.frequency.value=600;
+    }
+    src.connect(filter);filter.connect(ambientGain);src.start();
+    ambientNodes.push(src);
+  }catch(e){}
+}
+
 function playMusic(track){
   if(!AC||!musicEnabled) return;
   stopMusic();curTrack=track;
+  // Start ambient based on current world
+  if(track==='level'&&currentWorldLevel){
+    startAmbient(currentWorldLevel.worldId);
+  } else if(track==='infinite'){
+    // Ambient cycles with biome in infinite mode
+    var bm=getBiome(currentLevel);
+    if(bm){
+      var bnLower=bm.name.toLowerCase();
+      if(bnLower.indexOf('fire')>=0||bnLower.indexOf('lava')>=0||bnLower.indexOf('volcan')>=0||bnLower.indexOf('desert')>=0||bnLower.indexOf('burning')>=0||bnLower.indexOf('dragon')>=0) startAmbient('fire');
+      else if(bnLower.indexOf('ice')>=0||bnLower.indexOf('frozen')>=0||bnLower.indexOf('arctic')>=0||bnLower.indexOf('cloud')>=0||bnLower.indexOf('wind')>=0||bnLower.indexOf('sky')>=0||bnLower.indexOf('thunder')>=0||bnLower.indexOf('tornado')>=0||bnLower.indexOf('storm')>=0||bnLower.indexOf('tempest')>=0) startAmbient('ice');
+      else if(bnLower.indexOf('water')>=0||bnLower.indexOf('lake')>=0||bnLower.indexOf('beach')>=0||bnLower.indexOf('swamp')>=0||bnLower.indexOf('abyss')>=0||bnLower.indexOf('levia')>=0) startAmbient('water');
+      else if(bnLower.indexOf('moon')>=0||bnLower.indexOf('mars')>=0||bnLower.indexOf('venus')>=0||bnLower.indexOf('saturn')>=0||bnLower.indexOf('space')>=0||bnLower.indexOf('alien')>=0||bnLower.indexOf('atmo')>=0||bnLower.indexOf('celestial')>=0) startAmbient('galaxy');
+      else startAmbient('earth');
+    }
+  } else if(track&&track.indexOf('boss_')===0){
+    // Keep ambient running during boss fight for atmosphere
+    if(currentWorldLevel) startAmbient(currentWorldLevel.worldId);
+  }
   var cfg;
   if(track==='infinite') cfg={mel:IL,bas:IBL,pls:IL_P,bpm:168};
   else if(track==='menu') cfg={mel:ML,bas:BL,pls:ML_P,pad:ML_PAD,bpm:128};
@@ -11835,8 +12608,49 @@ function playMusic(track){
 }
 
 document.getElementById('optSound').addEventListener('change',function(e){sfxEnabled=e.target.checked;if(sfxGain)sfxGain.gain.value=sfxEnabled?parseFloat(document.getElementById('sfxVolSlider').value)/100:0;sfxMenuTick();showToast('Sound '+(e.target.checked?'On':'Off'));});
-document.getElementById('optMusic').addEventListener('change',function(e){musicEnabled=e.target.checked;if(musicEnabled)playMusic(state==='playing'?'level':'level');else stopMusic();sfxMenuTick();showToast('Music '+(e.target.checked?'On':'Off'));});
-document.getElementById('optVibe').addEventListener('change',function(e){sfxMenuTick();showToast('Vibration '+(e.target.checked?'On':'Off'));});
+document.getElementById('optMusic').addEventListener('change',function(e){musicEnabled=e.target.checked;if(musicEnabled)playMusic(state==='playing'?'level':'level');else{stopMusic();stopAmbient();}sfxMenuTick();showToast('Music '+(e.target.checked?'On':'Off'));});
+document.getElementById('optVibe').addEventListener('change',function(e){hapticEnabled=e.target.checked;sfxMenuTick();if(hapticEnabled) haptic(30);showToast('Vibration '+(e.target.checked?'On':'Off'));});
+document.getElementById('optTilt').addEventListener('change',function(e){
+  var checkbox=e.target;
+  if(checkbox.checked){
+    sfxMenuTick();
+    // Check if gyroscope is available at all
+    if(!window.DeviceOrientationEvent){
+      tiltEnabled=false;checkbox.checked=false;
+      showToast('❌ Gyroscope not available on this device');
+      return;
+    }
+    // iOS 13+ requires explicit permission via user gesture
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      DeviceOrientationEvent.requestPermission().then(function(response){
+        if(response==='granted'){
+          tiltEnabled=true;
+          showToast('📱 Tilt to fly enabled! Hold phone at natural angle.');
+        } else {
+          tiltEnabled=false;checkbox.checked=false;
+          showToast('❌ Gyroscope permission denied — check Settings > Safari > Motion & Orientation');
+        }
+      }).catch(function(err){
+        tiltEnabled=false;checkbox.checked=false;
+        showToast('❌ Gyroscope not available');
+      });
+    } else {
+      // Android / non-iOS — permission not needed, just enable
+      tiltEnabled=true;
+      // Test if we actually get data after a short delay
+      var testTimeout=setTimeout(function(){
+        if(tiltY===0){
+          showToast('📱 Tilt enabled — if nothing happens, your device may not have a gyroscope');
+        }
+      },2000);
+      showToast('📱 Tilt to fly enabled!');
+    }
+  } else {
+    sfxMenuTick();
+    tiltEnabled=false;
+    showToast('Tilt to fly disabled');
+  }
+});
 document.getElementById('optHitbox').addEventListener('change',function(e){sfxMenuTick();showToast('Hitbox '+(e.target.checked?'Visible':'Hidden'));});
 
 // Volume sliders
@@ -11862,7 +12676,8 @@ function buildSkins(){
     var bossDefeatedForSkin=!skin.bossReward||defeatedBosses.indexOf(skin.bossId)>=0;
     var card=document.createElement('div');
     card.className='skin-card'+(owned?' owned':'')+(active?' active':'')+(skin.bossReward&&!bossDefeatedForSkin?' locked':'');
-    var swatch='<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:linear-gradient(135deg,'+skin.body[0]+','+skin.body[1]+','+skin.body[2]+');border:2px solid '+skin.wing[0]+';'+(skin.bossReward&&!bossDefeatedForSkin?'filter:grayscale(0.7);opacity:0.6':'')+'"></div>';
+    var locked=skin.bossReward&&!bossDefeatedForSkin;
+    var swatch='<div style="width:32px;height:32px;border-radius:50%;margin:0 auto 4px;background:linear-gradient(135deg,'+skin.body[0]+','+skin.body[1]+','+skin.body[2]+');border:2px solid '+skin.wing[0]+';'+(locked?'filter:grayscale(0.7);opacity:0.6':'')+'"></div>';
     var rarity,rarityCol,priceLabel;
     if(skin.bossReward){
       rarity=bossDefeatedForSkin?'\uD83D\uDC51 BOSS REWARD':'\uD83D\uDD12 LOCKED';
@@ -11930,12 +12745,29 @@ function updateLeaderboard(){
   var lb=document.getElementById('leaderboardList');
   if(!lb) return;
   lb.innerHTML='';
+  // Set name input to current name
+  var ni=document.getElementById('playerNameInput');
+  if(ni&&playerName) ni.value=playerName;
   for(var i=0;i<Math.min(leaderboard.length,10);i++){
     var entry=leaderboard[i];
     var row=document.createElement('div');
-    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(80,30,160,0.18);border:1px solid #3a1060;border-radius:6px;margin-bottom:6px;';
-    var medal=i===0?'\ud83e\udd47':i===1?'\ud83e\udd48':i===2?'\ud83e\udd49':'#'+(i+1);
-    row.innerHTML='<span style="color:#ffd700;font-size:16px">'+medal+'</span><span style="color:#e8d8ff;font-size:13px;font-family:Cinzel,serif;flex:1;margin-left:12px;">'+entry.name+'</span><span style="color:#b06eff;font-size:11px;">Lvl '+entry.level+'</span><span style="color:#40c8ff;font-size:14px;font-weight:700;margin-left:12px;">'+entry.score+'</span>';
+    row.style.cssText='display:flex;flex-direction:column;padding:10px 14px;background:rgba(80,30,160,0.18);border:1px solid #3a1060;border-radius:8px;gap:4px;';
+    if(i===0) row.style.borderColor='#ffd700';
+    else if(i===1) row.style.borderColor='#c0c0c0';
+    else if(i===2) row.style.borderColor='#cd7f32';
+    var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    var topRow='<div style="display:flex;justify-content:space-between;align-items:center;">'
+      +'<span style="font-size:14px">'+medal+'</span>'
+      +'<span style="color:#e8d8ff;font-size:13px;font-family:Cinzel,serif;flex:1;margin-left:10px;">'+entry.name+'</span>'
+      +'<span style="color:#40c8ff;font-size:16px;font-weight:700;">'+entry.score+'</span></div>';
+    var biome2=entry.biome||('Lvl '+entry.level);
+    var moths2=entry.moths!==undefined?entry.moths:'--';
+    var time2=entry.time||'--';
+    var botRow='<div style="display:flex;justify-content:space-between;font-size:10px;color:#7755aa;margin-top:2px;">'
+      +'<span>🌍 '+biome2+'</span>'
+      +'<span>🦋 '+moths2+'</span>'
+      +'<span>⏱ '+time2+'</span></div>';
+    row.innerHTML=topRow+botRow;
     lb.appendChild(row);
   }
   if(leaderboard.length===0){lb.innerHTML='<div style="text-align:center;color:#6a20aa;padding:30px;font-family:Crimson Text,serif;font-style:italic;">No scores yet. Play Infinite Mode!</div>';}
@@ -12018,6 +12850,31 @@ var btnExport=document.getElementById('btnExportSave');
 var btnImport=document.getElementById('btnImportSave');
 var btnImportConfirm=document.getElementById('btnImportConfirm');
 var saveArea=document.getElementById('saveCodeArea');
+var btnReplayTut=document.getElementById('btnReplayTutorial');
+if(btnReplayTut){
+  var replayTutFn=function(){
+    sfxMenuSelect();
+    tutorialShown=false;
+    // Find and start tutorial level
+    var awakeningWorld=getWorldById?getWorldById('awakening'):null;
+    if(awakeningWorld&&awakeningWorld.levels[0]){
+      var tutLevel=awakeningWorld.levels[0];
+      gameMode='story';
+      currentWorldLevel={worldId:'awakening',levelIdx:0,level:tutLevel};
+      showScreen(null);
+      try{resetGame();}catch(e){}
+      state='playing';
+      currentLevel=tutLevel.biomeIdx;
+      levelDuration=tutLevel.duration||999;
+      gameStartTime=Date.now();
+      if(AC) AC.resume();
+      playMusic('level');
+      startTutorial();
+    }
+  };
+  btnReplayTut.addEventListener('click',replayTutFn);
+  btnReplayTut.addEventListener('touchstart',function(e){e.preventDefault();replayTutFn();},{passive:false});
+}
 if(btnExport) btnExport.addEventListener('click',function(){
   sfxMenuSelect();saveGame();
   try{
@@ -12095,6 +12952,15 @@ function pauseGame(){
   state = 'paused';
   var ov = document.getElementById('pauseOverlay');
   if(ov) ov.style.display = 'flex';
+  // Populate current run stats
+  var psEl=document.getElementById('pauseScore');
+  if(psEl) psEl.textContent=Math.floor(score/10);
+  var pmEl=document.getElementById('pauseMoths');
+  if(pmEl) pmEl.textContent=currentRunMoths+' 🦋';
+  var pnEl=document.getElementById('pauseNearMiss');
+  if(pnEl) pnEl.textContent=(window._runNearMisses||0);
+  var plEl=document.getElementById('pauseLives');
+  if(plEl) plEl.textContent=lives+' 🪲';
   try{ stopMusic(); }catch(e){}
 }
 
@@ -12158,13 +13024,129 @@ if(pauseMenu){
   pauseMenu.addEventListener('click', menuFromPause);
 }
 
+// ── PHOTO MODE ──
+var photoMode=false;
+var pausePhoto=document.getElementById('pausePhoto');
+if(pausePhoto){
+  function enterPhotoMode(){
+    sfxMenuTap();photoMode=true;
+    // Hide ALL UI elements
+    var hideEls=['pauseOverlay','hud','timerBar','lives','bossHud','powerupBar','infiniteHud','magnetHud','pauseBtn','coopGameHud','coopEmoteBar','mothCounter'];
+    hideEls.forEach(function(id){var el=document.getElementById(id);if(el) el.style.visibility='hidden';});
+    // Show photo mode overlay + hint
+    var pm=document.getElementById('photoModeOverlay');
+    if(pm) pm.style.display='block';
+    var hint=document.getElementById('photoModeHint');
+    if(hint) hint.style.display='block';
+    // Fade hint after 3 seconds
+    setTimeout(function(){if(photoMode&&hint) hint.style.opacity='0';hint.style.transition='opacity 1s';},2500);
+  }
+  pausePhoto.addEventListener('click',enterPhotoMode);
+  pausePhoto.addEventListener('touchstart',function(e){e.preventDefault();enterPhotoMode();},{passive:false});
+}
+var photoOverlay=document.getElementById('photoModeOverlay');
+if(photoOverlay){
+  function exitPhotoMode(){
+    if(!photoMode) return;
+    photoMode=false;
+    // Restore all UI
+    var showEls=['pauseOverlay','hud','timerBar','lives','bossHud','powerupBar','pauseBtn','mothCounter'];
+    showEls.forEach(function(id){var el=document.getElementById(id);if(el) el.style.visibility='';});
+    // Hide photo overlay + hint
+    photoOverlay.style.display='none';
+    var hint=document.getElementById('photoModeHint');
+    if(hint){hint.style.display='none';hint.style.opacity='1';hint.style.transition='';}
+    // Return to pause
+    var ov=document.getElementById('pauseOverlay');
+    if(ov) ov.style.display='flex';
+  }
+  photoOverlay.addEventListener('click',exitPhotoMode);
+  photoOverlay.addEventListener('touchstart',function(e){e.preventDefault();exitPhotoMode();},{passive:false});
+}
+
+// ── SECRET LEVEL EASTER EGG ──
+var secretTapCount=0, secretTapTimer=null, secretUnlocked=false;
+try{secretUnlocked=!!localStorage.getItem('df_secret');}catch(e){}
+var titleTap=document.getElementById('menuTitleTap');
+if(titleTap){
+  titleTap.style.cursor='pointer';
+  titleTap.addEventListener('click',function(){
+    secretTapCount++;
+    if(secretTapTimer) clearTimeout(secretTapTimer);
+    secretTapTimer=setTimeout(function(){secretTapCount=0;},2000);
+    var needed=secretUnlocked?3:7;
+    if(secretTapCount>=needed){
+      secretTapCount=0;
+      if(!secretUnlocked){
+        secretUnlocked=true;
+        try{localStorage.setItem('df_secret','1');}catch(e){}
+        haptic([50,30,50,30,50,30,200]);
+        showToast('🍷 Secret unlocked: Rooftop Bistro!');
+      } else {
+        haptic([50,30,100]);
+        showToast('🍷 Returning to the Rooftop...');
+      }
+      setTimeout(function(){
+        sfxMenuSelect();
+        gameMode='story';
+        currentWorldLevel={worldId:'earth',levelIdx:0,level:{id:'secret1',name:'Rooftop Bistro',icon:'🍷',biomeIdx:20,desc:'A secret dinner above the city',duration:120}};
+        showScreen(null);
+        try{resetGame();}catch(e){}
+        state='playing';
+        currentLevel=20;
+        levelDuration=120;
+        speed=2.4;obstInterval=140;obstTimer=0;
+        fly.x=W*0.22;fly.y=H*0.42;fly.vy=0;fly.trail=[];
+        obstacles=[];frogs=[];moths=[];
+        initBg();gameStartTime=Date.now();
+        if(AC) AC.resume();
+        playMusic('level');
+        updateLevelUI();
+      },1500);
+    } else if(secretTapCount>=needed-3&&secretTapCount<needed){
+      showToast('🤔 '+(needed-secretTapCount)+' more...');
+    }
+  });
+}
+
 var btnWorldMap=document.getElementById('btnWorldMap');
 if(btnWorldMap) btnWorldMap.addEventListener('click',function(){sfxMenuTap();buildWorldMap();showScreen('screenWorldMap');});
 if(btnWorldMap) btnWorldMap.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuTap();buildWorldMap();showScreen('screenWorldMap');},{passive:false});
 
 var btnPlayInfinite=document.getElementById('btnPlayInfinite');
-if(btnPlayInfinite) btnPlayInfinite.addEventListener('click',function(){gameMode='infinite';levelDuration=999999;startGame();});
-if(btnPlayInfinite) btnPlayInfinite.addEventListener('touchstart',function(e){e.preventDefault();gameMode='infinite';levelDuration=999999;startGame();},{passive:false});
+if(btnPlayInfinite) btnPlayInfinite.addEventListener('click',function(){
+  sfxMenuTap();
+  var splash=document.getElementById('infiniteSplash');
+  if(splash){
+    splash.style.display='flex';
+    var bestEl=document.getElementById('infSplashBest');
+    if(bestEl) bestEl.textContent=highScoreInfinite||0;
+    var rankEl=document.getElementById('infSplashRank');
+    if(rankEl){
+      if(leaderboard.length>0) rankEl.textContent='Rank #1 of '+leaderboard.length+' runs';
+      else rankEl.textContent='No runs yet — set your first record!';
+    }
+  }
+});
+if(btnPlayInfinite) btnPlayInfinite.addEventListener('touchstart',function(e){e.preventDefault();btnPlayInfinite.click();},{passive:false});
+// Infinite splash play button
+var btnInfPlay=document.getElementById('btnInfSplashPlay');
+if(btnInfPlay){
+  btnInfPlay.addEventListener('click',function(){
+    sfxMenuSelect();
+    document.getElementById('infiniteSplash').style.display='none';
+    gameMode='infinite';levelDuration=999999;startGame();
+  });
+  btnInfPlay.addEventListener('touchstart',function(e){e.preventDefault();btnInfPlay.click();},{passive:false});
+}
+var btnInfBack=document.getElementById('btnInfSplashBack');
+if(btnInfBack){
+  btnInfBack.addEventListener('click',function(){
+    sfxMenuBack();
+    document.getElementById('infiniteSplash').style.display='none';
+  });
+  btnInfBack.addEventListener('touchstart',function(e){e.preventDefault();btnInfBack.click();},{passive:false});
+}
 
 document.getElementById('btnFlyAgain').addEventListener('touchstart',function(e){e.preventDefault();restartGame();},{passive:false});
 document.getElementById('btnFlyAgain').addEventListener('click',restartGame);
@@ -12533,6 +13515,78 @@ if(btnLeaderboard) btnLeaderboard.addEventListener('touchstart',function(e){e.pr
 var lbBack=document.getElementById('lbBack');
 if(lbBack) lbBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
 if(lbBack) lbBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
+var btnSaveName=document.getElementById('btnSaveName');
+if(btnSaveName) btnSaveName.addEventListener('click',function(){
+  var ni2=document.getElementById('playerNameInput');
+  if(ni2){
+    playerName=ni2.value.trim().substring(0,16);
+    try{localStorage.setItem('df_playerName',playerName);}catch(e){}
+    showToast(playerName?'✅ Name saved: '+playerName:'Name cleared');
+    // Update existing leaderboard entries with new name
+    for(var li2=0;li2<leaderboard.length;li2++){
+      if(leaderboard[li2].name==='Anonymous'||leaderboard[li2].name===playerName) leaderboard[li2].name=playerName||'Anonymous';
+    }
+    updateLeaderboard();saveGame();
+  }
+});
+// ── STATS SCREEN ──
+var btnStats=document.getElementById('btnStats');
+if(btnStats) btnStats.addEventListener('click',function(){sfxMenuTap();buildStats();showScreen('screenStats');});
+if(btnStats) btnStats.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuTap();buildStats();showScreen('screenStats');},{passive:false});
+var statsBack=document.getElementById('statsBack');
+if(statsBack) statsBack.addEventListener('click',function(){sfxMenuBack();showScreen('screenMain');});
+if(statsBack) statsBack.addEventListener('touchstart',function(e){e.preventDefault();sfxMenuBack();showScreen('screenMain');},{passive:false});
+
+function buildStats(){
+  var sb=document.getElementById('statsBody');
+  if(!sb) return;
+  var clearedCount=Object.keys(levelProgress).length;
+  var totalLvls=0;
+  for(var wi2=0;wi2<WORLDS.length;wi2++) totalLvls+=WORLDS[wi2].levels.length;
+  var stats=[
+    {section:'📊 Overview'},
+    {label:'Levels Cleared',value:clearedCount+' / '+totalLvls},
+    {label:'Total Stars',value:totalStars+' ⭐'},
+    {label:'Worlds Visited',value:worldsVisited+' / 5'},
+    {label:'Bosses Defeated',value:defeatedBosses.length+' / 6'},
+    {section:'🦋 Moths'},
+    {label:'Current Moths',value:mothsTotal.toLocaleString()},
+    {label:'Lifetime Moths',value:lifetimeMoths.toLocaleString()},
+    {label:'Best in One Level',value:mothsInOneLevelBest},
+    {label:'Skins Owned',value:ownedSkins.length+' / '+SKINS.length},
+    {section:'🏆 Records'},
+    {label:'Best Story Score',value:highScoreStory},
+    {label:'Best Infinite Score',value:highScoreInfinite},
+    {label:'Best Score Overall',value:Math.max(highScoreStory,highScoreInfinite,bestScore||0)},
+    {section:'💪 Skill'},
+    {label:'Total Near-Misses',value:totalNearMisses},
+    {label:'No-Damage Levels',value:bestNoDamageLevels},
+    {label:'Best No-Damage Streak',value:bestNoDamageStreak},
+    {section:'📈 Totals'},
+    {label:'Total Deaths',value:totalDeaths},
+    {label:'Total Levels Cleared',value:totalLevelsCleared},
+    {label:'Powerups Used',value:totalPowerupsUsed},
+    {label:'Infinite Activations',value:totalInfiniteUses},
+    {label:'Ghost Uses',value:totalGhostUses||0},
+    {label:'Slow-Mo Uses',value:totalSlowMoUses||0}
+  ];
+  sb.innerHTML='';
+  for(var si2=0;si2<stats.length;si2++){
+    var s=stats[si2];
+    if(s.section){
+      var sec=document.createElement('div');
+      sec.style.cssText='font-family:Cinzel,serif;font-size:11px;color:#b06eff;letter-spacing:2px;padding:10px 0 4px;'+(si2>0?'margin-top:8px;border-top:1px solid rgba(120,60,200,0.2);padding-top:14px;':'');
+      sec.textContent=s.section;
+      sb.appendChild(sec);
+    } else {
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:rgba(80,30,160,0.12);border-radius:6px;';
+      row.innerHTML='<span style="color:#9080c0;font-size:12px;">'+s.label+'</span><span style="color:#e8d8ff;font-size:13px;font-weight:700;">'+s.value+'</span>';
+      sb.appendChild(row);
+    }
+  }
+}
+
 var btnPlayStory2=document.getElementById('btnPlayStory2');
 if(btnPlayStory2) btnPlayStory2.addEventListener('click',function(){gameMode='story';startGame();});
 
@@ -12726,14 +13780,24 @@ function buildWorldMap(){
           dot.className='lvl-dot'+(isDone?' done':isCurrent?' current':' locked-lvl');
           dot.style.background=isDone?world.border:isCurrent?'rgba('+world.glow+',0.3)':'rgba(0,0,0,0.3)';
           dot.style.color=isDone?'#000':'rgba(255,255,255,0.9)';
-          dot.style.fontSize='9px';
-          // Show stars if done, otherwise level number
+          dot.style.flexDirection='column';dot.style.gap='1px';dot.style.height='auto';dot.style.minHeight='32px';dot.style.padding='4px 2px';
+          // Level number or icon always visible
+          var numSpan=document.createElement('div');
+          numSpan.style.cssText='font-size:10px;font-weight:700;line-height:1;';
+          numSpan.textContent=level.isBoss?'⚔':level.isTutorial?'?':(li2+1);
+          dot.appendChild(numSpan);
+          // Stars below number
           if(isDone&&starCount>0){
-            dot.textContent='★'.repeat(starCount)+'☆'.repeat(3-starCount);
-            dot.style.fontSize='7px'; dot.style.letterSpacing='-1px';
-            dot.style.color=starCount===3?'#ffd700':starCount===2?'#fff':'rgba(255,255,255,0.7)';
-          } else {
-            dot.textContent=li2+1;
+            var starSpan=document.createElement('div');
+            starSpan.style.cssText='font-size:6px;line-height:1;letter-spacing:-1px;color:'+(starCount===3?'#ffd700':starCount===2?'#fff':'rgba(255,255,255,0.6)')+';';
+            starSpan.textContent='★'.repeat(starCount)+'☆'.repeat(3-starCount);
+            dot.appendChild(starSpan);
+            if(starCount===3) dot.style.boxShadow='0 0 8px rgba(255,215,0,0.5)';
+          } else if(isDone){
+            var checkSpan=document.createElement('div');
+            checkSpan.style.cssText='font-size:7px;line-height:1;color:rgba(0,0,0,0.5);';
+            checkSpan.textContent='✓';
+            dot.appendChild(checkSpan);
           }
           dot.title=level.name+(isDone?' ('+starCount+'★)':'');
           if(isUnlocked){
@@ -12876,6 +13940,128 @@ document.getElementById('ldBackBtn').addEventListener('click',function(){
   var _sldh=document.getElementById('screenLevelDetail');if(_sldh){_sldh.classList.add('hidden');_sldh.style.display='none';}
 });
 
+// ── DAILY LOGIN REWARD SYSTEM ──
+var DAILY_REWARDS=[25,50,75,100,150,250,500]; // Day 1-7 rewards
+function getDayKey(){return new Date().toISOString().split('T')[0];} // "2026-04-19"
+function checkDailyReward(){
+  try{
+    var raw=localStorage.getItem('df_daily');
+    var data=raw?JSON.parse(raw):{lastDay:'',streak:0,claimed:false};
+    var today=getDayKey();
+    if(data.lastDay===today&&data.claimed) return; // already claimed today
+    // Calculate streak
+    var yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    var yKey=yesterday.toISOString().split('T')[0];
+    var streak=(data.lastDay===yKey)?Math.min(data.streak+1,7):(data.lastDay===today?data.streak:1);
+    var reward=DAILY_REWARDS[streak-1]||DAILY_REWARDS[0];
+    // Show popup
+    var popup=document.getElementById('dailyRewardPopup');
+    if(!popup) return;
+    popup.style.display='flex';
+    document.getElementById('dailyStreak').textContent='Day '+streak+' streak!';
+    document.getElementById('dailyRewardAmount').textContent='+'+reward+' 🦋';
+    // Build streak dots
+    var dots=document.getElementById('dailyDots');
+    dots.innerHTML='';
+    for(var di=0;di<7;di++){
+      var dot=document.createElement('div');
+      dot.style.cssText='width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;';
+      if(di<streak){
+        dot.style.background='linear-gradient(135deg,#ffd700,#ff8800)';dot.style.color='#000';dot.textContent='✓';
+      } else if(di===streak){
+        dot.style.background='rgba(255,215,0,0.2)';dot.style.border='2px solid #ffd700';dot.style.color='#ffd700';dot.textContent=di+1;
+      } else {
+        dot.style.background='rgba(80,30,160,0.3)';dot.style.border='1px solid #3a1060';dot.style.color='#5a3a8a';dot.textContent=di+1;
+      }
+      dots.appendChild(dot);
+    }
+    // Claim handler
+    var claimBtn=document.getElementById('dailyClaimBtn');
+    claimBtn.onclick=function(){
+      mothsTotal+=reward; lifetimeMoths+=reward;
+      updateMothUI();updateCurrencyUI();saveGame();
+      localStorage.setItem('df_daily',JSON.stringify({lastDay:today,streak:streak,claimed:true}));
+      popup.style.display='none';
+      showToast('🎁 Day '+streak+': +'+reward+' 🦋!');
+      try{sfxStarEarned();}catch(e){}
+    };
+  }catch(e){}
+}
+
+// ── DAILY CHALLENGE SYSTEM ──
+var DAILY_CHALLENGES=[
+  {type:'nodamage',levelId:'e1',desc:'Clear Ancient Forest with no damage',reward:200},
+  {type:'nodamage',levelId:'e4',desc:'Clear Tropical Beach with no damage',reward:250},
+  {type:'moths',levelId:'e2',count:80,desc:'Collect 80 moths in Jungle Canopy',reward:200},
+  {type:'moths',levelId:'f1',count:60,desc:'Collect 60 moths in Volcanic Hellscape',reward:300},
+  {type:'moths',levelId:'w4',count:50,desc:'Collect 50 moths in Storm Front',reward:350},
+  {type:'nodamage',levelId:'f2',desc:'Clear Desert Sands with no damage',reward:300},
+  {type:'clear',levelId:'e6',desc:'Complete Enchanted Forest',reward:150},
+  {type:'clear',levelId:'f4',desc:'Complete Lava Cavern',reward:250},
+  {type:'clear',levelId:'w5',desc:'Complete Celestial Ruins',reward:300},
+  {type:'nodamage',levelId:'e3',desc:'Clear Frog Swamp with no damage',reward:200},
+  {type:'moths',levelId:'e5',count:70,desc:'Collect 70 moths in Mountain Lake',reward:200},
+  {type:'clear',levelId:'f5',desc:'Complete Firestorm',reward:350},
+  {type:'infinite',count:2000,desc:'Reach score 2,000 in Infinite Mode',reward:400},
+  {type:'infinite',count:3000,desc:'Reach score 3,000 in Infinite Mode',reward:500},
+  {type:'moths',levelId:'i1',count:60,desc:'Collect 60 moths in Cloud Kingdom',reward:350},
+  {type:'nodamage',levelId:'w3',desc:'Clear Mountain Lake with no damage',reward:250},
+  {type:'clear',levelId:'i3',desc:'Complete Sky Ruins',reward:300},
+  {type:'moths',levelId:'g1',count:50,desc:'Collect 50 moths on The Moon',reward:400},
+  {type:'infinite',count:5000,desc:'Reach score 5,000 in Infinite Mode',reward:750},
+  {type:'nodamage',levelId:'f3',desc:'Clear Burning City with no damage',reward:350}
+];
+function getTodayChallenge(){
+  // Deterministic challenge per day using date as seed
+  var d=getDayKey();var seed=0;for(var i=0;i<d.length;i++)seed=seed*31+d.charCodeAt(i);
+  return DAILY_CHALLENGES[Math.abs(seed)%DAILY_CHALLENGES.length];
+}
+function isDailyChallengeCompleted(){
+  try{
+    var raw=localStorage.getItem('df_challenge');
+    if(!raw) return false;
+    var data=JSON.parse(raw);
+    return data.day===getDayKey()&&data.completed;
+  }catch(e){return false;}
+}
+function completeDailyChallenge(){
+  var ch=getTodayChallenge();
+  if(isDailyChallengeCompleted()) return;
+  try{localStorage.setItem('df_challenge',JSON.stringify({day:getDayKey(),completed:true}));}catch(e){}
+  mothsTotal+=ch.reward; lifetimeMoths+=ch.reward;
+  updateMothUI();saveGame();
+  showToast('⚔️ Challenge complete! +'+ch.reward+' 🦋');
+  try{sfxStarEarned();}catch(e){}
+  updateDailyChallengeUI();
+}
+function checkDailyChallengeProgress(){
+  if(isDailyChallengeCompleted()) return;
+  var ch=getTodayChallenge();
+  var lid=currentWorldLevel?currentWorldLevel.level.id:null;
+  if(ch.type==='clear'&&lid===ch.levelId) completeDailyChallenge();
+  else if(ch.type==='nodamage'&&lid===ch.levelId&&currentRunNoDamage) completeDailyChallenge();
+  else if(ch.type==='moths'&&lid===ch.levelId&&currentRunMoths>=ch.count) completeDailyChallenge();
+}
+function checkDailyChallengeInfinite(sc){
+  if(isDailyChallengeCompleted()) return;
+  var ch=getTodayChallenge();
+  if(ch.type==='infinite'&&sc>=ch.count) completeDailyChallenge();
+}
+function updateDailyChallengeUI(){
+  var card=document.getElementById('dailyChallengeCard');
+  var slot=document.getElementById('dailyChallengeSlot');
+  if(!card||!slot) return;
+  var ch=getTodayChallenge();
+  var done=isDailyChallengeCompleted();
+  card.style.display='block';
+  slot.appendChild(card);
+  document.getElementById('dailyChallengeText').textContent=ch.desc;
+  document.getElementById('dailyChallengeReward').textContent=done?'✅ Done':'+'+ch.reward+' 🦋';
+  document.getElementById('dailyChallengeStatus').textContent=done?'Completed today! Come back tomorrow.':'Complete this challenge for bonus moths!';
+  if(done){card.style.borderColor='#2a6030';card.style.opacity='0.7';}
+  else{card.style.borderColor='#40cc80';card.style.opacity='1';}
+}
+
 // -- PASSWORD GATE -------------------------------------------
 // Game initializes directly to main menu
 
@@ -12895,6 +14081,25 @@ try{
     else if(lives < MAX_LIVES_CAP && lifeTimerStart) tickLifeTimer();
     updateCurrencyUI();updateMothUI();
     showScreen('screenMain');
+    updateDailyChallengeUI();
+    setTimeout(checkDailyReward,500); // slight delay so menu renders first
+    // Spawn floating moth particles on menu
+    (function spawnMenuParticles(){
+      var container=document.getElementById('menuParticles');
+      if(!container) return;
+      var emojis=['🦋','✨','🌟'];
+      for(var pi=0;pi<6;pi++){
+        var p=document.createElement('div');
+        p.className='menu-particle';
+        p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+        p.style.left=(Math.random()*90+5)+'%';
+        p.style.bottom='-30px';
+        p.style.animationDuration=(15+Math.random()*12)+'s';
+        p.style.animationDelay=(Math.random()*10)+'s';
+        p.style.fontSize=(10+Math.random()*8)+'px';
+        container.appendChild(p);
+      }
+    })();
     initBg(); loop();
   })();
 } catch(err){
@@ -12905,7 +14110,6 @@ try{
 </script>
 
 <!-- Co-op uses native WebSockets — no external library needed -->
-
 <script>
 // ── CO-OP CLIENT (Native WebSocket) ─────────────────────────────────
 var COOP_SERVER_WS = 'wss://dragonfly-coop-server-production.up.railway.app';
